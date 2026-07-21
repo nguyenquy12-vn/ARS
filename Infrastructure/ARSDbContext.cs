@@ -29,6 +29,10 @@ public class ARSDbContext : DbContext
             .Property(u => u.Status)
             .HasConversion<string>();
 
+        modelBuilder.Entity<Role>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
         modelBuilder.Entity<RecruiterRequest>()
             .Property(r => r.Status)
             .HasConversion<string>();
@@ -90,18 +94,37 @@ public class ARSDbContext : DbContext
 
         modelBuilder.Entity<Permission>().HasData(permissions);
 
+        // Seed: RolePermissions
+        modelBuilder.Entity<RolePermission>().HasData(
+            // Admin: ManageRoles, ManageUsers
+            new RolePermission { RoleId = 1, PermissionId = (int)PermissionType.ManageRoles },
+            new RolePermission { RoleId = 1, PermissionId = (int)PermissionType.ManageUsers },
+
+            // Recruiter: ViewJob, CreateJob, EditJob, DeleteJob, ReviewCV, EvaluateAI
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.ViewJob },
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.CreateJob },
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.EditJob },
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.DeleteJob },
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.ReviewCV },
+            new RolePermission { RoleId = 2, PermissionId = (int)PermissionType.EvaluateAI },
+
+            // Candidate: ViewJob, ApplyJob
+            new RolePermission { RoleId = 3, PermissionId = (int)PermissionType.ViewJob },
+            new RolePermission { RoleId = 3, PermissionId = (int)PermissionType.ApplyJob }
+        );
+
         // BCrypt hash of "Password123@"
         string defaultPasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.";
 
         // Seed: Users
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, RoleId = 1, FullName = "Hệ Thống Admin", Email = "admin@ars.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0123456789", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 2, RoleId = 2, FullName = "Nguyễn Văn Tuyển FPT", Email = "recruiter1@fpt.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0987654321", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 3, RoleId = 2, FullName = "Trần Thị Duyệt Viettel", Email = "recruiter2@viettel.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0912345678", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 4, RoleId = 3, FullName = "Lê Văn Pro .NET", Email = "candidate1@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444555", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 5, RoleId = 3, FullName = "Nguyễn Thị Fresher", Email = "candidate2@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444666", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 6, RoleId = 3, FullName = "Trần Văn Intern", Email = "candidate3@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444777", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow },
-            new User { Id = 7, RoleId = 3, FullName = "Hoàng Lệ Trái Ngành", Email = "candidate4@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444888", Status = UserStatus.Active, CreatedAt = DateTime.UtcNow }
+            new User { Id = 1, RoleId = 1, FullName = "Hệ Thống Admin", Email = "admin@ars.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0123456789", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 2, RoleId = 2, FullName = "Nguyễn Văn Tuyển FPT", Email = "recruiter1@fpt.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0987654321", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 3, RoleId = 2, FullName = "Trần Thị Duyệt Viettel", Email = "recruiter2@viettel.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0912345678", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 4, RoleId = 3, FullName = "Lê Văn Pro .NET", Email = "candidate1@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444555", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 5, RoleId = 3, FullName = "Nguyễn Thị Fresher", Email = "candidate2@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444666", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 6, RoleId = 3, FullName = "Trần Văn Intern", Email = "candidate3@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444777", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = 7, RoleId = 3, FullName = "Hoàng Lệ Trái Ngành", Email = "candidate4@gmail.com", PasswordHash = defaultPasswordHash, PhoneNumber = "0333444888", Status = UserStatus.Active, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
 
         // Seed: Companies
@@ -138,25 +161,25 @@ public class ARSDbContext : DbContext
                 MaxSalary = 25000000,
                 Status = JobStatus.Active,
                 Vacancies = 3,
-                CreatedAt = DateTime.UtcNow,
-                ExpiredAt = DateTime.UtcNow.AddDays(30)
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                ExpiredAt = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
 
         // Seed: Resumes
         modelBuilder.Entity<Resume>().HasData(
-            new Resume { Id = 1, CandidateId = 4, Title = "CV Lê Văn Pro - .NET Developer", FilePath = "/uploads/cv1.pdf", IsDefault = true, RawTextContent = "Kinh nghiệm 3 năm làm việc với C#, chuyên sâu Web API, Entity Framework Core, SQL Server và Docker.", CreatedAt = DateTime.UtcNow },
-            new Resume { Id = 2, CandidateId = 5, Title = "CV Nguyễn Thị Fresher", FilePath = "/uploads/cv2.pdf", IsDefault = true, RawTextContent = "Sinh viên mới tốt nghiệp, biết cơ bản về C# và OOP, chưa có kinh nghiệm thực tế hệ thống lớn.", CreatedAt = DateTime.UtcNow },
-            new Resume { Id = 3, CandidateId = 6, Title = "CV Trần Văn Intern Backend", FilePath = "/uploads/cv3.pdf", IsDefault = true, RawTextContent = "Sinh viên năm 4 tìm kiếm vị trí thực tập, biết viết câu lệnh SQL cơ bản, đang học C#.", CreatedAt = DateTime.UtcNow },
-            new Resume { Id = 4, CandidateId = 7, Title = "CV Hoàng Lệ - Sales Marketing", FilePath = "/uploads/cv4.pdf", IsDefault = true, RawTextContent = "Kinh nghiệm 2 năm chạy quảng cáo Facebook, Google Ads, tư vấn chốt đơn hàng.", CreatedAt = DateTime.UtcNow }
+            new Resume { Id = 1, CandidateId = 4, Title = "CV Lê Văn Pro - .NET Developer", FilePath = "/uploads/cv1.pdf", IsDefault = true, RawTextContent = "Kinh nghiệm 3 năm làm việc với C#, chuyên sâu Web API, Entity Framework Core, SQL Server và Docker.", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Resume { Id = 2, CandidateId = 5, Title = "CV Nguyễn Thị Fresher", FilePath = "/uploads/cv2.pdf", IsDefault = true, RawTextContent = "Sinh viên mới tốt nghiệp, biết cơ bản về C# và OOP, chưa có kinh nghiệm thực tế hệ thống lớn.", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Resume { Id = 3, CandidateId = 6, Title = "CV Trần Văn Intern Backend", FilePath = "/uploads/cv3.pdf", IsDefault = true, RawTextContent = "Sinh viên năm 4 tìm kiếm vị trí thực tập, biết viết câu lệnh SQL cơ bản, đang học C#.", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Resume { Id = 4, CandidateId = 7, Title = "CV Hoàng Lệ - Sales Marketing", FilePath = "/uploads/cv4.pdf", IsDefault = true, RawTextContent = "Kinh nghiệm 2 năm chạy quảng cáo Facebook, Google Ads, tư vấn chốt đơn hàng.", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
 
         // Seed: Applications
         modelBuilder.Entity<Application>().HasData(
-            new Application { Id = 1, JobPostingId = 1, CandidateId = 4, ResumeId = 1, CoverLetter = "Tôi rất mong muốn được làm việc tại FPT.", Status = ApplicationStatus.Reviewing, AiMatchScore = 95, AiFeedback = "Hồ sơ hoàn hảo. Ứng viên có đầy đủ kỹ năng cứng về C#, EF Core, SQL và Docker trùng khớp hoàn toàn với JD.", AppliedAt = DateTime.UtcNow },
-            new Application { Id = 2, JobPostingId = 1, CandidateId = 5, ResumeId = 2, CoverLetter = "Mong công ty cho cơ hội phỏng vấn.", Status = ApplicationStatus.Reviewing, AiMatchScore = 65, AiFeedback = "Ứng viên có kiến thức nền tảng C# nhưng thiếu kinh nghiệm thực tế với SQL và hệ thống lớn theo yêu cầu.", AppliedAt = DateTime.UtcNow },
-            new Application { Id = 3, JobPostingId = 1, CandidateId = 6, ResumeId = 3, CoverLetter = "Xin thực tập ạ.", Status = ApplicationStatus.Reviewing, AiMatchScore = 40, AiFeedback = "Hồ sơ còn khá yếu, chưa đáp ứng được các tiêu chí kỹ thuật tối thiểu của vị trí hiện tại.", AppliedAt = DateTime.UtcNow },
-            new Application { Id = 4, JobPostingId = 1, CandidateId = 7, ResumeId = 4, CoverLetter = "Tìm kiếm cơ hội mới.", Status = ApplicationStatus.Reviewing, AiMatchScore = 10, AiFeedback = "Hồ sơ không phù hợp. Ứng viên làm mảng Marketing, hoàn toàn không có kỹ năng lập trình phần mềm.", AppliedAt = DateTime.UtcNow }
+            new Application { Id = 1, JobPostingId = 1, CandidateId = 4, ResumeId = 1, CoverLetter = "Tôi rất mong muốn được làm việc tại FPT.", Status = ApplicationStatus.Reviewing, AiMatchScore = 95, AiFeedback = "Hồ sơ hoàn hảo. Ứng viên có đầy đủ kỹ năng cứng về C#, EF Core, SQL và Docker trùng khớp hoàn toàn với JD.", AppliedAt = new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc) },
+            new Application { Id = 2, JobPostingId = 1, CandidateId = 5, ResumeId = 2, CoverLetter = "Mong công ty cho cơ hội phỏng vấn.", Status = ApplicationStatus.Reviewing, AiMatchScore = 65, AiFeedback = "Ứng viên có kiến thức nền tảng C# nhưng thiếu kinh nghiệm thực tế với SQL và hệ thống lớn theo yêu cầu.", AppliedAt = new DateTime(2026, 1, 10, 0, 0, 0, DateTimeKind.Utc) },
+            new Application { Id = 3, JobPostingId = 1, CandidateId = 6, ResumeId = 3, CoverLetter = "Xin thực tập ạ.", Status = ApplicationStatus.Reviewing, AiMatchScore = 40, AiFeedback = "Hồ sơ còn khá yếu, chưa đáp ứng được các tiêu chí kỹ thuật tối thiểu của vị trí hiện tại.", AppliedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
+            new Application { Id = 4, JobPostingId = 1, CandidateId = 7, ResumeId = 4, CoverLetter = "Tìm kiếm cơ hội mới.", Status = ApplicationStatus.Reviewing, AiMatchScore = 10, AiFeedback = "Hồ sơ không phù hợp. Ứng viên làm mảng Marketing, hoàn toàn không có kỹ năng lập trình phần mềm.", AppliedAt = new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc) }
         );
     }
 

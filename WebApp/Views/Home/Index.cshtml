@@ -1,8 +1,57 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang chủ - Kiểm tra Cookie Auth";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <h2 class="mb-4">Dự án Hệ thống Tuyển dụng</h2>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <div class="card border-success mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">🟢 Đã đăng nhập thành công (Cookie Auth đã hoạt động!)</h4>
+            </div>
+            <div class="card-body">
+                <h5>1. Thông tin tài khoản (Basic Claims):</h5>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item"><strong>User ID:</strong> @ViewBag.UserId</li>
+                    <li class="list-group-item"><strong>Họ và tên:</strong> @ViewBag.UserName</li>
+                    <li class="list-group-item"><strong>Email:</strong> @ViewBag.Email</li>
+                    <li class="list-group-item"><strong>Chức vụ (Role):</strong> <span class="badge bg-primary">@ViewBag.Role</span></li>
+                </ul>
+
+                <h5>2. Danh sách Quyền hạn (Permission Claims trong Cookie):</h5>
+                @if (ViewBag.Permissions != null && ((List<string>)ViewBag.Permissions).Count > 0)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var perm in (List<string>)ViewBag.Permissions)
+                        {
+                            <span class="badge bg-info text-dark fs-6">🔑 @perm</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-warning">⚠️ Tài khoản này chưa được gán Quyền hạn (Permission) nào!</p>
+                }
+            </div>
+            <div class="card-footer text-end">
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Đăng xuất</button>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">🔴 Chưa đăng nhập (Chưa có Cookie Auth)</h4>
+            </div>
+            <div class="card-body">
+                <p>Bạn đang truy cập dưới dạng Khách (Anonymous).</p>
+                <a asp-controller="Auth" asp-action="Login" class="btn btn-primary">Đăng nhập ngay</a>
+            </div>
+        </div>
+    }
 </div>

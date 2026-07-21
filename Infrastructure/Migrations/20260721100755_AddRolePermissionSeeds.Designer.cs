@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ARSDbContext))]
-    partial class ARSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721100755_AddRolePermissionSeeds")]
+    partial class AddRolePermissionSeeds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +66,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ResumeId");
 
-                    b.ToTable("Application", (string)null);
+                    b.ToTable("Application");
 
                     b.HasData(
                         new
@@ -164,7 +167,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TaxCode")
                         .IsUnique();
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
 
                     b.HasData(
                         new
@@ -200,7 +203,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("JobCategories", (string)null);
+                    b.ToTable("JobCategories");
 
                     b.HasData(
                         new
@@ -312,7 +315,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("JobCategoryId");
 
-                    b.ToTable("JobPostings", (string)null);
+                    b.ToTable("JobPostings");
 
                     b.HasData(
                         new
@@ -354,7 +357,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
 
                     b.HasData(
                         new
@@ -456,7 +459,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RecruiterRequests", (string)null);
+                    b.ToTable("RecruiterRequests");
                 });
 
             modelBuilder.Entity("Domain.Entities.Resume", b =>
@@ -496,7 +499,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CandidateId");
 
-                    b.ToTable("Resumes", (string)null);
+                    b.ToTable("Resumes");
 
                     b.HasData(
                         new
@@ -562,7 +565,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -597,7 +600,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions");
 
                     b.HasData(
                         new
@@ -692,7 +695,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
 
                     b.HasData(
                         new

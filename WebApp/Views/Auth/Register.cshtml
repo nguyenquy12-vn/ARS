@@ -1,0 +1,83 @@
+﻿@model WebApp.Models.Auth.RegisterViewModel
+@{
+    Layout = "_Layout"; // Hoặc null nếu bạn không muốn dùng chung khung với Header/Footer của web
+    ViewData["Title"] = "Đăng ký tài khoản Ứng viên";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body p-4 p-sm-5">
+
+                    <h3 class="card-title text-center mb-4 fw-bold text-primary">
+                        ĐĂNG KÝ ỨNG VIÊN
+                    </h3>
+                    <p class="text-muted text-center small mb-4">Tạo tài khoản để bắt đầu tìm kiếm cơ hội việc làm mơ ước</p>
+
+                    <!-- Form gửi dữ liệu dạng POST tới đúng trang /register -->
+                    <form asp-action="Register" asp-controller="Auth" method="post">
+
+                        <!-- Vùng hiển thị lỗi tổng hợp từ hệ thống (Ví dụ: Email đã tồn tại) -->
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 d-none" id="system-error-box"></div>
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] != null)
+                        {
+                            <div class="alert alert-danger small py-2">
+                                <span asp-validation-summary="ModelOnly"></span>
+                            </div>
+                        }
+
+                        <!-- Trường nhập Họ và tên -->
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label small fw-semibold">Họ và tên</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Trường nhập Email -->
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label small fw-semibold">Địa chỉ Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="example@@gmail.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Trường nhập Mật khẩu -->
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label small fw-semibold">Mật khẩu</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Tối thiểu 6 ký tự" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Trường nhập Xác nhận mật khẩu -->
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label small fw-semibold">Xác nhận mật khẩu</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Nút Submit đăng ký -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fs-6 fw-semibold rounded-2 py-2 shadow-sm">
+                                Đăng Ký Ngay
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="text-muted my-4">
+
+                    <!-- Đường dẫn chuyển hướng nhanh nếu đã có tài khoản -->
+                    <div class="text-center small">
+                        Bạn đã có tài khoản?
+                        <a asp-action="Login" asp-controller="Auth" class="text-decoration-none fw-semibold text-primary">Đăng nhập tại đây</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Nhúng thư viện giúp kiểm tra lỗi ngay tại Client (Client-side Validation) không cần tải lại trang -->
+    <partial name="_ValidationScriptsPartial" />
+}
