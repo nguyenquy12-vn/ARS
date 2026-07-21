@@ -57,7 +57,7 @@ public class CandidateController : Controller
         
         if (result)
         {
-            TempData["SuccessMessage"] = "Ứng tuyển thành công!";
+            TempData["SuccessMessage"] = "CV của bạn đã được gửi đi!";
             return RedirectToAction(nameof(MyApplications));
         }
         else
