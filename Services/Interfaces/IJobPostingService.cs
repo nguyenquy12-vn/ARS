@@ -1,4 +1,5 @@
-﻿using Services.DTOs.JobPosting;
+using Domain.Enums;
+using Services.DTOs.JobPosting;
 
 namespace Services.Interfaces;
 
@@ -15,4 +16,7 @@ public interface IJobPostingService
     Task<JobPostingResult> DeleteAsync(int id, int recruiterId);
 
     Task<List<JobCategoryOption>> GetCategoriesAsync();
+    Task<List<JobPostingListDto>> GetActiveJobsAsync(string? keyword, int? categoryId, JobType? jobType, WorkMode? workMode);
+    Task<JobPostingDetailDto?> GetJobDetailAsync(int id);
+    Task<List<JobPostingListDto>> GetLatestJobsAsync(int count);
 }

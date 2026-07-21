@@ -1,44 +1,46 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApp.Models;
+using Services.Interfaces;
+using Infrastructure;
 
 namespace WebApp.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IJobPostingService _jobPostingService;
+        private readonly ARSDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IJobPostingService jobPostingService, ARSDbContext context)
         {
             _logger = logger;
+            _jobPostingService = jobPostingService;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // 1. Kiểm tra xem User đã Đăng nhập (Auth thành công) hay chưa
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // Lấy các Claim cơ bản
                 ViewBag.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 ViewBag.UserName = User.FindFirstValue(ClaimTypes.Name);
                 ViewBag.Email = User.FindFirstValue(ClaimTypes.Email);
                 ViewBag.Role = User.FindFirstValue(ClaimTypes.Role);
-
-                // Lấy TẤT CẢ các Claims có type là "Permission" nạp từ Cookie
-                ViewBag.Permissions = User.Claims
-                    .Where(c => c.Type == "Permission")
-                    .Select(c => c.Value)
-                    .ToList();
+                ViewBag.Permissions = User.Claims.Where(c => c.Type == "Permission").Select(c => c.Value).ToList();
             }
 
+            ViewBag.LatestJobs = await _jobPostingService.GetLatestJobsAsync(6);
+            ViewBag.Categories = await _context.JobCategories.ToListAsync();
+
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        public IActionResult Privacy() { return View(); }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
