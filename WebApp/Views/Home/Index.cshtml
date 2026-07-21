@@ -1,57 +1,135 @@
-﻿@{
-    ViewData["Title"] = "Trang chủ - Kiểm tra Cookie Auth";
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Dự án Hệ thống Tuyển dụng</h2>
-
-    @if (User.Identity != null && User.Identity.IsAuthenticated)
+@functions {
+    public string FormatSalary(int? min, int? max)
     {
-        <div class="card border-success mb-4">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">🟢 Đã đăng nhập thành công (Cookie Auth đã hoạt động!)</h4>
-            </div>
-            <div class="card-body">
-                <h5>1. Thông tin tài khoản (Basic Claims):</h5>
-                <ul class="list-group mb-3">
-                    <li class="list-group-item"><strong>User ID:</strong> @ViewBag.UserId</li>
-                    <li class="list-group-item"><strong>Họ và tên:</strong> @ViewBag.UserName</li>
-                    <li class="list-group-item"><strong>Email:</strong> @ViewBag.Email</li>
-                    <li class="list-group-item"><strong>Chức vụ (Role):</strong> <span class="badge bg-primary">@ViewBag.Role</span></li>
-                </ul>
+        if (min.HasValue && max.HasValue)
+            return $"{min.Value / 1000000} - {max.Value / 1000000} triệu";
+        if (min.HasValue)
+            return $"Từ {min.Value / 1000000} triệu";
+        if (max.HasValue)
+            return $"Đến {max.Value / 1000000} triệu";
+        return "Thỏa thuận";
+    }
+}
 
-                <h5>2. Danh sách Quyền hạn (Permission Claims trong Cookie):</h5>
-                @if (ViewBag.Permissions != null && ((List<string>)ViewBag.Permissions).Count > 0)
-                {
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach (var perm in (List<string>)ViewBag.Permissions)
-                        {
-                            <span class="badge bg-info text-dark fs-6">🔑 @perm</span>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <p class="text-warning">⚠️ Tài khoản này chưa được gán Quyền hạn (Permission) nào!</p>
-                }
-            </div>
-            <div class="card-footer text-end">
-                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger">Đăng xuất</button>
+<!-- Hero Section -->
+<section class="hero-section text-center text-white d-flex align-items-center justify-content-center">
+    <div class="container hero-content fade-in-up">
+        <h1 class="display-4 fw-bold mb-4 hero-title">Tìm kiếm công việc mơ ước</h1>
+        <p class="lead mb-5 fs-4 text-white-75">Hàng ngàn cơ hội việc làm đang chờ đón bạn từ các công ty hàng đầu.</p>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <form action="/Job" method="get" class="search-form bg-white p-2 rounded-pill shadow-lg d-flex align-items-center">
+                    <i class="bi bi-search text-muted ms-3 me-2"></i>
+                    <input type="text" name="keyword" class="form-control border-0 shadow-none fs-5" placeholder="Nhập tên công việc, vị trí...">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fs-5 fw-medium">Tìm kiếm</button>
                 </form>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h4 class="mb-0">🔴 Chưa đăng nhập (Chưa có Cookie Auth)</h4>
-            </div>
-            <div class="card-body">
-                <p>Bạn đang truy cập dưới dạng Khách (Anonymous).</p>
-                <a asp-controller="Auth" asp-action="Login" class="btn btn-primary">Đăng nhập ngay</a>
-            </div>
+    </div>
+    
+    <!-- Decorative elements -->
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section py-5 bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold section-title">Danh mục ngành nghề</h2>
+            <p class="text-muted">Khám phá các cơ hội nghề nghiệp đa dạng</p>
         </div>
-    }
-</div>
+        
+        <div class="row g-4">
+            @if (ViewBag.Categories != null)
+            {
+                var categories = (IEnumerable<dynamic>)ViewBag.Categories;
+                var icons = new[] { "bi-code-slash", "bi-graph-up", "bi-megaphone", "bi-palette", "bi-cpu", "bi-building", "bi-cash-coin", "bi-headset" };
+                int iconIndex = 0;
+                
+                foreach (var cat in categories)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="/Job?categoryId=@cat.Id" class="text-decoration-none">
+                            <div class="category-card card h-100 border-0 shadow-sm text-center p-4">
+                                <div class="category-icon-wrapper mb-3 mx-auto shadow-sm">
+                                    <i class="bi @icons[iconIndex % icons.Length] fs-2 text-primary"></i>
+                                </div>
+                                <h5 class="card-title text-dark fw-bold mb-1">@cat.Name</h5>
+                            </div>
+                        </a>
+                    </div>
+                    iconIndex++;
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Latest Jobs Section -->
+<section class="latest-jobs-section py-5">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-end mb-5">
+            <div>
+                <h2 class="fw-bold section-title mb-2">Việc làm mới nhất</h2>
+                <p class="text-muted mb-0">Cập nhật những cơ hội nghề nghiệp hot nhất hiện nay</p>
+            </div>
+            <a href="/Job" class="btn btn-outline-primary fw-medium rounded-pill px-4">Xem tất cả <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        
+        <div class="row g-4">
+            @if (ViewBag.LatestJobs != null)
+            {
+                foreach (var job in ViewBag.LatestJobs)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="job-card card h-100 border-0 shadow-sm p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="company-logo bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle me-3 flex-shrink-0">
+                                    @(string.IsNullOrEmpty(job.CompanyLogoPath) ? job.CompanyName.Substring(0,1).ToUpper() : $"<img src='{job.CompanyLogoPath}' alt='logo' class='img-fluid rounded-circle'>")
+                                </div>
+                                <div>
+                                    <h5 class="job-title text-dark fw-bold mb-1 text-truncate" style="max-width: 200px;" title="@job.Title">@job.Title</h5>
+                                    <p class="company-name text-muted mb-0 small text-truncate" style="max-width: 200px;">@job.CompanyName</p>
+                                </div>
+                            </div>
+                            
+                            <div class="job-meta mb-3 text-muted small">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-geo-alt me-2 text-primary"></i> @job.Location
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-cash me-2 text-success"></i>
+                                    <span class="text-success fw-bold">@FormatSalary(job.MinSalary, job.MaxSalary)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="job-tags mb-4">
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-medium me-2 mb-2">@job.JobTypeName</span>
+                                <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2 fw-medium mb-2">@job.WorkModeName</span>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <a href="/Job/Detail/@job.Id" class="btn btn-light w-100 fw-medium text-primary btn-apply-hover">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 text-white text-center">
+    <div class="container py-5">
+        <h2 class="display-5 fw-bold mb-4">Bắt đầu hành trình của bạn</h2>
+        <p class="lead mb-5 opacity-75 max-w-md mx-auto">Tạo tài khoản ngay hôm nay để nhận thông báo việc làm mới nhất và ứng tuyển vào các công ty hàng đầu.</p>
+        <a href="/register" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-primary shadow-lg cta-btn">Đăng ký ngay</a>
+    </div>
+</section>

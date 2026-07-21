@@ -1,0 +1,187 @@
+@model Services.DTOs.JobPosting.JobPostingDetailDto
+
+@{
+    ViewData["Title"] = Model?.Title ?? "Chi tiết việc làm";
+}
+
+@functions {
+    public string FormatSalary(int? min, int? max)
+    {
+        if (min.HasValue && max.HasValue)
+            return $"{min.Value / 1000000} - {max.Value / 1000000} triệu";
+        if (min.HasValue)
+            return $"Từ {min.Value / 1000000} triệu";
+        if (max.HasValue)
+            return $"Đến {max.Value / 1000000} triệu";
+        return "Thỏa thuận";
+    }
+}
+
+<!-- Page Header -->
+<div class="page-header bg-primary text-white py-4">
+    <div class="container py-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-white-50 text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Job" class="text-white-50 text-decoration-none">Việc làm</a></li>
+                <li class="breadcrumb-item active text-white text-truncate d-inline-block" style="max-width: 200px;" aria-current="page">@Model?.Title</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="job-header mb-5 border-bottom pb-4">
+                        <h1 class="fw-bold text-dark mb-3">@Model?.Title</h1>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-building fs-5 text-muted me-2"></i>
+                            <h5 class="text-muted mb-0 fw-medium">@Model?.CompanyName</h5>
+                        </div>
+                        <div class="d-flex flex-wrap gap-4 text-muted mt-4">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-circle bg-light text-primary me-2"><i class="bi bi-geo-alt-fill"></i></div>
+                                <span>@Model?.Location</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="icon-circle bg-light text-primary me-2"><i class="bi bi-clock-history"></i></div>
+                                <span>Đăng ngày: @Model?.CreatedAt.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="job-section mb-5">
+                        <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-card-text text-primary me-2"></i> Mô tả công việc</h4>
+                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
+                            @Html.Raw(Model?.Description?.Replace("\n", "<br/>"))
+                        </div>
+                    </div>
+
+                    <div class="job-section mb-5">
+                        <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-check2-square text-primary me-2"></i> Yêu cầu ứng viên</h4>
+                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
+                            @Html.Raw(Model?.Requirements?.Replace("\n", "<br/>"))
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model?.Benefits))
+                    {
+                        <div class="job-section mb-4">
+                            <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-gift text-primary me-2"></i> Quyền lợi</h4>
+                            <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
+                                @Html.Raw(Model?.Benefits?.Replace("\n", "<br/>"))
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 100px; z-index: 10;">
+                
+                <!-- Company Card -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 text-center p-4">
+                    <div class="company-logo-large mx-auto mb-3 bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm">
+                        @(string.IsNullOrEmpty(Model?.CompanyLogoPath) ? Model?.CompanyName.Substring(0,1).ToUpper() : $"<img src='{Model?.CompanyLogoPath}' alt='logo' class='img-fluid rounded-circle'>")
+                    </div>
+                    <h5 class="fw-bold mb-2">@Model?.CompanyName</h5>
+                    
+                    @if (!string.IsNullOrEmpty(Model?.CompanyWebsite))
+                    {
+                        <a href="@Model?.CompanyWebsite" target="_blank" class="text-muted small text-decoration-none d-inline-flex align-items-center mb-3">
+                            <i class="bi bi-link-45deg me-1"></i> @Model?.CompanyWebsite
+                        </a>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model?.CompanyOverview))
+                    {
+                        <p class="text-muted small mb-3 text-start">@Model?.CompanyOverview</p>
+                    }
+                    
+                    <hr class="border-secondary opacity-25 my-3">
+                    
+                    @if (!string.IsNullOrEmpty(Model?.CompanySize))
+                    {
+                        <div class="d-flex align-items-center text-muted small mb-2 text-start">
+                            <i class="bi bi-people me-2 text-primary w-20px text-center"></i> Quy mô: @Model?.CompanySize
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model?.CompanyAddress))
+                    {
+                        <div class="d-flex align-items-start text-muted small text-start">
+                            <i class="bi bi-geo-alt me-2 text-primary w-20px text-center mt-1"></i> <span>@Model?.CompanyAddress</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Job Summary Card -->
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="fw-bold mb-4 border-bottom pb-3">Tổng quan công việc</h5>
+                    
+                    <ul class="list-unstyled mb-4">
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-success-subtle text-success me-3 rounded"><i class="bi bi-cash-stack"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Mức lương</span>
+                                <strong class="text-success fs-6">@FormatSalary(Model?.MinSalary, Model?.MaxSalary)</strong>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-primary-subtle text-primary me-3 rounded"><i class="bi bi-briefcase"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Hình thức</span>
+                                <strong class="text-dark">@Model?.JobTypeName</strong>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-info-subtle text-info me-3 rounded"><i class="bi bi-laptop"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Chế độ làm việc</span>
+                                <strong class="text-dark">@Model?.WorkModeName</strong>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-warning-subtle text-warning me-3 rounded"><i class="bi bi-person-plus"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Số lượng tuyển</span>
+                                <strong class="text-dark">@Model?.Vacancies người</strong>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-secondary-subtle text-secondary me-3 rounded"><i class="bi bi-tag"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Ngành nghề</span>
+                                <strong class="text-dark">@Model?.CategoryName</strong>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="icon-square bg-danger-subtle text-danger me-3 rounded"><i class="bi bi-calendar-x"></i></div>
+                            <div>
+                                <span class="d-block small text-muted">Hạn nộp hồ sơ</span>
+                                <strong class="text-danger">@Model?.ExpiredAt.ToString("dd/MM/yyyy")</strong>
+                            </div>
+                        </li>
+                    </ul>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <button class="btn btn-secondary w-100 rounded-pill py-3 fw-bold shadow mb-3" disabled><i class="bi bi-check-circle-fill me-2"></i> Ứng dụng này chỉ mang tính tham khảo</button>
+                    }
+                    else
+                    {
+                        <a href="/login" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow mb-3 apply-btn-anim"><i class="bi bi-box-arrow-in-right me-2"></i> Đăng nhập để ứng tuyển</a>
+                    }
+                    
+                    <a href="/Job" class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-medium"><i class="bi bi-arrow-left me-2"></i> Quay lại danh sách</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
