@@ -19,6 +19,7 @@
         <h3 class="fw-bold text-primary mb-0">@Model.Title</h3>
         <div class="d-flex gap-2">
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Sửa</a>
+            <a asp-controller="Application" asp-action="ByJob" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">Xem ứng viên (@Model.ApplicationCount)</a>
             <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Quay lại danh sách</a>
         </div>
     </div>

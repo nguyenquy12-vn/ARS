@@ -56,6 +56,7 @@
                                 <td>@job.ExpiredAt.ToString("dd/MM/yyyy")</td>
                                 <td class="text-end text-nowrap">
                                     <a asp-action="Details" asp-route-id="@job.Id" class="btn btn-sm btn-outline-secondary">Xem</a>
+                                    <a asp-controller="Application" asp-action="ByJob" asp-route-id="@job.Id" class="btn btn-sm btn-outline-info">Ứng viên</a>
                                     <a asp-action="Edit" asp-route-id="@job.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
                                     <form asp-action="Delete" asp-route-id="@job.Id" method="post" class="d-inline"
                                           onsubmit="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này?');">

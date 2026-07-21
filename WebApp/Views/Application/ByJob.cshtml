@@ -1,0 +1,105 @@
+@model WebApp.Models.Application.JobApplicantsViewModel
+@{
+    ViewData["Title"] = "Ứng viên: " + Model.Job.Title;
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-0">Ứng viên ứng tuyển</h3>
+            <div class="text-muted">@Model.Job.Title</div>
+        </div>
+        <a asp-controller="JobPosting" asp-action="Details" asp-route-id="@Model.Job.Id"
+           class="btn btn-outline-secondary btn-sm">← Quay lại tin</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!Model.Applicants.Any())
+    {
+        <div class="alert alert-info">Chưa có ứng viên nào nộp hồ sơ cho tin tuyển dụng này.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ứng viên</th>
+                            <th>Email</th>
+                            <th>Hồ sơ (CV)</th>
+                            <th>Ngày nộp</th>
+                            <th class="text-center">Điểm AI</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in Model.Applicants)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@a.CandidateName</td>
+                                <td>@a.CandidateEmail</td>
+                                <td>@a.ResumeTitle</td>
+                                <td>@a.AppliedAt.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center">
+                                    @if (a.AiMatchScore.HasValue)
+                                    {
+                                        <span class="badge @ScoreBadge(a.AiMatchScore.Value)">@a.AiMatchScore/100</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @StatusBadge(a.Status)">@StatusText(a.Status)</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Xem hồ sơ</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    string StatusBadge(Domain.Enums.ApplicationStatus s) => s switch
+    {
+        Domain.Enums.ApplicationStatus.Pending => "bg-secondary",
+        Domain.Enums.ApplicationStatus.Reviewing => "bg-info text-dark",
+        Domain.Enums.ApplicationStatus.EvaluatingAI => "bg-primary",
+        Domain.Enums.ApplicationStatus.Accepted => "bg-success",
+        Domain.Enums.ApplicationStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    string StatusText(Domain.Enums.ApplicationStatus s) => s switch
+    {
+        Domain.Enums.ApplicationStatus.Pending => "Chờ xem",
+        Domain.Enums.ApplicationStatus.Reviewing => "Đang xem xét",
+        Domain.Enums.ApplicationStatus.EvaluatingAI => "Đang chấm AI",
+        Domain.Enums.ApplicationStatus.Accepted => "Đạt",
+        Domain.Enums.ApplicationStatus.Rejected => "Từ chối",
+        _ => s.ToString()
+    };
+
+    string ScoreBadge(int score) => score switch
+    {
+        >= 70 => "bg-success",
+        >= 50 => "bg-warning text-dark",
+        _ => "bg-danger"
+    };
+}

@@ -16,6 +16,20 @@ public static class ErrorMessage
     public const string JobCategoryNotFound = "Ngành nghề được chọn không hợp lệ.";
     public const string JobSaveError = "Có lỗi xảy ra khi lưu tin tuyển dụng. Vui lòng thử lại.";
 
+    // Error messages for company profile (Recruiter)
+    public const string CompanyNotFound = "Không tìm thấy hồ sơ công ty.";
+    public const string CompanySaveError = "Có lỗi xảy ra khi lưu hồ sơ công ty. Vui lòng thử lại.";
+    public const string DuplicateTaxCode = "Mã số thuế này đã được đăng ký bởi một công ty khác.";
+
+    // Error messages for applications (Recruiter)
+    public const string ApplicationNotFound = "Không tìm thấy hồ sơ ứng tuyển hoặc bạn không có quyền truy cập.";
+    public const string ApplicationSaveError = "Có lỗi xảy ra khi cập nhật hồ sơ ứng tuyển. Vui lòng thử lại.";
+
+    // Error messages for AI CV evaluation (Gemini)
+    public const string CvContentMissing = "Hồ sơ ứng viên chưa có nội dung CV để chấm điểm.";
+    public const string AiNotConfigured = "Chưa cấu hình Gemini API Key. Vui lòng đặt 'Gemini:ApiKey' trong User Secrets.";
+    public const string AiEvaluationError = "Có lỗi xảy ra khi chấm điểm CV bằng AI. Vui lòng thử lại.";
+
 
 
     public const string InvalidPassword = "Invalid password.";

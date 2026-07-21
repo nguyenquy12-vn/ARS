@@ -1,0 +1,156 @@
+@model Services.DTOs.Application.ApplicationDetail
+@{
+    ViewData["Title"] = "Hồ sơ ứng tuyển";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary mb-0">Hồ sơ ứng tuyển</h3>
+        <a asp-action="ByJob" asp-route-id="@Model.JobPostingId" class="btn btn-outline-secondary btn-sm">← Danh sách ứng viên</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Thông tin ứng viên</h5>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Vị trí ứng tuyển</div>
+                        <div class="col-md-8 fw-semibold">@Model.JobTitle</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Họ tên</div>
+                        <div class="col-md-8">@Model.CandidateName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Email</div>
+                        <div class="col-md-8">@Model.CandidateEmail</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Số điện thoại</div>
+                        <div class="col-md-8">@(string.IsNullOrWhiteSpace(Model.CandidatePhone) ? "—" : Model.CandidatePhone)</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Ngày nộp</div>
+                        <div class="col-md-8">@Model.AppliedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 text-muted">Hồ sơ (CV)</div>
+                        <div class="col-md-8">
+                            @Model.ResumeTitle
+                            @if (!string.IsNullOrWhiteSpace(Model.ResumeFilePath))
+                            {
+                                <a href="@Model.ResumeFilePath" target="_blank" rel="noopener" class="ms-2 small">Tải CV</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.CoverLetter))
+            {
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold">Thư giới thiệu</h5>
+                        <p style="white-space: pre-line" class="mb-0">@Model.CoverLetter</p>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResumeRawText))
+            {
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold">Nội dung CV</h5>
+                        <p style="white-space: pre-line" class="mb-0 small">@Model.ResumeRawText</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Trạng thái duyệt</h5>
+                    <div class="mb-3">
+                        <span class="badge @StatusBadge(Model.Status) fs-6">@StatusText(Model.Status)</span>
+                    </div>
+                    <form asp-action="SetStatus" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <select name="status" class="form-select">
+                            @foreach (var s in Enum.GetValues<Domain.Enums.ApplicationStatus>())
+                            {
+                                <option value="@s" selected="@(s == Model.Status)">@StatusText(s)</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-primary text-nowrap">Cập nhật</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Đánh giá AI</h5>
+                        <form asp-action="Evaluate" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                @(Model.AiMatchScore.HasValue ? "Chấm lại" : "Chấm điểm CV")
+                            </button>
+                        </form>
+                    </div>
+
+                    @if (Model.AiMatchScore.HasValue)
+                    {
+                        <div class="mb-2">
+                            <span class="badge @ScoreBadge(Model.AiMatchScore.Value) fs-5">@Model.AiMatchScore/100</span>
+                        </div>
+                        <p style="white-space: pre-line" class="mb-0 small">@Model.AiFeedback</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">Chưa có đánh giá. Bấm "Chấm điểm CV" để AI phân tích độ phù hợp của ứng viên với tin tuyển dụng.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string StatusBadge(Domain.Enums.ApplicationStatus s) => s switch
+    {
+        Domain.Enums.ApplicationStatus.Pending => "bg-secondary",
+        Domain.Enums.ApplicationStatus.Reviewing => "bg-info text-dark",
+        Domain.Enums.ApplicationStatus.EvaluatingAI => "bg-primary",
+        Domain.Enums.ApplicationStatus.Accepted => "bg-success",
+        Domain.Enums.ApplicationStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    string StatusText(Domain.Enums.ApplicationStatus s) => s switch
+    {
+        Domain.Enums.ApplicationStatus.Pending => "Chờ xem",
+        Domain.Enums.ApplicationStatus.Reviewing => "Đang xem xét",
+        Domain.Enums.ApplicationStatus.EvaluatingAI => "Đang chấm AI",
+        Domain.Enums.ApplicationStatus.Accepted => "Đạt",
+        Domain.Enums.ApplicationStatus.Rejected => "Từ chối",
+        _ => s.ToString()
+    };
+
+    string ScoreBadge(int score) => score switch
+    {
+        >= 70 => "bg-success",
+        >= 50 => "bg-warning text-dark",
+        _ => "bg-danger"
+    };
+}
