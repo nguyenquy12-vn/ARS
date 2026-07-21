@@ -1,0 +1,80 @@
+@model WebApp.Models.JobPosting.JobPostingFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+<div class="mb-3">
+    <label asp-for="Title" class="form-label fw-semibold"></label>
+    <input asp-for="Title" class="form-control" placeholder="Ví dụ: Kỹ sư Lập trình Backend .NET" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="JobCategoryId" class="form-label fw-semibold"></label>
+        <select asp-for="JobCategoryId" asp-items="Model.Categories" class="form-select">
+            <option value="">-- Chọn ngành nghề --</option>
+        </select>
+        <span asp-validation-for="JobCategoryId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="Location" class="form-label fw-semibold"></label>
+        <input asp-for="Location" class="form-control" placeholder="Ví dụ: Cầu Giấy, Hà Nội" />
+        <span asp-validation-for="Location" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="JobType" class="form-label fw-semibold"></label>
+        <select asp-for="JobType" asp-items="Html.GetEnumSelectList<JobType>()" class="form-select"></select>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="WorkMode" class="form-label fw-semibold"></label>
+        <select asp-for="WorkMode" asp-items="Html.GetEnumSelectList<WorkMode>()" class="form-select"></select>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="Status" class="form-label fw-semibold"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<JobStatus>()" class="form-select"></select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="MinSalary" class="form-label fw-semibold"></label>
+        <input asp-for="MinSalary" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
+        <span asp-validation-for="MinSalary" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="MaxSalary" class="form-label fw-semibold"></label>
+        <input asp-for="MaxSalary" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
+        <span asp-validation-for="MaxSalary" class="text-danger small"></span>
+    </div>
+    <div class="col-md-2 mb-3">
+        <label asp-for="Vacancies" class="form-label fw-semibold"></label>
+        <input asp-for="Vacancies" class="form-control" />
+        <span asp-validation-for="Vacancies" class="text-danger small"></span>
+    </div>
+    <div class="col-md-2 mb-3">
+        <label asp-for="ExpiredAt" class="form-label fw-semibold"></label>
+        <input asp-for="ExpiredAt" type="date" class="form-control" />
+        <span asp-validation-for="ExpiredAt" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Description" class="form-label fw-semibold"></label>
+    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+    <span asp-validation-for="Description" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Requirements" class="form-label fw-semibold"></label>
+    <textarea asp-for="Requirements" class="form-control" rows="4"></textarea>
+    <span asp-validation-for="Requirements" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Benefits" class="form-label fw-semibold"></label>
+    <textarea asp-for="Benefits" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Benefits" class="text-danger small"></span>
+</div>
