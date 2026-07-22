@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ARSDbContext))]
-    partial class ARSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722004530_FixPasswordHash")]
+    partial class FixPasswordHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,9 +41,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("AppliedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("CancelReason")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CandidateId")
                         .HasColumnType("int");
@@ -336,82 +336,6 @@ namespace Infrastructure.Migrations
                             Title = "Kỹ Sư Lập Trình Backend .NET",
                             Vacancies = 3,
                             WorkMode = 3
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Benefits = "Thưởng theo KPIs, môi trường trẻ trung năng động.",
-                            CompanyId = 1,
-                            CreatedAt = new DateTime(2026, 1, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Lên kế hoạch và triển khai các chiến dịch quảng cáo trên nền tảng Digital (Facebook, Google).",
-                            ExpiredAt = new DateTime(2026, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobCategoryId = 3,
-                            JobType = 1,
-                            Location = "Thanh Xuân, Hà Nội",
-                            MaxSalary = 20000000,
-                            MinSalary = 10000000,
-                            Requirements = "Tối thiểu 1 năm kinh nghiệm chạy Ads. Có khả năng sáng tạo nội dung.",
-                            Status = 2,
-                            Title = "Chuyên viên Marketing Digital",
-                            Vacancies = 2,
-                            WorkMode = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Benefits = "Hoa hồng cao, phụ cấp ăn trưa và đi lại.",
-                            CompanyId = 1,
-                            CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Tư vấn sản phẩm dịch vụ của công ty đến với khách hàng qua điện thoại.",
-                            ExpiredAt = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobCategoryId = 2,
-                            JobType = 1,
-                            Location = "Đống Đa, Hà Nội",
-                            MaxSalary = 15000000,
-                            MinSalary = 7000000,
-                            Requirements = "Giọng nói chuẩn, giao tiếp tốt, không yêu cầu kinh nghiệm (được đào tạo).",
-                            Status = 2,
-                            Title = "Nhân viên Telesales",
-                            Vacancies = 5,
-                            WorkMode = 1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Benefits = "Hỗ trợ dấu mộc thực tập, trợ cấp 3 triệu/tháng, cơ hội lên nhân viên chính thức.",
-                            CompanyId = 1,
-                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Tham gia phát triển các tính năng Front-end cho dự án công ty bằng ReactJS.",
-                            ExpiredAt = new DateTime(2026, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobCategoryId = 1,
-                            JobType = 3,
-                            Location = "Quận 1, TP. HCM",
-                            MaxSalary = 5000000,
-                            MinSalary = 3000000,
-                            Requirements = "Sinh viên năm cuối hoặc mới ra trường, nắm chắc HTML/CSS/JS cơ bản.",
-                            Status = 2,
-                            Title = "Thực tập sinh ReactJS",
-                            Vacancies = 4,
-                            WorkMode = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Benefits = "Chế độ BHYT, BHXH đầy đủ, thưởng lễ tết hấp dẫn.",
-                            CompanyId = 1,
-                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Chịu trách nhiệm kiểm tra đối chiếu số liệu, lập báo cáo tài chính hàng tháng/quý.",
-                            ExpiredAt = new DateTime(2026, 3, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            JobCategoryId = 4,
-                            JobType = 1,
-                            Location = "Hải Châu, Đà Nẵng",
-                            MaxSalary = 18000000,
-                            MinSalary = 12000000,
-                            Requirements = "Tốt nghiệp đại học chuyên ngành Kế toán, trên 3 năm kinh nghiệm làm tổng hợp.",
-                            Status = 2,
-                            Title = "Kế toán tổng hợp",
-                            Vacancies = 1,
-                            WorkMode = 1
                         });
                 });
 

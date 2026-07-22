@@ -114,7 +114,7 @@ public class ARSDbContext : DbContext
         );
 
         // BCrypt hash of "Password123@"
-        string defaultPasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.";
+        string defaultPasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy";
 
         // Seed: Users
         modelBuilder.Entity<User>().HasData(
