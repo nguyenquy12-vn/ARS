@@ -44,6 +44,11 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
+// Gemini AI service (API key được cấu hình qua User Secrets: "Gemini:ApiKey")
+builder.Services.AddScoped<IAiService>(_ => new GeminiAiService(
+    builder.Configuration["Gemini:ApiKey"],
+    builder.Configuration["Gemini:Model"] ?? "gemini-2.0-flash"));
+
 // Register Mapster mappings
 var config = TypeAdapterConfig.GlobalSettings;
 
