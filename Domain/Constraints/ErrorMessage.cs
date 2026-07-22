@@ -30,10 +30,9 @@ public static class ErrorMessage
     public const string AiNotConfigured = "Chưa cấu hình Gemini API Key. Vui lòng đặt 'Gemini:ApiKey' trong User Secrets.";
     public const string AiEvaluationError = "Có lỗi xảy ra khi chấm điểm CV bằng AI. Vui lòng thử lại.";
 
-
+    public const string UserNotFound = "Người dùng không tồn tại";
 
     public const string InvalidPassword = "Invalid password.";
-    public const string UserNotFound = "User not found.";
     public const string UserAlreadyExists = "User already exists.";
     public const string InvalidCredentials = "Invalid credentials.";
     public const string UnauthorizedAccess = "Unauthorized access.";

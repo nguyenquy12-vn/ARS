@@ -7,5 +7,9 @@ public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest request);
 
-    Task<RegisterResponse> RegisterCandidateAsync(RegisterRequest request);
+    Task<BoolResponse> RegisterCandidateAsync(RegisterRequest request);
+
+    Task<BoolResponse> LockAccountAsync(int userId);
+
+    Task<BoolResponse> UnlockAccountAsync(int userId);
 }

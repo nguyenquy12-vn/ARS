@@ -46,7 +46,7 @@ public class AuthService : IAuthService
             return LoginResponse.Failure(ErrorMessage.AccountLocked);
         }
 
-        var userResponse = _mapper.Map<UserResponse>(user);
+        var userResponse = _mapper.Map<UserAuthResponse>(user);
 
         var permissions = await _context.RolePermissions
             .Where(p => p.RoleId == user.RoleId)
@@ -57,18 +57,18 @@ public class AuthService : IAuthService
         return LoginResponse.Success(userResponse, permissions);
     }
 
-    public async Task<RegisterResponse> RegisterCandidateAsync(RegisterRequest request)
+    public async Task<BoolResponse> RegisterCandidateAsync(RegisterRequest request)
     {
         var isEmailExist = await _context.Users.AnyAsync(u => u.Email == request.Email);
         if (isEmailExist)
         {
-            return RegisterResponse.Failure(ErrorMessage.DuplicateEmail);
+            return BoolResponse.Failure(ErrorMessage.DuplicateEmail);
         }
 
         var candidateRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Candidate");
         if (candidateRole == null)
         {
-            return RegisterResponse.Failure(ErrorMessage.CandidateRoleNotAvailable);
+            return BoolResponse.Failure(ErrorMessage.CandidateRoleNotAvailable);
         }
 
         string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -86,11 +86,45 @@ public class AuthService : IAuthService
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
 
-            return RegisterResponse.Success();
+            return BoolResponse.Success();
         }
         catch (Exception ex)
         {
-            return RegisterResponse.Failure(ErrorMessage.ExceptionError);
+            return BoolResponse.Failure(ErrorMessage.ExceptionError);
         }
     }
+
+    public async Task<BoolResponse> LockAccountAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return BoolResponse.Failure(ErrorMessage.UserNotFound);
+        }
+
+        user.Status = UserStatus.Locked;
+        _context.Users.Update(user);
+
+        await _context.SaveChangesAsync();
+
+        return BoolResponse.Success();
+
+    }
+    public async Task<BoolResponse> UnlockAccountAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return BoolResponse.Failure(ErrorMessage.UserNotFound);
+        }
+
+        user.Status = UserStatus.Active;
+        _context.Users.Update(user);
+
+        await _context.SaveChangesAsync();
+
+        return BoolResponse.Success();
+
+    }
+
 }

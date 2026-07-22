@@ -65,9 +65,9 @@ public class ARSDbContext : DbContext
 
         // Seed: Roles
         modelBuilder.Entity<Role>().HasData(
-            new Role { Id = 1, Name = "Admin", Description = "Quản trị viên toàn quyền hệ thống" },
-            new Role { Id = 2, Name = "Recruiter", Description = "Nhà tuyển dụng (Đăng tin, duyệt CV, dùng AI)" },
-            new Role { Id = 3, Name = "Candidate", Description = "Ứng viên (Tìm việc, nộp CV)" }
+            new Role { Id = 1, Name = "Admin", DisplayedName = "Quản trị viên", Description = "Quản trị viên toàn quyền hệ thống" },
+            new Role { Id = 2, Name = "Recruiter", DisplayedName = "Nhà tuyển dụng", Description = "Nhà tuyển dụng (Đăng tin, duyệt CV, dùng AI)" },
+            new Role { Id = 3, Name = "Candidate", DisplayedName = "Ứng viên", Description = "Ứng viên (Tìm việc, nộp CV)" }
         );
 
         // Seed: JobCategories
