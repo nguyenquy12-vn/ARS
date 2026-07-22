@@ -1,8 +1,6 @@
-﻿using Domain.Enums;
+﻿namespace Services.DTOs.User;
 
-namespace Services.DTOs.Auth;
-
-public class UserResponse
+public class UserDto
 {
     public int Id { get; set; } = 0;
 
@@ -14,7 +12,9 @@ public class UserResponse
 
     public string RoleName { get; set; } = string.Empty;
 
-    public string Status { get; set; } = UserStatus.Active.ToString();
+    public string DisplayedRoleName { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

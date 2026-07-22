@@ -19,4 +19,8 @@ public interface IJobPostingService
     Task<List<JobPostingListDto>> GetActiveJobsAsync(string? keyword, int? categoryId, JobType? jobType, WorkMode? workMode);
     Task<JobPostingDetailDto?> GetJobDetailAsync(int id);
     Task<List<JobPostingListDto>> GetLatestJobsAsync(int count);
+
+    Task<List<JobListItem>> GetAllJobsAsync();
+
+    Task<JobDetailsResponse> GetJobDetailsAsync(int id);
 }

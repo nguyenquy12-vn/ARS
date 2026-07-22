@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Implementations;
 using Services.Interfaces;
+using WebApp.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,7 @@ builder.Services.AddAuthorization(options =>
     {
         string permissionName = permission.ToString();
 
-        options.AddPolicy($"Can{permissionName}", policy =>
+        options.AddPolicy(permissionName, policy =>
             policy.RequireClaim("Permission", permissionName));
     }
 });
@@ -43,6 +44,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Gemini AI service (API key được cấu hình qua User Secrets: "Gemini:ApiKey")
 builder.Services.AddScoped<IAiService>(_ => new GeminiAiService(
@@ -87,7 +89,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
+app.UseMiddleware<UserStatusValidationMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(

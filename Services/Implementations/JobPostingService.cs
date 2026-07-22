@@ -2,6 +2,7 @@ using Domain.Constraints;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using Services.DTOs.JobPosting;
 using Services.Interfaces;
@@ -11,10 +12,12 @@ namespace Services.Implementations;
 public class JobPostingService : IJobPostingService
 {
     private readonly ARSDbContext _context;
+    private readonly IMapper _mapper;
 
-    public JobPostingService(ARSDbContext context)
+    public JobPostingService(ARSDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
     public async Task<List<JobPostingListItem>> GetRecruiterJobsAsync(int recruiterId)
@@ -318,5 +321,31 @@ public class JobPostingService : IJobPostingService
             .ToListAsync();
 
         return jobs;
+    }
+
+    public async Task<List<JobListItem>> GetAllJobsAsync()
+    {
+        var jobs = await _context.JobPostings
+            .Include(j => j.Company)
+            .Include(j => j.JobCategory)
+            .Include(j => j.Applications)
+            .ToListAsync();
+        return _mapper.Map<List<JobListItem>>(jobs);
+    }
+
+    public async Task<JobDetailsResponse> GetJobDetailsAsync(int id)
+    {
+        var job = await _context.JobPostings
+            .Include(j => j.Company)
+            .Include(j => j.JobCategory)
+            .Include(j => j.Applications)
+            .ThenInclude(a => a.Candidate)
+            .FirstOrDefaultAsync(j => j.Id == id);
+        if (job == null)
+        {
+            return JobDetailsResponse.Failure(ErrorMessage.JobNotFound);
+        }
+        
+        return JobDetailsResponse.Success(_mapper.Map<JobDto>(job));
     }
 }
