@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Enums; // Gọi ApplicationStatus đã định nghĩa từ bài trước
 
@@ -40,6 +40,9 @@ public class Application
     // Trạng thái đơn ứng tuyển (Sử dụng ApplicationStatus Enum: Pending, Reviewing, EvaluatingAI, Accepted, Rejected)
     [Required]
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
+
+    // Lý do ứng viên từ chối/rút lui các bước tuyển dụng
+    public string? CancelReason { get; set; }
 
     // ==========================================
     // CÁC TRƯỜNG DÀNH CHO GEMINI AI CHẤM ĐIỂM 🌟

@@ -39,6 +39,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Job" asp-action="Index">Việc làm</a>
                         </li>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim("Permission", "ApplyJob"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Candidate" asp-action="MyApplications">Việc làm đã ứng tuyển</a>
+                            </li>
+                        }
                         @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Recruiter"))
                         {
                             <li class="nav-item">

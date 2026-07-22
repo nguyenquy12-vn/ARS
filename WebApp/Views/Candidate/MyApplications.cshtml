@@ -1,0 +1,145 @@
+@model List<Services.DTOs.Application.ApplicationDto>
+
+@{
+    ViewData["Title"] = "Việc làm đã ứng tuyển";
+}
+
+<div class="page-header bg-primary text-white py-4">
+    <div class="container py-3">
+        <h2 class="mb-0 fw-bold">Việc làm đã ứng tuyển</h2>
+        <p class="mb-0 text-white-50 mt-1">Quản lý và theo dõi tiến độ các đơn ứng tuyển của bạn</p>
+    </div>
+</div>
+
+<div class="container py-5 min-vh-100">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4 py-3 border-0 rounded-top-start-4">Công việc</th>
+                                <th scope="col" class="py-3 border-0">Ngày nộp</th>
+                                <th scope="col" class="py-3 border-0">Trạng thái</th>
+                                <th scope="col" class="py-3 border-0 text-end pe-4 rounded-top-end-4">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="company-logo bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded me-3 shadow-sm" style="width: 48px; height: 48px;">
+                                                @(string.IsNullOrEmpty(item.CompanyLogoPath) ? item.CompanyName.Substring(0,1).ToUpper() : $"<img src='{item.CompanyLogoPath}' alt='logo' class='img-fluid rounded'>")
+                                            </div>
+                                            <div>
+                                                <a href="/Job/Detail/@item.JobPostingId" class="text-dark fw-bold text-decoration-none d-block mb-1">@item.JobTitle</a>
+                                                <span class="text-muted small"><i class="bi bi-building me-1"></i> @item.CompanyName</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="text-muted"><i class="bi bi-calendar-event me-1"></i> @item.AppliedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </td>
+                                    <td class="py-3">
+                                        @switch (item.Status)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-secondary rounded-pill fw-normal px-3 py-2"><i class="bi bi-hourglass-split me-1"></i> Chờ xử lý</span>
+                                                break;
+                                            case "Reviewing":
+                                                <span class="badge bg-info text-dark rounded-pill fw-normal px-3 py-2"><i class="bi bi-search me-1"></i> Đang xem xét</span>
+                                                break;
+                                            case "Accepted":
+                                                <span class="badge bg-success rounded-pill fw-normal px-3 py-2"><i class="bi bi-check-circle me-1"></i> Trúng tuyển / Hẹn phỏng vấn</span>
+                                                break;
+                                            case "Rejected":
+                                                <span class="badge bg-danger rounded-pill fw-normal px-3 py-2"><i class="bi bi-x-circle me-1"></i> Bị từ chối</span>
+                                                break;
+                                            case "Withdrawn":
+                                                <span class="badge bg-dark rounded-pill fw-normal px-3 py-2"><i class="bi bi-slash-circle me-1"></i> Đã rút/Từ chối</span>
+                                                @if (!string.IsNullOrEmpty(item.CancelReason))
+                                                {
+                                                    <div class="small text-muted mt-1 fst-italic">Lý do: @item.CancelReason</div>
+                                                }
+                                                break;
+                                            default:
+                                                <span class="badge bg-primary rounded-pill fw-normal px-3 py-2">@item.Status</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="py-3 text-end pe-4">
+                                        @if (item.Status == "Pending" || item.Status == "Reviewing" || item.Status == "Accepted")
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#withdrawModal_@item.Id">
+                                                Từ chối / Hủy
+                                            </button>
+                                            
+                                            <!-- Modal Withdraw -->
+                                            <div class="modal fade text-start" id="withdrawModal_@item.Id" tabindex="-1" aria-labelledby="withdrawModalLabel_@item.Id" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-4 border-0 shadow">
+                                                        <div class="modal-header border-bottom-0 bg-light rounded-top-4 py-3">
+                                                            <h5 class="modal-title fw-bold text-danger" id="withdrawModalLabel_@item.Id"><i class="bi bi-exclamation-triangle me-2"></i> Xác nhận hủy ứng tuyển</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <form action="/Candidate/Withdraw" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="applicationId" value="@item.Id" />
+                                                            <div class="modal-body p-4">
+                                                                <p class="mb-3">Bạn đang hủy / từ chối tiến trình tuyển dụng cho công việc <strong>@item.JobTitle</strong>.</p>
+                                                                <div class="mb-3">
+                                                                    <label for="reason_@item.Id" class="form-label fw-medium">Lý do từ chối <span class="text-danger">*</span></label>
+                                                                    <textarea class="form-control" id="reason_@item.Id" name="reason" rows="3" required placeholder="Ví dụ: Đã tìm được công việc khác, Chế độ không phù hợp..."></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                                                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-medium">Xác nhận Hủy</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>Không khả dụng</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="display-1 text-muted mb-3 opacity-25"><i class="bi bi-inbox"></i></div>
+                    <h5 class="text-muted fw-normal">Bạn chưa ứng tuyển công việc nào.</h5>
+                    <a href="/Job" class="btn btn-primary rounded-pill px-4 mt-3">Tìm việc ngay</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

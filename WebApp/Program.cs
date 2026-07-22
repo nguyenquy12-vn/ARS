@@ -60,6 +60,20 @@ builder.Services.AddScoped<IMapper, Mapper>();
 
 var app = builder.Build();
 
+// Tự động cập nhật hạn nộp hồ sơ của tất cả công việc thành năm 2027 khi ứng dụng chạy
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
+        dbContext.Database.ExecuteSqlRaw("UPDATE JobPostings SET ExpiredAt = '2027-12-31 23:59:59' WHERE ExpiredAt < '2027-01-01'");
+    }
+    catch
+    {
+        // Bỏ qua nếu DB chưa được khởi tạo
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
