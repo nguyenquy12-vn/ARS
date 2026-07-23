@@ -137,7 +137,7 @@ public class AiService : IAiService
         if (cvText.Length > 5000) cvText = cvText[..5000];
 
         var priority = string.IsNullOrWhiteSpace(s.PriorityNote)
-            ? "(không có ghi chú ưu tiên đặc biệt)"
+            ? "(không có yêu cầu bắt buộc đặc biệt)"
             : s.PriorityNote.Trim();
 
         return $@"Bạn là chuyên gia tuyển dụng. Hãy so khớp CV của ứng viên với Mô tả công việc (JD) và CHẤM ĐIỂM theo TRỌNG SỐ mà nhà tuyển dụng đặt ra.
@@ -152,7 +152,7 @@ CHỈ trả về JSON đúng schema sau, không thêm bất kỳ chữ nào khá
     ""achievement"": <0-100>
   }},
   ""matched_skills"": [""kỹ năng/kinh nghiệm trong CV KHỚP yêu cầu JD""],
-  ""missing_skills"": [""yêu cầu quan trọng của JD mà CV còn THIẾU""],
+  ""missing_skills"": [""yêu cầu quan trọng của JD hoặc must-have mà CV còn THIẾU""],
   ""strengths"": [""2-4 điểm mạnh nổi bật so với JD""],
   ""concerns"": [""2-4 điểm yếu / rủi ro so với JD""],
   ""summary"": ""2-3 câu tiếng Việt giải thích điểm số"",
@@ -165,8 +165,11 @@ CHỈ trả về JSON đúng schema sau, không thêm bất kỳ chữ nào khá
 - Học vấn / chứng chỉ: {s.WeightEducation}%
 - Thành tựu / dự án: {s.WeightAchievement}%
 
-# ƯU TIÊN ĐẶC BIỆT CỦA NHÀ TUYỂN DỤNG (cho điểm cao nếu đáp ứng)
+# YÊU CẦU BẮT BUỘC (MUST-HAVE) CỦA NHÀ TUYỂN DỤNG — ƯU TIÊN CAO NHẤT
 {priority}
+QUAN TRỌNG: Đây là điều kiện BẮT BUỘC. Hãy kiểm tra kỹ ứng viên có đáp ứng KHÔNG.
+- Nếu ứng viên KHÔNG đáp ứng dù chỉ một must-have (ví dụ yêu cầu 4 năm kinh nghiệm nhưng ứng viên chỉ có 3 năm): match_score KHÔNG được vượt quá 50, verdict CHỈ được là ""Cân nhắc"" hoặc ""Chưa phù hợp"", và phải ghi rõ điểm thiếu vào ""missing_skills"" + ""concerns"".
+- Chỉ khi ứng viên đáp ứng ĐẦY ĐỦ must-have thì mới được xét các mức điểm cao (""Phù hợp"", ""Rất phù hợp"").
 
 Thang verdict: 85-100 Rất phù hợp; 70-84 Phù hợp; 50-69 Cân nhắc; dưới 50 Chưa phù hợp.
 
