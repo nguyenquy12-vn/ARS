@@ -245,6 +245,10 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge @StatusBadge(a.Status)">@StatusText(a.Status)</span>
+                                @if (a.InterviewAt.HasValue)
+                                {
+                                    <div class="text-muted small mt-1"><i class="bi bi-calendar-event"></i> @a.InterviewAt.Value.ToString("HH:mm dd/MM")</div>
+                                }
                             </td>
                             <td class="text-center">
                                 @if (!string.IsNullOrWhiteSpace(a.ResumeFilePath))
@@ -258,14 +262,54 @@
                                     <span class="text-muted">—</span>
                                 }
                             </td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Xem hồ sơ</a>
+                            <td class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-success"
+                                        onclick="openInterview(@a.Id, '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(a.CandidateName))', '@(a.InterviewAt?.ToString("yyyy-MM-ddTHH:mm"))', '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(a.InterviewNote ?? ""))')">
+                                    <i class="bi bi-calendar-plus"></i> Hẹn PV
+                                </button>
+                                <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Xem</a>
                             </td>
                         </tr>
                     }
                 }
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal hẹn phỏng vấn -->
+<div class="modal fade" id="interviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <form asp-action="ScheduleInterview" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="ivAppId" />
+                <input type="hidden" name="jobId" value="@Model.Job.Id" />
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Hẹn phỏng vấn: <span id="ivName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Thời gian phỏng vấn <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="interviewAt" id="ivTime" required class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Địa điểm / Link / Ghi chú</label>
+                        <input type="text" name="note" id="ivNote" maxlength="500" class="form-control"
+                               placeholder="VD: Google Meet meet.google.com/... hoặc Tầng 5, tòa nhà ABC" />
+                    </div>
+                    <div class="text-muted small">
+                        <i class="bi bi-envelope"></i> Hệ thống sẽ tự gửi email mời phỏng vấn tới ứng viên
+                        (cần cấu hình email trong <strong>Hồ sơ cá nhân</strong>).
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">Lưu &amp; Gửi email</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -277,6 +321,7 @@
         Domain.Enums.ApplicationStatus.Pending => "bg-secondary",
         Domain.Enums.ApplicationStatus.Reviewing => "bg-info text-dark",
         Domain.Enums.ApplicationStatus.EvaluatingAI => "bg-primary",
+        Domain.Enums.ApplicationStatus.Interview => "bg-warning text-dark",
         Domain.Enums.ApplicationStatus.Accepted => "bg-success",
         Domain.Enums.ApplicationStatus.Rejected => "bg-danger",
         _ => "bg-secondary"
@@ -287,6 +332,7 @@
         Domain.Enums.ApplicationStatus.Pending => "Chờ xem",
         Domain.Enums.ApplicationStatus.Reviewing => "Đang xem xét",
         Domain.Enums.ApplicationStatus.EvaluatingAI => "Đang chấm AI",
+        Domain.Enums.ApplicationStatus.Interview => "Đã hẹn PV",
         Domain.Enums.ApplicationStatus.Accepted => "Đạt",
         Domain.Enums.ApplicationStatus.Rejected => "Từ chối",
         _ => s.ToString()
@@ -374,6 +420,14 @@
                 : /Cân nhắc/.test(v) ? 'bg-warning text-dark' : 'bg-danger';
             cell.innerHTML = `<span class="r-score ${cls}">${score}<span class="unit">/100</span></span>`
                 + (v ? `<div><span class="badge ${vcls}">${v}</span></div>` : '');
+        }
+
+        function openInterview(appId, name, time, note) {
+            document.getElementById('ivAppId').value = appId;
+            document.getElementById('ivName').textContent = name;
+            document.getElementById('ivTime').value = time || '';
+            document.getElementById('ivNote').value = note || '';
+            new bootstrap.Modal(document.getElementById('interviewModal')).show();
         }
     </script>
 }

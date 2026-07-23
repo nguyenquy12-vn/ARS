@@ -1,0 +1,82 @@
+@model WebApp.Models.Profile.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<h3 class="fw-bold mb-4">Hồ sơ cá nhân</h3>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3">Thông tin cá nhân</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <h6 class="fw-bold mb-1">Cài đặt Email (SMTP)</h6>
+            <p class="text-muted small mb-3">
+                Dùng để gửi mail hẹn phỏng vấn / thông báo cho ứng viên. Với Gmail: Host <code>smtp.gmail.com</code>,
+                Port <code>587</code>, Password là <strong>App Password</strong> (không phải mật khẩu đăng nhập).
+            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="SmtpHost" class="form-label"></label>
+                    <input asp-for="SmtpHost" class="form-control" placeholder="smtp.gmail.com" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SmtpPort" class="form-label"></label>
+                    <input asp-for="SmtpPort" class="form-control" placeholder="587" />
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input asp-for="SmtpEnableSsl" class="form-check-input" />
+                        <label asp-for="SmtpEnableSsl" class="form-check-label"></label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpUsername" class="form-label"></label>
+                    <input asp-for="SmtpUsername" class="form-control" placeholder="you@gmail.com" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpPassword" class="form-label"></label>
+                    <input asp-for="SmtpPassword" type="password" class="form-control" autocomplete="new-password" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpFromEmail" class="form-label"></label>
+                    <input asp-for="SmtpFromEmail" class="form-control" placeholder="you@gmail.com" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary fw-semibold">Lưu hồ sơ</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

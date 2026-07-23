@@ -105,6 +105,9 @@
                 <a class="nav-link @NavActive("Company")" asp-controller="Company" asp-action="Index">
                     <i class="bi bi-building"></i><span>Hồ sơ công ty</span>
                 </a>
+                <a class="nav-link @NavActive("Profile")" asp-controller="Profile" asp-action="Edit">
+                    <i class="bi bi-person-gear"></i><span>Hồ sơ cá nhân</span>
+                </a>
             </nav>
             <div class="mt-auto p-3 border-top border-secondary">
                 <form asp-controller="Auth" asp-action="Logout" method="post">

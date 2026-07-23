@@ -59,4 +59,9 @@ public class Application
     public string? AiConcerns { get; set; }         // điểm yếu / rủi ro so với JD
     public string? AiRecommendation { get; set; }   // Mời phỏng vấn | Cân nhắc thêm | Loại
     public DateTime? AiScoredAt { get; set; }
+
+    // ===== Lịch phỏng vấn =====
+    public DateTime? InterviewAt { get; set; }
+    [StringLength(500)]
+    public string? InterviewNote { get; set; }       // địa điểm / link Google Meet / ghi chú
 }

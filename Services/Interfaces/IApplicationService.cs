@@ -33,6 +33,9 @@ public interface IApplicationService
     // Cập nhật trạng thái duyệt hồ sơ (Reviewing / Accepted / Rejected...)
     Task<ApplicationResult> UpdateStatusAsync(int applicationId, int recruiterId, ApplicationStatus status);
 
+    // Hẹn lịch phỏng vấn cho ứng viên + gửi email mời. Trả về (ok, lỗi, thông tin gửi mail).
+    Task<(bool ok, string? error, string? mailInfo)> ScheduleInterviewAsync(int applicationId, int recruiterId, DateTime interviewAt, string? note);
+
     // Chấm điểm CV bằng Gemini AI và lưu kết quả (AiMatchScore + AiFeedback)
     Task<ApplicationResult> EvaluateWithAiAsync(int applicationId, int recruiterId);
 }

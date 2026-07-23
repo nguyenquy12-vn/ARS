@@ -23,6 +23,10 @@ public class ApplicantListItem
     public List<string> MatchConcerns { get; set; } = new();
     public bool HasScore { get; set; }
 
+    // Lịch phỏng vấn
+    public DateTime? InterviewAt { get; set; }
+    public string? InterviewNote { get; set; }
+
     // ===== Thông tin AI trích xuất từ CV (giống Kho CV) =====
     public string? CvTitle { get; set; }
     public double? TotalYears { get; set; }

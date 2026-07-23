@@ -11,11 +11,13 @@ public class ApplicationService : IApplicationService
 {
     private readonly ARSDbContext _context;
     private readonly IAiService _aiService;
+    private readonly IEmailService _emailService;
 
-    public ApplicationService(ARSDbContext context, IAiService aiService)
+    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService)
     {
         _context = context;
         _aiService = aiService;
+        _emailService = emailService;
     }
 
     public async Task<List<ApplicantListItem>> GetApplicantsForJobAsync(int jobId, int recruiterId)
@@ -62,7 +64,9 @@ public class ApplicationService : IApplicationService
             Weaknesses = !string.IsNullOrWhiteSpace(a.Resume?.AiWeaknesses)
                 ? a.Resume!.AiWeaknesses!.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
                 : new List<string>(),
-            ResumeFilePath = a.Resume?.FilePath
+            ResumeFilePath = a.Resume?.FilePath,
+            InterviewAt = a.InterviewAt,
+            InterviewNote = a.InterviewNote
         }).ToList();
     }
 
@@ -134,6 +138,8 @@ public class ApplicationService : IApplicationService
     public async Task<ApplicationResult> UpdateStatusAsync(int applicationId, int recruiterId, ApplicationStatus status)
     {
         var application = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.JobPosting)
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPosting!.Company!.RecruiterId == recruiterId);
 
         if (application == null)
@@ -146,12 +152,86 @@ public class ApplicationService : IApplicationService
         try
         {
             await _context.SaveChangesAsync();
+
+            // Gửi email thông báo khi Đạt / Từ chối
+            if (status is ApplicationStatus.Accepted or ApplicationStatus.Rejected)
+            {
+                await NotifyStatusAsync(application, recruiterId, status);
+            }
+
             return ApplicationResult.Success(application.Id, application.JobPostingId);
         }
         catch (Exception)
         {
             return ApplicationResult.Failure(ErrorMessage.ApplicationSaveError);
         }
+    }
+
+    public async Task<(bool ok, string? error, string? mailInfo)> ScheduleInterviewAsync(int applicationId, int recruiterId, DateTime interviewAt, string? note)
+    {
+        var application = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.JobPosting)
+            .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPosting!.Company!.RecruiterId == recruiterId);
+
+        if (application == null)
+        {
+            return (false, ErrorMessage.ApplicationNotFound, null);
+        }
+
+        application.InterviewAt = interviewAt;
+        application.InterviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        application.Status = ApplicationStatus.Interview;
+        await _context.SaveChangesAsync();
+
+        // Gửi email mời phỏng vấn
+        var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
+        var candidateEmail = application.Candidate?.Email;
+        if (recruiter == null || string.IsNullOrWhiteSpace(candidateEmail))
+        {
+            return (true, null, "Đã lưu lịch nhưng chưa gửi được email (thiếu thông tin).");
+        }
+
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+        var subject = $"[Mời phỏng vấn] {jobTitle}";
+        var body = $@"
+<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Bạn được mời tham gia phỏng vấn cho vị trí <strong>{jobTitle}</strong>.</p>
+<ul>
+  <li><strong>Thời gian:</strong> {interviewAt:HH:mm dddd, dd/MM/yyyy}</li>
+  {(string.IsNullOrWhiteSpace(note) ? "" : $"<li><strong>Địa điểm / Ghi chú:</strong> {note}</li>")}
+</ul>
+<p>Vui lòng phản hồi email này để xác nhận. Trân trọng,<br/>{recruiter.FullName}</p>";
+
+        var (ok, error) = await _emailService.SendAsync(recruiter, candidateEmail, subject, body);
+        var mailInfo = ok ? $"Đã gửi email mời phỏng vấn tới {candidateEmail}." : $"Đã lưu lịch. Gửi email lỗi: {error}";
+        return (true, null, mailInfo);
+    }
+
+    private async Task NotifyStatusAsync(Domain.Entities.Application application, int recruiterId, ApplicationStatus status)
+    {
+        var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
+        var candidateEmail = application.Candidate?.Email;
+        if (recruiter == null || string.IsNullOrWhiteSpace(candidateEmail)) return;
+
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+        string subject, body;
+        if (status == ApplicationStatus.Accepted)
+        {
+            subject = $"[Kết quả ứng tuyển] Chúc mừng - {jobTitle}";
+            body = $@"<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Chúc mừng! Hồ sơ của bạn cho vị trí <strong>{jobTitle}</strong> đã được chấp nhận. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.</p>
+<p>Trân trọng,<br/>{recruiter.FullName}</p>";
+        }
+        else
+        {
+            subject = $"[Kết quả ứng tuyển] {jobTitle}";
+            body = $@"<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Cảm ơn bạn đã ứng tuyển vị trí <strong>{jobTitle}</strong>. Rất tiếc, hồ sơ của bạn chưa phù hợp ở thời điểm này. Chúc bạn sớm tìm được công việc phù hợp.</p>
+<p>Trân trọng,<br/>{recruiter.FullName}</p>";
+        }
+
+        await _emailService.SendAsync(recruiter, candidateEmail, subject, body);
     }
 
     public async Task<ApplicationResult> EvaluateWithAiAsync(int applicationId, int recruiterId)

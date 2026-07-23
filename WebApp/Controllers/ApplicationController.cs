@@ -167,4 +167,22 @@ public class ApplicationController : Controller
 
         return RedirectToAction(nameof(Details), new { id });
     }
+
+    // POST /Application/ScheduleInterview -> hẹn lịch phỏng vấn + gửi email mời
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> ScheduleInterview(int id, int jobId, DateTime interviewAt, string? note)
+    {
+        var (ok, error, mailInfo) = await _applicationService.ScheduleInterviewAsync(id, CurrentUserId, interviewAt, note);
+        if (ok)
+        {
+            TempData["Success"] = mailInfo ?? "Đã lưu lịch phỏng vấn.";
+        }
+        else
+        {
+            TempData["Error"] = error;
+        }
+        return RedirectToAction(nameof(ByJob), new { id = jobId });
+    }
 }
