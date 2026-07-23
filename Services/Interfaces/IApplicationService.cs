@@ -11,6 +11,22 @@ public interface IApplicationService
     // Trích xuất thông tin CV bằng AI cho các ứng viên chưa phân tích. Trả về số CV đã phân tích.
     Task<int> AnalyzeApplicantsAsync(int jobId, int recruiterId);
 
+    // Chấm điểm ứng viên theo JD. rescoreAll=false: chỉ chấm ứng viên chưa chấm; true: chấm lại tất cả.
+    Task<(int scored, string? error)> ScoreApplicantsAsync(int jobId, int recruiterId, bool rescoreAll);
+
+    // Chấm điểm 1 ứng viên (dùng cho tiến trình từng bước). Trả về điểm + kết luận.
+    Task<(bool ok, string? error, int score, string? verdict)> ScoreApplicantAsync(int applicationId, int recruiterId);
+
+    // Lưu cài đặt trọng số chấm điểm cho một tin tuyển dụng.
+    Task<bool> SaveJdSettingsAsync(int jobId, int recruiterId, JdEvalSettings settings);
+
+    // ===== Phía ứng viên (Candidate) =====
+    // Ứng tuyển: upload CV (PDF) + lời nhắn -> tạo Resume + Application.
+    Task<(bool ok, string? error)> ApplyAsync(int jobId, int candidateId, string fileName, string filePath, byte[] pdfBytes, string? coverLetter);
+
+    // Kiểm tra ứng viên đã ứng tuyển tin này chưa.
+    Task<bool> HasAppliedAsync(int jobId, int candidateId);
+
     // Chi tiết một hồ sơ ứng tuyển
     Task<ApplicationDetail?> GetDetailAsync(int applicationId, int recruiterId);
 

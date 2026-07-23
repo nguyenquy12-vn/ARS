@@ -22,7 +22,7 @@ public class AiService : IAiService
         _settings = settings;
     }
 
-    public async Task<CvMatchResult> MatchCvAsync(string jobTitle, string description, string requirements, string cvText)
+    public async Task<CvMatchResult> MatchCvAsync(string jobTitle, string description, string requirements, string cvText, JdEvalSettings settings)
     {
         if (string.IsNullOrWhiteSpace(cvText))
         {
@@ -31,7 +31,7 @@ public class AiService : IAiService
 
         try
         {
-            var text = await SendChatAsync(BuildMatchPrompt(jobTitle, description, requirements, cvText));
+            var text = await SendChatAsync(BuildMatchPrompt(jobTitle, description, requirements, cvText, settings));
             return ParseMatch(text);
         }
         catch (AiException ex)
@@ -132,20 +132,43 @@ public class AiService : IAiService
     }
 
     // ===== Prompt: so khớp CV với JD =====
-    private static string BuildMatchPrompt(string title, string description, string requirements, string cvText)
+    private static string BuildMatchPrompt(string title, string description, string requirements, string cvText, JdEvalSettings s)
     {
-        if (cvText.Length > 8000) cvText = cvText[..8000];
+        if (cvText.Length > 5000) cvText = cvText[..5000];
 
-        return $@"Bạn là chuyên gia tuyển dụng. Hãy so khớp CV của ứng viên với Mô tả công việc (JD).
+        var priority = string.IsNullOrWhiteSpace(s.PriorityNote)
+            ? "(không có ghi chú ưu tiên đặc biệt)"
+            : s.PriorityNote.Trim();
+
+        return $@"Bạn là chuyên gia tuyển dụng. Hãy so khớp CV của ứng viên với Mô tả công việc (JD) và CHẤM ĐIỂM theo TRỌNG SỐ mà nhà tuyển dụng đặt ra.
 CHỈ trả về JSON đúng schema sau, không thêm bất kỳ chữ nào khác:
 {{
-  ""match_score"": <số nguyên 0-100, mức độ phù hợp tổng thể>,
-  ""summary"": ""2-3 câu tiếng Việt giải thích vì sao đạt điểm như vậy"",
-  ""strengths"": [""2-4 điểm mạnh so với JD""],
-  ""concerns"": [""2-4 điểm còn thiếu hoặc rủi ro""],
+  ""match_score"": <số nguyên 0-100, điểm phù hợp tổng thể tính theo trọng số bên dưới>,
+  ""verdict"": ""<một trong: Rất phù hợp | Phù hợp | Cân nhắc | Chưa phù hợp>"",
+  ""breakdown"": {{
+    ""experience"": <0-100>,
+    ""skills"": <0-100>,
+    ""education"": <0-100>,
+    ""achievement"": <0-100>
+  }},
+  ""matched_skills"": [""kỹ năng/kinh nghiệm trong CV KHỚP yêu cầu JD""],
+  ""missing_skills"": [""yêu cầu quan trọng của JD mà CV còn THIẾU""],
+  ""strengths"": [""2-4 điểm mạnh nổi bật so với JD""],
+  ""concerns"": [""2-4 điểm yếu / rủi ro so với JD""],
+  ""summary"": ""2-3 câu tiếng Việt giải thích điểm số"",
   ""recommendation"": ""<một trong: Mời phỏng vấn | Cân nhắc thêm | Loại>""
 }}
-Thang điểm: 85-100 Rất phù hợp; 70-84 Phù hợp; 50-69 Cân nhắc; dưới 50 Chưa phù hợp.
+
+# TRỌNG SỐ CHẤM ĐIỂM (tổng 100) — match_score ≈ trung bình có trọng số của breakdown
+- Kinh nghiệm liên quan: {s.WeightExperience}%
+- Kỹ năng khớp yêu cầu: {s.WeightSkills}%
+- Học vấn / chứng chỉ: {s.WeightEducation}%
+- Thành tựu / dự án: {s.WeightAchievement}%
+
+# ƯU TIÊN ĐẶC BIỆT CỦA NHÀ TUYỂN DỤNG (cho điểm cao nếu đáp ứng)
+{priority}
+
+Thang verdict: 85-100 Rất phù hợp; 70-84 Phù hợp; 50-69 Cân nhắc; dưới 50 Chưa phù hợp.
 
 # MÔ TẢ CÔNG VIỆC
 Vị trí: {title}
@@ -165,7 +188,10 @@ Yêu cầu: {requirements}
             var root = doc.RootElement;
 
             var score = (int)Math.Clamp(ReadDouble(root, "match_score"), 0, 100);
+            var verdict = ReadString(root, "verdict");
             var summary = ReadString(root, "summary");
+            var matched = ReadList(root, "matched_skills");
+            var missing = ReadList(root, "missing_skills");
             var strengths = ReadList(root, "strengths");
             var concerns = ReadList(root, "concerns");
             var recommendation = ReadString(root, "recommendation");
@@ -191,7 +217,19 @@ Yêu cầu: {requirements}
             }
 
             var text = feedback.ToString().Trim();
-            return CvMatchResult.Success(score, string.IsNullOrWhiteSpace(text) ? content.Trim() : text);
+            return new CvMatchResult
+            {
+                IsSuccess = true,
+                MatchScore = score,
+                Verdict = NullIfEmpty(verdict),
+                MatchedSkills = matched,
+                MissingSkills = missing,
+                Strengths = strengths,
+                Concerns = concerns,
+                Summary = string.IsNullOrWhiteSpace(summary) ? text : summary,
+                Recommendation = NullIfEmpty(recommendation),
+                Feedback = string.IsNullOrWhiteSpace(text) ? content.Trim() : text
+            };
         }
         catch
         {
@@ -202,7 +240,7 @@ Yêu cầu: {requirements}
     // ===== Prompt: trích xuất thông tin CV (cho Kho CV / cột ứng viên) =====
     private static string BuildExtractPrompt(string cvText)
     {
-        if (cvText.Length > 12000) cvText = cvText[..12000];
+        if (cvText.Length > 6000) cvText = cvText[..6000];
 
         return $@"Bạn là chuyên gia nhân sự (HR senior). Đọc nội dung CV dưới đây và trả về JSON ĐÚNG schema sau, không thêm bất kỳ chữ nào khác:
 {{

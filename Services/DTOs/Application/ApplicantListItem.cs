@@ -13,6 +13,16 @@ public class ApplicantListItem
     public ApplicationStatus Status { get; set; }
     public int? AiMatchScore { get; set; }
 
+    // ===== Kết quả chấm điểm theo JD (so sánh có cấu trúc) =====
+    public string? Verdict { get; set; }
+    public string? Recommendation { get; set; }
+    public string? MatchSummary { get; set; }
+    public List<string> MatchedSkills { get; set; } = new();
+    public List<string> MissingSkills { get; set; } = new();
+    public List<string> MatchStrengths { get; set; } = new();
+    public List<string> MatchConcerns { get; set; } = new();
+    public bool HasScore { get; set; }
+
     // ===== Thông tin AI trích xuất từ CV (giống Kho CV) =====
     public string? CvTitle { get; set; }
     public double? TotalYears { get; set; }

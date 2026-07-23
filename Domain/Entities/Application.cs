@@ -42,7 +42,7 @@ public class Application
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
 
     // ==========================================
-    // CÁC TRƯỜNG DÀNH CHO GEMINI AI CHẤM ĐIỂM 🌟
+    // CÁC TRƯỜNG DÀNH CHO AI CHẤM ĐIỂM 🌟
     // ==========================================
 
     // Điểm số AI đánh giá độ phù hợp (Thang điểm 100 hoặc 10 tùy bạn chọn)
@@ -50,4 +50,13 @@ public class Application
 
     // Đoạn văn ngắn AI nhận xét lý do tại sao đạt/không đạt (Dùng hiển thị cho Recruiter xem)
     public string? AiFeedback { get; set; }
+
+    // ===== Kết quả chấm điểm theo JD (cấu trúc so sánh rõ ràng) =====
+    public string? AiVerdict { get; set; }          // Rất phù hợp | Phù hợp | Cân nhắc | Chưa phù hợp
+    public string? AiMatchedSkills { get; set; }    // kỹ năng khớp JD (mỗi dòng 1 mục)
+    public string? AiMissingSkills { get; set; }    // yêu cầu JD còn thiếu
+    public string? AiStrengths { get; set; }        // điểm mạnh so với JD
+    public string? AiConcerns { get; set; }         // điểm yếu / rủi ro so với JD
+    public string? AiRecommendation { get; set; }   // Mời phỏng vấn | Cân nhắc thêm | Loại
+    public DateTime? AiScoredAt { get; set; }
 }

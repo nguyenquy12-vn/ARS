@@ -1,0 +1,111 @@
+@* Modal so sánh ứng viên với JD (điểm, matched/missing skills, mạnh/yếu, đề xuất). *@
+<div class="modal fade" id="applicantMatchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1" id="amName"></h5>
+                    <div class="text-muted small" id="amEmail"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center gap-3 p-3 mb-4" style="background: var(--color-subtle-mist); border-radius: 12px;">
+                    <div class="text-center">
+                        <div class="r-score" id="amScore" style="font-size: 30px;"></div>
+                        <div class="text-muted small">/100</div>
+                    </div>
+                    <div>
+                        <span class="badge" id="amVerdict"></span>
+                        <div class="text-muted small mt-1" id="amRecommendation"></div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Đánh giá</h6>
+                <div class="cvd-callout eval mb-4" id="amSummary"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4" id="amMatchedBlock">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">✓ Kỹ năng khớp JD</h6>
+                        <div id="amMatched"></div>
+                    </div>
+                    <div class="col-md-6 mb-4" id="amMissingBlock">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">✗ Yêu cầu còn thiếu</h6>
+                        <div id="amMissing"></div>
+                    </div>
+                </div>
+
+                <div id="amStrengthsBlock" class="mb-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm mạnh so với JD</h6>
+                    <ul class="cvd-list pos" id="amStrengths"></ul>
+                </div>
+
+                <div id="amConcernsBlock" class="mb-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm yếu / rủi ro</h6>
+                    <ul class="cvd-list neg" id="amConcerns"></ul>
+                </div>
+
+                <a href="#" id="amPdf" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Mở CV (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        function parseArr(s) { try { return JSON.parse(s || "[]"); } catch { return []; } }
+        function esc(s) {
+            return String(s ?? "").replace(/[&<>"']/g, c =>
+                ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
+        function fillList(listId, blockId, arr) {
+            const block = document.getElementById(blockId), list = document.getElementById(listId);
+            if (!arr.length) { block.style.display = "none"; return; }
+            block.style.display = "";
+            list.innerHTML = arr.map(x => `<li>${esc(x)}</li>`).join("");
+        }
+        function fillChips(id, blockId, arr, cls) {
+            const block = document.getElementById(blockId), box = document.getElementById(id);
+            if (!arr.length) { box.innerHTML = '<span class="text-muted small">—</span>'; return; }
+            box.innerHTML = arr.map(x => `<span class="badge rounded-pill ${cls} me-1 mb-1">${esc(x)}</span>`).join("");
+        }
+
+        window.openApplicantMatch = function (el) {
+            const d = el.dataset;
+            document.getElementById("amName").textContent = d.name || "";
+            document.getElementById("amEmail").textContent = d.email || "";
+
+            const hasScore = d.score && d.score !== "";
+            const score = hasScore ? Number(d.score) : null;
+            const scoreEl = document.getElementById("amScore");
+            scoreEl.textContent = hasScore ? score : "—";
+            scoreEl.className = "r-score " + (score == null ? "" : score >= 70 ? "r-score-hi" : score >= 50 ? "r-score-md" : "r-score-lo");
+
+            const vEl = document.getElementById("amVerdict");
+            if (d.verdict) { vEl.style.display = ""; vEl.textContent = d.verdict; vEl.className = "badge " + verdictClass(d.verdict); }
+            else { vEl.style.display = "none"; }
+
+            document.getElementById("amRecommendation").textContent = d.recommendation ? ("Đề xuất: " + d.recommendation) : "";
+            document.getElementById("amSummary").textContent = d.summary || "Chưa chấm điểm. Bấm \"Chấm điểm\" để AI đánh giá theo JD.";
+
+            fillChips("amMatched", "amMatchedBlock", parseArr(d.matched), "bg-success-subtle text-success-emphasis");
+            fillChips("amMissing", "amMissingBlock", parseArr(d.missing), "bg-warning-subtle text-warning-emphasis");
+            fillList("amStrengths", "amStrengthsBlock", parseArr(d.strengths));
+            fillList("amConcerns", "amConcernsBlock", parseArr(d.concerns));
+
+            const pdf = document.getElementById("amPdf");
+            if (d.pdf) { pdf.style.display = ""; pdf.href = d.pdf; } else { pdf.style.display = "none"; }
+
+            new bootstrap.Modal(document.getElementById("applicantMatchModal")).show();
+        };
+
+        function verdictClass(v) {
+            if (/Rất phù hợp/i.test(v)) return "bg-success";
+            if (/^Phù hợp/i.test(v)) return "bg-primary";
+            if (/Cân nhắc/i.test(v)) return "bg-warning text-dark";
+            return "bg-danger";
+        }
+    })();
+</script>

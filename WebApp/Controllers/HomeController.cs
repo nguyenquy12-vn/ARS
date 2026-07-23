@@ -25,6 +25,12 @@ namespace WebApp.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // Recruiter không dùng trang chủ candidate/guest — dashboard của họ chính là trang quản lý tin
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Recruiter"))
+            {
+                return RedirectToAction("Index", "JobPosting");
+            }
+
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 ViewBag.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);

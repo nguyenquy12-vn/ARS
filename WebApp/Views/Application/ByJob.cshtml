@@ -14,15 +14,71 @@
         <h3 class="fw-bold mb-1">Ứng viên ứng tuyển</h3>
         <div class="text-muted">@Model.Job.Title</div>
     </div>
-    <div class="d-flex gap-2">
-        <form asp-action="Analyze" asp-route-id="@Model.Job.Id" method="post" class="d-inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="bi bi-stars me-1"></i> Phân tích CV bằng AI
-            </button>
-        </form>
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#scoreSettings">
+            <i class="bi bi-sliders me-1"></i> Cài đặt chấm điểm
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="startScoring(false)" id="btnScoreNew">
+            <i class="bi bi-clipboard-check me-1"></i> Chấm điểm (chưa chấm)
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(confirm('Chấm lại toàn bộ ứng viên theo JD?')) startScoring(true)" id="btnScoreAll">
+            <i class="bi bi-arrow-repeat me-1"></i> Chấm lại tất cả
+        </button>
         <a asp-controller="JobPosting" asp-action="Details" asp-route-id="@Model.Job.Id"
            class="btn btn-outline-secondary btn-sm">← Quay lại tin</a>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<!-- Thanh tiến trình chấm điểm -->
+<div class="card shadow-sm border-0 mb-3" id="scoreProgress" style="display:none;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold" id="scoreProgressLabel">Đang chuẩn bị...</span>
+            <span class="text-muted small" id="scoreProgressCount">0 / 0</span>
+        </div>
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar" id="scoreProgressBar" role="progressbar" style="width: 0%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Cài đặt chấm điểm theo JD -->
+<div class="collapse mb-4" id="scoreSettings">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h6 class="fw-bold mb-1">Cài đặt chấm điểm cho tin này</h6>
+            <p class="text-muted small mb-3">Đặt trọng số ưu tiên (tổng nên = 100%) và ghi chú must-have. AI sẽ chấm điểm ứng viên dựa trên các thiết lập này.</p>
+            <form asp-action="SaveScoreSettings" asp-route-id="@Model.Job.Id" method="post" class="row g-3 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Kinh nghiệm (%)</label>
+                    <input type="number" name="WeightExperience" value="@Model.Job.AiWeightExperience" min="0" max="100" class="form-control" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Kỹ năng (%)</label>
+                    <input type="number" name="WeightSkills" value="@Model.Job.AiWeightSkills" min="0" max="100" class="form-control" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Học vấn (%)</label>
+                    <input type="number" name="WeightEducation" value="@Model.Job.AiWeightEducation" min="0" max="100" class="form-control" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Thành tựu (%)</label>
+                    <input type="number" name="WeightAchievement" value="@Model.Job.AiWeightAchievement" min="0" max="100" class="form-control" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-muted mb-1">Ưu tiên / must-have</label>
+                    <input type="text" name="PriorityNote" value="@Model.Job.AiPriorityNote" class="form-control"
+                           placeholder="VD: bắt buộc có React + 2 năm, ưu tiên tiếng Anh tốt..." />
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary btn-sm">Lưu cài đặt</button>
+                    <span class="text-muted small ms-2">Sau khi lưu, bấm <strong>Chấm lại tất cả</strong> để áp dụng.</span>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -104,24 +160,23 @@
                     foreach (var a in Model.Applicants)
                     {
                         var initial = string.IsNullOrWhiteSpace(a.CandidateName) ? "?" : a.CandidateName.Trim()[..1].ToUpper();
-                        var loai = a.IsFresher == true ? "Fresher" : (a.TotalYears.HasValue ? $"{a.TotalYears.Value:0.#}y+" : "—");
-                        <tr>
+                        <tr id="row-@a.Id" data-app-id="@a.Id" data-scored="@(a.HasScore ? 1 : 0)" data-name="@a.CandidateName">
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="r-avatar">@initial</div>
                                     <div>
                                         <a role="button" class="text-decoration-none fw-semibold"
-                                           onclick="openCvDetail(this)"
+                                           onclick="openApplicantMatch(this)"
                                            data-name="@a.CandidateName"
                                            data-email="@a.CandidateEmail"
-                                           data-title="@a.CvTitle"
-                                           data-total="@(a.TotalYears.HasValue ? a.TotalYears.Value.ToString("0.#") + "y" : "—")"
-                                           data-ai="@(a.AiYears.HasValue ? a.AiYears.Value.ToString("0.#") + "y" : "—")"
-                                           data-type="@loai"
-                                           data-summary="@a.Summary"
-                                           data-skills="@JsonSerializer.Serialize(a.Skills)"
-                                           data-strengths="@JsonSerializer.Serialize(a.Strengths)"
-                                           data-weaknesses="@JsonSerializer.Serialize(a.Weaknesses)"
+                                           data-score="@(a.AiMatchScore?.ToString() ?? "")"
+                                           data-verdict="@a.Verdict"
+                                           data-recommendation="@a.Recommendation"
+                                           data-summary="@a.MatchSummary"
+                                           data-matched="@JsonSerializer.Serialize(a.MatchedSkills)"
+                                           data-missing="@JsonSerializer.Serialize(a.MissingSkills)"
+                                           data-strengths="@JsonSerializer.Serialize(a.MatchStrengths)"
+                                           data-concerns="@JsonSerializer.Serialize(a.MatchConcerns)"
                                            data-pdf="@a.ResumeFilePath">
                                             @a.CandidateName
                                         </a>
@@ -172,12 +227,16 @@
                                     <span class="r-no-score">—</span>
                                 }
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" id="score-@a.Id">
                                 @if (a.AiMatchScore.HasValue)
                                 {
                                     <span class="r-score @ScoreClass(a.AiMatchScore.Value)">
                                         @a.AiMatchScore<span class="unit">/100</span>
                                     </span>
+                                    @if (!string.IsNullOrWhiteSpace(a.Verdict))
+                                    {
+                                        <div><span class="badge @VerdictBadge(a.Verdict)">@a.Verdict</span></div>
+                                    }
                                 }
                                 else
                                 {
@@ -210,7 +269,7 @@
     </div>
 </div>
 
-@await Html.PartialAsync("_CvDetailModal")
+@await Html.PartialAsync("_ApplicantMatchModal")
 
 @functions {
     string StatusBadge(Domain.Enums.ApplicationStatus s) => s switch
@@ -239,4 +298,82 @@
         >= 50 => "r-score-md",
         _ => "r-score-lo"
     };
+
+    string VerdictBadge(string? v) => v switch
+    {
+        not null when v.Contains("Rất phù hợp") => "bg-success",
+        not null when v.StartsWith("Phù hợp") => "bg-primary",
+        not null when v.Contains("Cân nhắc") => "bg-warning text-dark",
+        _ => "bg-danger"
+    };
+}
+
+@section Scripts {
+    <script>
+        function startScoring(rescore) {
+            const rows = Array.from(document.querySelectorAll('tr[data-app-id]'));
+            const targets = rows.filter(r => rescore || r.dataset.scored !== '1');
+            if (!targets.length) {
+                alert(rescore ? 'Không có ứng viên nào để chấm.' : 'Tất cả ứng viên đã được chấm.');
+                return;
+            }
+
+            const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenEl ? tokenEl.value : '';
+            const panel = document.getElementById('scoreProgress');
+            const bar = document.getElementById('scoreProgressBar');
+            const label = document.getElementById('scoreProgressLabel');
+            const count = document.getElementById('scoreProgressCount');
+            const btnNew = document.getElementById('btnScoreNew');
+            const btnAll = document.getElementById('btnScoreAll');
+
+            panel.style.display = '';
+            btnNew.disabled = true; btnAll.disabled = true;
+
+            let done = 0, ok = 0, firstErr = null;
+
+            (async function () {
+                for (const row of targets) {
+                    const id = row.dataset.appId;
+                    const name = row.dataset.name || ('#' + id);
+                    label.textContent = `Đang chấm ${done + 1}/${targets.length}: ${name}`;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+
+                    try {
+                        const res = await fetch('/Application/ScoreOne/' + id, {
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': token }
+                        });
+                        const d = await res.json();
+                        if (d.ok) { ok++; updateScoreCell(id, d.score, d.verdict); row.dataset.scored = '1'; }
+                        else if (!firstErr) firstErr = d.error;
+                    } catch (e) {
+                        if (!firstErr) firstErr = 'Lỗi kết nối máy chủ AI.';
+                    }
+
+                    done++;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+                }
+
+                label.textContent = `Hoàn thành ${ok}/${targets.length}` + (firstErr ? ` · Lỗi: ${firstErr}` : '');
+                btnNew.disabled = false; btnAll.disabled = false;
+                // Tải lại để cập nhật đầy đủ các cột (Title / KN / Skills / Tóm tắt)
+                setTimeout(() => location.reload(), 1500);
+            })();
+        }
+
+        function updateScoreCell(id, score, verdict) {
+            const cell = document.getElementById('score-' + id);
+            if (!cell) return;
+            const cls = score >= 70 ? 'r-score-hi' : score >= 50 ? 'r-score-md' : 'r-score-lo';
+            const v = verdict || '';
+            const vcls = /Rất phù hợp/.test(v) ? 'bg-success'
+                : /^Phù hợp/.test(v) ? 'bg-primary'
+                : /Cân nhắc/.test(v) ? 'bg-warning text-dark' : 'bg-danger';
+            cell.innerHTML = `<span class="r-score ${cls}">${score}<span class="unit">/100</span></span>`
+                + (v ? `<div><span class="badge ${vcls}">${v}</span></div>` : '');
+        }
+    </script>
 }
