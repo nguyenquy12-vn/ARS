@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ARSDbContext))]
-    partial class ARSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723201101_AddCvBankEntry")]
+    partial class AddCvBankEntry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,9 +211,6 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("FolderId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsFresher")
                         .HasColumnType("bit");
 
@@ -236,51 +236,17 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Strengths")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Summary")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TotalYearsExperience")
                         .HasColumnType("float");
 
-                    b.Property<string>("Weaknesses")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("FolderId");
 
                     b.HasIndex("RecruiterId");
 
                     b.ToTable("CvBankEntries");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("RecruiterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecruiterId");
-
-                    b.ToTable("CvFolders");
                 });
 
             modelBuilder.Entity("Domain.Entities.JobCategory", b =>
@@ -568,36 +534,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double?>("AiAiYears")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime?>("AiAnalyzedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("AiIsFresher")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("AiName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiStrengths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiSummary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiTitle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double?>("AiTotalYears")
-                        .HasColumnType("float");
-
-                    b.Property<string>("AiWeaknesses")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CandidateId")
                         .HasColumnType("int");
@@ -946,28 +882,10 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.CvBankEntry", b =>
                 {
-                    b.HasOne("Domain.Entities.CvFolder", "Folder")
-                        .WithMany("CvBankEntries")
-                        .HasForeignKey("FolderId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Domain.Entities.User", "Recruiter")
                         .WithMany()
                         .HasForeignKey("RecruiterId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Folder");
-
-                    b.Navigation("Recruiter");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "Recruiter")
-                        .WithMany()
-                        .HasForeignKey("RecruiterId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Recruiter");
@@ -1042,11 +960,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.Navigation("CvBankEntries");
                 });
 
             modelBuilder.Entity("Domain.Entities.JobCategory", b =>

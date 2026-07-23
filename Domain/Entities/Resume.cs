@@ -36,6 +36,20 @@ public class Resume
     // Lưu toàn bộ nội dung text chữ được trích xuất từ file PDF/Word để làm nguyên liệu đầu vào cho AI đọc
     public string? RawTextContent { get; set; }
 
+    // ==========================================
+    // KẾT QUẢ AI TRÍCH XUẤT (cache lại để hiển thị cột giống Kho CV, tránh gọi AI nhiều lần)
+    // ==========================================
+    public string? AiName { get; set; }
+    public string? AiTitle { get; set; }
+    public double? AiTotalYears { get; set; }
+    public double? AiAiYears { get; set; }
+    public bool? AiIsFresher { get; set; }
+    public string? AiSkills { get; set; }
+    public string? AiSummary { get; set; }
+    public string? AiStrengths { get; set; }
+    public string? AiWeaknesses { get; set; }
+    public DateTime? AiAnalyzedAt { get; set; }
+
     // Danh sách các đơn ứng tuyển sử dụng hồ sơ này (Quan hệ Một - Nhiều với bảng Application)
     public ICollection<Application> Applications { get; set; } = new List<Application>();
 }

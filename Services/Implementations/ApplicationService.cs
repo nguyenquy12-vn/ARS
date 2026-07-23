@@ -20,22 +20,78 @@ public class ApplicationService : IApplicationService
 
     public async Task<List<ApplicantListItem>> GetApplicantsForJobAsync(int jobId, int recruiterId)
     {
-        return await _context.Set<Domain.Entities.Application>()
+        // Chỉ đọc dữ liệu (kể cả kết quả AI đã cache). KHÔNG gọi AI ở đây để trang không bị treo
+        // khi server AI không phản hồi. Việc phân tích do recruiter bấm nút (AnalyzeApplicantsAsync).
+        var applications = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.Resume)
             .Where(a => a.JobPostingId == jobId && a.JobPosting!.Company!.RecruiterId == recruiterId)
             .OrderByDescending(a => a.AiMatchScore ?? -1)
             .ThenByDescending(a => a.AppliedAt)
-            .Select(a => new ApplicantListItem
-            {
-                Id = a.Id,
-                CandidateName = a.Candidate != null ? a.Candidate.FullName : string.Empty,
-                CandidateEmail = a.Candidate != null ? a.Candidate.Email : string.Empty,
-                ResumeTitle = a.Resume != null ? a.Resume.Title : string.Empty,
-                CoverLetter = a.CoverLetter,
-                AppliedAt = a.AppliedAt,
-                Status = a.Status,
-                AiMatchScore = a.AiMatchScore
-            })
             .ToListAsync();
+
+        return applications.Select(a => new ApplicantListItem
+        {
+            Id = a.Id,
+            CandidateName = a.Candidate != null ? a.Candidate.FullName : string.Empty,
+            CandidateEmail = a.Candidate != null ? a.Candidate.Email : string.Empty,
+            ResumeTitle = a.Resume != null ? a.Resume.Title : string.Empty,
+            CoverLetter = a.CoverLetter,
+            AppliedAt = a.AppliedAt,
+            Status = a.Status,
+            AiMatchScore = a.AiMatchScore,
+            CvTitle = a.Resume?.AiTitle,
+            TotalYears = a.Resume?.AiTotalYears,
+            AiYears = a.Resume?.AiAiYears,
+            IsFresher = a.Resume?.AiIsFresher,
+            Skills = !string.IsNullOrWhiteSpace(a.Resume?.AiSkills)
+                ? a.Resume!.AiSkills!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            Summary = a.Resume?.AiSummary,
+            Strengths = !string.IsNullOrWhiteSpace(a.Resume?.AiStrengths)
+                ? a.Resume!.AiStrengths!.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            Weaknesses = !string.IsNullOrWhiteSpace(a.Resume?.AiWeaknesses)
+                ? a.Resume!.AiWeaknesses!.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            ResumeFilePath = a.Resume?.FilePath
+        }).ToList();
+    }
+
+    public async Task<int> AnalyzeApplicantsAsync(int jobId, int recruiterId)
+    {
+        var resumes = await _context.Set<Domain.Entities.Application>()
+            .Where(a => a.JobPostingId == jobId && a.JobPosting!.Company!.RecruiterId == recruiterId)
+            .Select(a => a.Resume!)
+            .Where(r => r != null && r.AiAnalyzedAt == null && r.RawTextContent != null)
+            .Distinct()
+            .ToListAsync();
+
+        var analyzed = 0;
+        foreach (var resume in resumes)
+        {
+            var extracted = await _aiService.ExtractCvInfoAsync(resume.RawTextContent!);
+            if (!extracted.IsSuccess) continue;
+
+            resume.AiName = extracted.Name;
+            resume.AiTitle = extracted.CurrentTitle;
+            resume.AiTotalYears = extracted.TotalYearsExperience;
+            resume.AiAiYears = extracted.AiYearsExperience;
+            resume.AiIsFresher = extracted.IsFresher;
+            resume.AiSkills = extracted.Skills.Count > 0 ? string.Join(", ", extracted.Skills) : null;
+            resume.AiSummary = extracted.Summary;
+            resume.AiStrengths = extracted.Strengths.Count > 0 ? string.Join("\n", extracted.Strengths) : null;
+            resume.AiWeaknesses = extracted.Weaknesses.Count > 0 ? string.Join("\n", extracted.Weaknesses) : null;
+            resume.AiAnalyzedAt = DateTime.UtcNow;
+            analyzed++;
+        }
+
+        if (analyzed > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        return analyzed;
     }
 
     public async Task<ApplicationDetail?> GetDetailAsync(int applicationId, int recruiterId)

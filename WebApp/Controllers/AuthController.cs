@@ -90,6 +90,13 @@ public class AuthController : Controller
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity));
 
+            // Điều hướng theo vai trò: Recruiter về khu vực quản lý tin tuyển dụng,
+            // các vai trò khác (Candidate/Guest) về trang chủ.
+            if (user.RoleName == "Recruiter")
+            {
+                return RedirectToAction("Index", "JobPosting");
+            }
+
             return RedirectToAction("Index", "Home");
         }
 

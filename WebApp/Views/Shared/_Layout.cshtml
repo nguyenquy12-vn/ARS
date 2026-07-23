@@ -39,15 +39,6 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Job" asp-action="Index">Việc làm</a>
                         </li>
-                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Recruiter"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="JobPosting" asp-action="Index">Tin tuyển dụng</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Company" asp-action="Index">Hồ sơ công ty</a>
-                            </li>
-                        }
                     </ul>
                     <div class="d-flex auth-section">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)

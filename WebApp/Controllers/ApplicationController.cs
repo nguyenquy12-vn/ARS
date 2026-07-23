@@ -36,6 +36,27 @@ public class ApplicationController : Controller
         return View(new JobApplicantsViewModel { Job = job, Applicants = applicants });
     }
 
+    // POST /Application/Analyze -> trích xuất thông tin CV bằng AI cho các ứng viên chưa phân tích
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> Analyze(int id)
+    {
+        try
+        {
+            var count = await _applicationService.AnalyzeApplicantsAsync(id, CurrentUserId);
+            TempData["Success"] = count > 0
+                ? $"AI đã phân tích {count} CV."
+                : "Không có CV mới để phân tích (hoặc AI không phản hồi).";
+        }
+        catch (Exception)
+        {
+            TempData["Error"] = "Không kết nối được máy chủ AI. Vui lòng kiểm tra 'Ai:BaseUrl' trong appsettings.json.";
+        }
+
+        return RedirectToAction(nameof(ByJob), new { id });
+    }
+
     // GET /Application/Details/5 -> chi tiết một hồ sơ ứng tuyển
     [HttpGet]
     [Authorize(Policy = "CanReviewCV")]

@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ARSDbContext))]
-    partial class ARSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723205520_AddCvFolders")]
+    partial class AddCvFolders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -236,17 +239,11 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Strengths")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Summary")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TotalYearsExperience")
                         .HasColumnType("float");
-
-                    b.Property<string>("Weaknesses")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -584,9 +581,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AiSkills")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AiStrengths")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("AiSummary")
                         .HasColumnType("nvarchar(max)");
 
@@ -595,9 +589,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<double?>("AiTotalYears")
                         .HasColumnType("float");
-
-                    b.Property<string>("AiWeaknesses")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CandidateId")
                         .HasColumnType("int");
