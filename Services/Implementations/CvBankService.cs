@@ -2,6 +2,7 @@ using Domain.Constraints;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Services.DTOs.Application;
 using Services.DTOs.CvBank;
 using Services.Interfaces;
 
@@ -99,7 +100,22 @@ public class CvBankService : ICvBankService
                 FileName = c.FileName,
                 StoredFileName = c.StoredFileName,
                 CreatedAt = c.CreatedAt,
-                FolderId = c.FolderId
+                FolderId = c.FolderId,
+                MatchScore = c.MatchScore,
+                MatchVerdict = c.MatchVerdict,
+                MatchedSkills = c.MatchedSkills != null
+                    ? c.MatchedSkills.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                    : new List<string>(),
+                MissingSkills = c.MissingSkills != null
+                    ? c.MissingSkills.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                    : new List<string>(),
+                MatchStrengths = c.MatchStrengths != null
+                    ? c.MatchStrengths.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                    : new List<string>(),
+                MatchConcerns = c.MatchConcerns != null
+                    ? c.MatchConcerns.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                    : new List<string>(),
+                HasMatch = c.MatchScoredAt != null
             })
             .ToListAsync();
 
@@ -237,5 +253,97 @@ public class CvBankService : ICvBankService
 
         entry.FolderId = folderId;
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<CvFolderDto?> GetFolderAsync(int recruiterId, int folderId)
+    {
+        return await _context.CvFolders
+            .Where(f => f.Id == folderId && f.RecruiterId == recruiterId)
+            .Select(f => new CvFolderDto
+            {
+                Id = f.Id,
+                Name = f.Name,
+                Count = f.CvBankEntries.Count,
+                JdDescription = f.JdDescription,
+                JdRequirements = f.JdRequirements,
+                AiWeightExperience = f.AiWeightExperience,
+                AiWeightSkills = f.AiWeightSkills,
+                AiWeightEducation = f.AiWeightEducation,
+                AiWeightAchievement = f.AiWeightAchievement,
+                AiPriorityNote = f.AiPriorityNote,
+                HasJd = f.JdDescription != null || f.JdRequirements != null
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<bool> SaveFolderJdAsync(int recruiterId, int folderId, string? description, string? requirements, JdEvalSettings settings)
+    {
+        var folder = await _context.CvFolders
+            .FirstOrDefaultAsync(f => f.Id == folderId && f.RecruiterId == recruiterId);
+        if (folder == null) return false;
+
+        folder.JdDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        folder.JdRequirements = string.IsNullOrWhiteSpace(requirements) ? null : requirements.Trim();
+        folder.AiWeightExperience = Math.Clamp(settings.WeightExperience, 0, 100);
+        folder.AiWeightSkills = Math.Clamp(settings.WeightSkills, 0, 100);
+        folder.AiWeightEducation = Math.Clamp(settings.WeightEducation, 0, 100);
+        folder.AiWeightAchievement = Math.Clamp(settings.WeightAchievement, 0, 100);
+        folder.AiPriorityNote = string.IsNullOrWhiteSpace(settings.PriorityNote) ? null : settings.PriorityNote.Trim();
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<(bool ok, string? error, int score, string? verdict)> ScoreCvAsync(int recruiterId, int cvId)
+    {
+        var cv = await _context.CvBankEntries
+            .Include(c => c.Folder)
+            .FirstOrDefaultAsync(c => c.Id == cvId && c.RecruiterId == recruiterId);
+
+        if (cv == null)
+        {
+            return (false, "Không tìm thấy CV.", 0, null);
+        }
+        if (cv.Folder == null)
+        {
+            return (false, "CV chưa thuộc thư mục nào để chấm theo JD.", 0, null);
+        }
+        var folder = cv.Folder;
+        if (string.IsNullOrWhiteSpace(folder.JdDescription) && string.IsNullOrWhiteSpace(folder.JdRequirements))
+        {
+            return (false, "Thư mục chưa có JD. Vui lòng nhập JD trước khi chấm.", 0, null);
+        }
+        if (string.IsNullOrWhiteSpace(cv.RawText))
+        {
+            return (false, "CV không có nội dung text để chấm.", 0, null);
+        }
+
+        var settings = new JdEvalSettings
+        {
+            WeightExperience = folder.AiWeightExperience,
+            WeightSkills = folder.AiWeightSkills,
+            WeightEducation = folder.AiWeightEducation,
+            WeightAchievement = folder.AiWeightAchievement,
+            PriorityNote = folder.AiPriorityNote
+        };
+
+        var match = await _aiService.MatchCvAsync(
+            folder.Name, folder.JdDescription ?? string.Empty, folder.JdRequirements ?? string.Empty, cv.RawText, settings);
+
+        if (!match.IsSuccess)
+        {
+            return (false, match.ErrorMessage ?? "Lỗi chấm điểm AI.", 0, null);
+        }
+
+        cv.MatchScore = match.MatchScore;
+        cv.MatchVerdict = match.Verdict;
+        cv.MatchedSkills = match.MatchedSkills.Count > 0 ? string.Join("\n", match.MatchedSkills) : null;
+        cv.MissingSkills = match.MissingSkills.Count > 0 ? string.Join("\n", match.MissingSkills) : null;
+        cv.MatchStrengths = match.Strengths.Count > 0 ? string.Join("\n", match.Strengths) : null;
+        cv.MatchConcerns = match.Concerns.Count > 0 ? string.Join("\n", match.Concerns) : null;
+        cv.MatchScoredAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return (true, null, match.MatchScore, match.Verdict);
     }
 }

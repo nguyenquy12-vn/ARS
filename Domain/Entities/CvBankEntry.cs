@@ -67,5 +67,14 @@ public class CvBankEntry
     // Toàn bộ text đọc từ PDF (nguyên liệu cho AI)
     public string? RawText { get; set; }
 
+    // ===== Kết quả chấm điểm CV theo JD của thư mục =====
+    public int? MatchScore { get; set; }
+    public string? MatchVerdict { get; set; }
+    public string? MatchedSkills { get; set; }
+    public string? MissingSkills { get; set; }
+    public string? MatchStrengths { get; set; }
+    public string? MatchConcerns { get; set; }
+    public DateTime? MatchScoredAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

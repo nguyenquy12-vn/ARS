@@ -31,7 +31,44 @@ public class CvBankController : Controller
         var items = await _cvBankService.GetForRecruiterAsync(CurrentUserId, filter);
         ViewBag.Filter = filter;
         ViewBag.Folders = await _cvBankService.GetFoldersAsync(CurrentUserId);
+        if (filter.FolderId is > 0)
+        {
+            ViewBag.CurrentFolder = await _cvBankService.GetFolderAsync(CurrentUserId, filter.FolderId.Value);
+        }
         return View(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveFolderJd(int folderId, string? jdDescription, string? jdRequirements,
+        int weightExperience, int weightSkills, int weightEducation, int weightAchievement, string? priorityNote)
+    {
+        var settings = new Services.DTOs.Application.JdEvalSettings
+        {
+            WeightExperience = weightExperience,
+            WeightSkills = weightSkills,
+            WeightEducation = weightEducation,
+            WeightAchievement = weightAchievement,
+            PriorityNote = priorityNote
+        };
+        var ok = await _cvBankService.SaveFolderJdAsync(CurrentUserId, folderId, jdDescription, jdRequirements, settings);
+        TempData[ok ? "Success" : "Error"] = ok ? "Đã lưu JD cho thư mục." : "Không lưu được JD.";
+        return RedirectToAction(nameof(Index), new { FolderId = folderId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ScoreCvOne(int id)
+    {
+        try
+        {
+            var (ok, error, score, verdict) = await _cvBankService.ScoreCvAsync(CurrentUserId, id);
+            return Json(new { ok, error, score, verdict });
+        }
+        catch (Exception)
+        {
+            return Json(new { ok = false, error = "Không kết nối được máy chủ AI.", score = 0, verdict = (string?)null });
+        }
     }
 
     [HttpPost]

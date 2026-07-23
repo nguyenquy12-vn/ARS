@@ -1,3 +1,4 @@
+using Services.DTOs.Application;
 using Services.DTOs.CvBank;
 
 namespace Services.Interfaces;
@@ -21,4 +22,9 @@ public interface ICvBankService
     Task<(bool ok, string? error)> CreateFolderAsync(int recruiterId, string name);
     Task DeleteFolderAsync(int recruiterId, int folderId);
     Task MoveToFolderAsync(int recruiterId, int cvId, int? folderId);
+
+    // ===== JD & chấm điểm CV theo thư mục =====
+    Task<CvFolderDto?> GetFolderAsync(int recruiterId, int folderId);
+    Task<bool> SaveFolderJdAsync(int recruiterId, int folderId, string? description, string? requirements, JdEvalSettings settings);
+    Task<(bool ok, string? error, int score, string? verdict)> ScoreCvAsync(int recruiterId, int cvId);
 }

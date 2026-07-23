@@ -5,6 +5,7 @@
     var filter = ViewBag.Filter as Services.DTOs.CvBank.CvBankFilter ?? new Services.DTOs.CvBank.CvBankFilter();
     var folders = ViewBag.Folders as List<Services.DTOs.CvBank.CvFolderDto> ?? new List<Services.DTOs.CvBank.CvFolderDto>();
     var currentFolder = filter.FolderId;
+    var folderJd = ViewBag.CurrentFolder as Services.DTOs.CvBank.CvFolderDto;
     string TabClass(int? id) => currentFolder == id ? "btn-primary" : "btn-outline-primary";
 }
 
@@ -70,6 +71,83 @@
     </div>
 </div>
 
+@if (folderJd != null)
+{
+    <!-- JD & chấm điểm cho thư mục -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-1"></i> JD & chấm điểm cho thư mục "@folderJd.Name"</h6>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#folderJdPanel">
+                        <i class="bi bi-pencil me-1"></i> Sửa JD / cài đặt
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="startCvScoring(false)" id="btnCvScoreNew">
+                        <i class="bi bi-clipboard-check me-1"></i> Chấm CV chưa chấm
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(confirm('Chấm lại toàn bộ CV trong thư mục?')) startCvScoring(true)" id="btnCvScoreAll">
+                        <i class="bi bi-arrow-repeat me-1"></i> Chấm lại tất cả
+                    </button>
+                </div>
+            </div>
+
+            @if (!folderJd.HasJd)
+            {
+                <div class="alert alert-warning py-2 small mb-3">Thư mục chưa có JD. Bấm <strong>Sửa JD / cài đặt</strong> để nhập trước khi chấm điểm.</div>
+            }
+
+            <div class="collapse @(folderJd.HasJd ? "" : "show")" id="folderJdPanel">
+                <form asp-action="SaveFolderJd" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="folderId" value="@folderJd.Id" />
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-1">Mô tả công việc (JD)</label>
+                        <textarea name="jdDescription" rows="4" class="form-control" placeholder="Mô tả vị trí, nhiệm vụ...">@folderJd.JdDescription</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-1">Yêu cầu</label>
+                        <textarea name="jdRequirements" rows="4" class="form-control" placeholder="Kỹ năng, kinh nghiệm yêu cầu...">@folderJd.JdRequirements</textarea>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Kinh nghiệm (%)</label>
+                        <input type="number" name="weightExperience" value="@folderJd.AiWeightExperience" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Kỹ năng (%)</label>
+                        <input type="number" name="weightSkills" value="@folderJd.AiWeightSkills" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Học vấn (%)</label>
+                        <input type="number" name="weightEducation" value="@folderJd.AiWeightEducation" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Thành tựu (%)</label>
+                        <input type="number" name="weightAchievement" value="@folderJd.AiWeightAchievement" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-1">Ưu tiên / must-have</label>
+                        <input type="text" name="priorityNote" value="@folderJd.AiPriorityNote" class="form-control" placeholder="VD: bắt buộc 3 năm React..." />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-sm">Lưu JD</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Thanh tiến trình chấm CV -->
+            <div id="cvScoreProgress" style="display:none;" class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold small" id="cvScoreLabel">Đang chuẩn bị...</span>
+                    <span class="text-muted small" id="cvScoreCount">0 / 0</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" id="cvScoreBar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Bộ lọc -->
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
@@ -119,6 +197,7 @@
                     <th>Loại</th>
                     <th>Skills</th>
                     <th>Tóm tắt</th>
+                    <th class="text-center">Điểm AI</th>
                     <th>Thư mục</th>
                     <th class="text-center">File</th>
                     <th></th>
@@ -128,7 +207,7 @@
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-5">
+                        <td colspan="10" class="text-center text-muted py-5">
                             Chưa có CV nào. Dùng <strong>Import CV</strong> ở trên để tải PDF lên và để AI phân tích.
                         </td>
                     </tr>
@@ -138,7 +217,7 @@
                     foreach (var cv in Model)
                     {
                         var loai = cv.IsFresher ? "Fresher" : $"{cv.TotalYearsExperience:0.#}y+";
-                        <tr>
+                        <tr data-cv-id="@cv.Id" data-scored="@(cv.HasMatch ? 1 : 0)" data-name="@cv.Name">
                             <td>
                                 <a role="button" class="text-decoration-none fw-semibold"
                                    onclick="openCvDetail(this)"
@@ -186,6 +265,35 @@
                             <td style="max-width: 320px;">
                                 <div class="r-clamp2">@cv.Summary</div>
                             </td>
+                            <td class="text-center" id="cvscore-@cv.Id">
+                                @if (cv.MatchScore.HasValue)
+                                {
+                                    <a role="button" class="text-decoration-none"
+                                       onclick="openApplicantMatch(this)"
+                                       data-name="@cv.Name"
+                                       data-email="@cv.Email"
+                                       data-score="@cv.MatchScore"
+                                       data-verdict="@cv.MatchVerdict"
+                                       data-summary="@cv.Summary"
+                                       data-matched="@JsonSerializer.Serialize(cv.MatchedSkills)"
+                                       data-missing="@JsonSerializer.Serialize(cv.MissingSkills)"
+                                       data-strengths="@JsonSerializer.Serialize(cv.MatchStrengths)"
+                                       data-concerns="@JsonSerializer.Serialize(cv.MatchConcerns)"
+                                       data-pdf="@Url.Action("ViewPdf", new { id = cv.Id })">
+                                        <span class="r-score @(cv.MatchScore >= 70 ? "r-score-hi" : cv.MatchScore >= 50 ? "r-score-md" : "r-score-lo")">
+                                            @cv.MatchScore<span class="unit">/100</span>
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(cv.MatchVerdict))
+                                        {
+                                            <div><span class="badge bg-secondary-subtle text-dark">@cv.MatchVerdict</span></div>
+                                        }
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="r-no-score">Chưa chấm</span>
+                                }
+                            </td>
                             <td>
                                 <form asp-action="MoveToFolder" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
@@ -222,3 +330,62 @@
 </div>
 
 @await Html.PartialAsync("_CvDetailModal")
+@await Html.PartialAsync("_ApplicantMatchModal")
+
+@section Scripts {
+    <script>
+        function startCvScoring(rescore) {
+            const rows = Array.from(document.querySelectorAll('tr[data-cv-id]'));
+            const targets = rows.filter(r => rescore || r.dataset.scored !== '1');
+            if (!targets.length) {
+                alert(rescore ? 'Không có CV nào để chấm.' : 'Tất cả CV đã được chấm.');
+                return;
+            }
+
+            const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenEl ? tokenEl.value : '';
+            const panel = document.getElementById('cvScoreProgress');
+            const bar = document.getElementById('cvScoreBar');
+            const label = document.getElementById('cvScoreLabel');
+            const count = document.getElementById('cvScoreCount');
+            const b1 = document.getElementById('btnCvScoreNew');
+            const b2 = document.getElementById('btnCvScoreAll');
+
+            panel.style.display = '';
+            b1.disabled = true; b2.disabled = true;
+            let done = 0, ok = 0, firstErr = null;
+
+            (async function () {
+                for (const row of targets) {
+                    const id = row.dataset.cvId;
+                    const name = row.dataset.name || ('#' + id);
+                    label.textContent = `Đang chấm ${done + 1}/${targets.length}: ${name}`;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+                    try {
+                        const res = await fetch('/CvBank/ScoreCvOne/' + id, {
+                            method: 'POST', headers: { 'RequestVerificationToken': token }
+                        });
+                        const d = await res.json();
+                        if (d.ok) { ok++; updateCvScoreCell(id, d.score, d.verdict); row.dataset.scored = '1'; }
+                        else if (!firstErr) firstErr = d.error;
+                    } catch (e) { if (!firstErr) firstErr = 'Lỗi kết nối AI.'; }
+                    done++;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+                }
+                label.textContent = `Hoàn thành ${ok}/${targets.length}` + (firstErr ? ` · Lỗi: ${firstErr}` : '');
+                b1.disabled = false; b2.disabled = false;
+                setTimeout(() => location.reload(), 1500);
+            })();
+        }
+
+        function updateCvScoreCell(id, score, verdict) {
+            const cell = document.getElementById('cvscore-' + id);
+            if (!cell) return;
+            const cls = score >= 70 ? 'r-score-hi' : score >= 50 ? 'r-score-md' : 'r-score-lo';
+            cell.innerHTML = `<span class="r-score ${cls}">${score}<span class="unit">/100</span></span>`
+                + (verdict ? `<div><span class="badge bg-secondary-subtle text-dark">${verdict}</span></div>` : '');
+        }
+    </script>
+}
