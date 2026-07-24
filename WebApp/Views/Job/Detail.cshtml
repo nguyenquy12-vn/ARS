@@ -71,15 +71,15 @@
 
                     <div class="job-section mb-5">
                         <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-card-text text-primary me-2"></i> Mô tả công việc</h4>
-                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
-                            @Html.Raw(Model?.Description?.Replace("\n", "<br/>"))
+                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3 md-content">
+                            @Model?.Description
                         </div>
                     </div>
 
                     <div class="job-section mb-5">
                         <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-check2-square text-primary me-2"></i> Yêu cầu ứng viên</h4>
-                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
-                            @Html.Raw(Model?.Requirements?.Replace("\n", "<br/>"))
+                        <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3 md-content">
+                            @Model?.Requirements
                         </div>
                     </div>
 
@@ -87,8 +87,8 @@
                     {
                         <div class="job-section mb-4">
                             <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-gift text-primary me-2"></i> Quyền lợi</h4>
-                            <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3">
-                                @Html.Raw(Model?.Benefits?.Replace("\n", "<br/>"))
+                            <div class="text-muted lh-lg fs-6 bg-light p-4 rounded-3 md-content">
+                                @Model?.Benefits
                             </div>
                         </div>
                     }
@@ -264,4 +264,14 @@
             </div>
         </div>
     </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script>
+        document.querySelectorAll('.md-content').forEach(function (el) {
+            el.innerHTML = DOMPurify.sanitize(marked.parse(el.textContent.trim()));
+        });
+    </script>
 }

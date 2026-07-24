@@ -28,7 +28,8 @@ builder.Services.AddAuthorization(options =>
     {
         string permissionName = permission.ToString();
 
-        options.AddPolicy(permissionName, policy =>
+        // Toàn bộ controller dùng quy ước "Can<Permission>" (vd: CanViewJob)
+        options.AddPolicy($"Can{permissionName}", policy =>
             policy.RequireClaim("Permission", permissionName));
     }
 });
