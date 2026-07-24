@@ -8,7 +8,6 @@ public class Resume
     [Key]
     public int Id { get; set; }
 
-    // Liên kết tới tài khoản Ứng viên (User) sở hữu CV này
     [Required]
     public int CandidateId { get; set; }
 
@@ -17,7 +16,7 @@ public class Resume
 
     [Required]
     [StringLength(150)]
-    public string Title { get; set; } = string.Empty; // Tiêu đề hồ sơ (Ví dụ: "CV Lập trình viên .NET Backend", "CV Sales Executive")
+    public string Title { get; set; } = string.Empty; 
 
     [Required]
     [StringLength(500)]

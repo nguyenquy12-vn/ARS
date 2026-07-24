@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Implementations;
 using Services.Interfaces;
+using WebApp.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,7 @@ builder.Services.AddAuthorization(options =>
     {
         string permissionName = permission.ToString();
 
-        options.AddPolicy($"Can{permissionName}", policy =>
+        options.AddPolicy(permissionName, policy =>
             policy.RequireClaim("Permission", permissionName));
     }
 });
@@ -43,8 +44,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<ICvBankService, CvBankService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+=======
+builder.Services.AddScoped<IUserService, UserService>();
+>>>>>>> origin/features
 
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
 builder.Services.AddSingleton(new AiSettings
@@ -77,6 +82,20 @@ builder.Services.AddScoped<IMapper, Mapper>();
 
 var app = builder.Build();
 
+// Tự động cập nhật hạn nộp hồ sơ của tất cả công việc thành năm 2027 khi ứng dụng chạy
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
+        dbContext.Database.ExecuteSqlRaw("UPDATE JobPostings SET ExpiredAt = '2027-12-31 23:59:59' WHERE ExpiredAt < '2027-01-01'");
+    }
+    catch
+    {
+        // Bỏ qua nếu DB chưa được khởi tạo
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -90,7 +109,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
+app.UseMiddleware<UserStatusValidationMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(

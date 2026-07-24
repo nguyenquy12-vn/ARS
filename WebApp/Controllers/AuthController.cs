@@ -1,4 +1,5 @@
-﻿using Mapster;
+﻿using Domain.Constraints;
+using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -50,8 +51,13 @@ public class AuthController : Controller
     }
 
     [HttpGet("login")]
-    public IActionResult Login()
+    public IActionResult Login(string? reason)
     {
+        if (reason == "locked")
+        {
+            ViewBag.ErrorMessage = ErrorMessage.AccountLocked;
+        }
+
         return View();
     }
 
@@ -89,6 +95,7 @@ public class AuthController : Controller
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity));
+<<<<<<< HEAD
 
             // Điều hướng theo vai trò: Recruiter về khu vực quản lý tin tuyển dụng,
             // các vai trò khác (Candidate/Guest) về trang chủ.
@@ -98,6 +105,17 @@ public class AuthController : Controller
             }
 
             return RedirectToAction("Index", "Home");
+=======
+            switch (user.RoleName)
+            {
+                case "Admin":
+                    return RedirectToAction("Index", "Admin");
+                case "Candidate":
+                    return RedirectToAction("Index", "Home");
+                default:
+                    return RedirectToAction("Index", "Home");
+            }
+>>>>>>> origin/features
         }
 
         ModelState.AddModelError(string.Empty, result.ErrorMessage);

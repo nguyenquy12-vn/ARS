@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ARSDbContext))]
-    partial class ARSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721212324_AddCancelReason")]
+    partial class AddCancelReason
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,32 +33,11 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AiConcerns")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("AiFeedback")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("AiMatchScore")
                         .HasColumnType("int");
-
-                    b.Property<string>("AiMatchedSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiMissingSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiRecommendation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("AiScoredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("AiStrengths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiVerdict")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("AppliedAt")
                         .HasColumnType("datetime2");
@@ -69,13 +51,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("CoverLetter")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("InterviewAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InterviewNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("JobPostingId")
                         .HasColumnType("int");
@@ -212,150 +187,6 @@ namespace Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Domain.Entities.CvBankEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("AiYearsExperience")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CurrentTitle")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int?>("FolderId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsFresher")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MatchConcerns")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("MatchScore")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("MatchScoredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("MatchStrengths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MatchVerdict")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MatchedSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MissingSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("RawText")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecruiterId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Skills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StoredFileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Strengths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Summary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("TotalYearsExperience")
-                        .HasColumnType("float");
-
-                    b.Property<string>("Weaknesses")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FolderId");
-
-                    b.HasIndex("RecruiterId");
-
-                    b.ToTable("CvBankEntries");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AiPriorityNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("AiWeightAchievement")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightEducation")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightExperience")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightSkills")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("JdDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("JdRequirements")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("RecruiterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecruiterId");
-
-                    b.ToTable("CvFolders");
-                });
-
             modelBuilder.Entity("Domain.Entities.JobCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -430,21 +261,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AiPriorityNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("AiWeightAchievement")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightEducation")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightExperience")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AiWeightSkills")
-                        .HasColumnType("int");
-
                     b.Property<string>("Benefits")
                         .HasColumnType("nvarchar(max)");
 
@@ -508,10 +324,6 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            AiWeightAchievement = 15,
-                            AiWeightEducation = 10,
-                            AiWeightExperience = 35,
-                            AiWeightSkills = 40,
                             Benefits = "Lương thưởng tháng 13, bảo hiểm FPT Care, làm việc hybrid.",
                             CompanyId = 1,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -737,36 +549,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("AiAiYears")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime?>("AiAnalyzedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("AiIsFresher")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("AiName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiStrengths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiSummary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AiTitle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double?>("AiTotalYears")
-                        .HasColumnType("float");
-
-                    b.Property<string>("AiWeaknesses")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("CandidateId")
                         .HasColumnType("int");
 
@@ -852,11 +634,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DisplayedName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -874,21 +651,18 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Description = "Quản trị viên toàn quyền hệ thống",
-                            DisplayedName = "Quản trị viên",
                             Name = "Admin"
                         },
                         new
                         {
                             Id = 2,
                             Description = "Nhà tuyển dụng (Đăng tin, duyệt CV, dùng AI)",
-                            DisplayedName = "Nhà tuyển dụng",
                             Name = "Recruiter"
                         },
                         new
                         {
                             Id = 3,
                             Description = "Ứng viên (Tìm việc, nộp CV)",
-                            DisplayedName = "Ứng viên",
                             Name = "Candidate"
                         });
                 });
@@ -992,28 +766,6 @@ namespace Infrastructure.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("SmtpEnableSsl")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SmtpFromEmail")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("SmtpHost")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("SmtpPassword")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int?>("SmtpPort")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SmtpUsername")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1031,10 +783,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@ars.com",
                             FullName = "Hệ Thống Admin",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0123456789",
                             RoleId = 1,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1043,10 +794,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter1@fpt.com",
                             FullName = "Nguyễn Văn Tuyển FPT",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0987654321",
                             RoleId = 2,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1055,10 +805,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter2@viettel.com",
                             FullName = "Trần Thị Duyệt Viettel",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0912345678",
                             RoleId = 2,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1067,10 +816,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate1@gmail.com",
                             FullName = "Lê Văn Pro .NET",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0333444555",
                             RoleId = 3,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1079,10 +827,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate2@gmail.com",
                             FullName = "Nguyễn Thị Fresher",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0333444666",
                             RoleId = 3,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1091,10 +838,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate3@gmail.com",
                             FullName = "Trần Văn Intern",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0333444777",
                             RoleId = 3,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         },
                         new
@@ -1103,10 +849,9 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate4@gmail.com",
                             FullName = "Hoàng Lệ Trái Ngành",
-                            PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
+                            PasswordHash = "$2a$11$M96I7clW6g7Y9bIvxX6gAexW7R4K1N.8h7Z62Lg82Mv7C5K1lK31.",
                             PhoneNumber = "0333444888",
                             RoleId = 3,
-                            SmtpEnableSsl = true,
                             Status = "Active"
                         });
                 });
@@ -1144,35 +889,6 @@ namespace Infrastructure.Migrations
                         .WithOne("Company")
                         .HasForeignKey("Domain.Entities.Company", "RecruiterId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Recruiter");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvBankEntry", b =>
-                {
-                    b.HasOne("Domain.Entities.CvFolder", "Folder")
-                        .WithMany("CvBankEntries")
-                        .HasForeignKey("FolderId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Domain.Entities.User", "Recruiter")
-                        .WithMany()
-                        .HasForeignKey("RecruiterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Folder");
-
-                    b.Navigation("Recruiter");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "Recruiter")
-                        .WithMany()
-                        .HasForeignKey("RecruiterId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Recruiter");
@@ -1247,11 +963,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("Domain.Entities.CvFolder", b =>
-                {
-                    b.Navigation("CvBankEntries");
                 });
 
             modelBuilder.Entity("Domain.Entities.JobCategory", b =>

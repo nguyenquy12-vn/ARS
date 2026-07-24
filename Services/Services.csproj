@@ -21,8 +21,6 @@
 
   <ItemGroup>
     <Folder Include="DTOs\Company\" />
-    <Folder Include="DTOs\JobPosting\" />
-    <Folder Include="DTOs\Application\" />
   </ItemGroup>
 
 </Project>

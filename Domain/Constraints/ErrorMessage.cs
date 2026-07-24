@@ -32,10 +32,9 @@ public static class ErrorMessage
     public const string AiQuotaExceeded = "Gemini đã hết hạn mức (429 Too Many Requests). Vui lòng đợi ít phút rồi thử lại, hoặc dùng API key khác.";
     public const string AiTimeout = "AI phản hồi quá lâu (timeout). Vui lòng thử lại sau.";
 
-
+    public const string UserNotFound = "Người dùng không tồn tại";
 
     public const string InvalidPassword = "Invalid password.";
-    public const string UserNotFound = "User not found.";
     public const string UserAlreadyExists = "User already exists.";
     public const string InvalidCredentials = "Invalid credentials.";
     public const string UnauthorizedAccess = "Unauthorized access.";

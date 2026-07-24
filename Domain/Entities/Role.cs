@@ -11,6 +11,10 @@ public class Role
     [StringLength(50)]
     public string Name { get; set; } = string.Empty; 
 
+    [Required]
+    [StringLength(50)]
+    public string DisplayedName { get; set; } = string.Empty;
+
     public string? Description { get; set; }
 
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();

@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ARS Admin Dashboard</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Custom Admin Layout CSS -->
+    <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #f8f9fa;
+            }
+
+            /* Sidebar Styling */
+            .admin-wrapper {
+                display: flex;
+                min-height: 100vh;
+            }
+
+            .admin-sidebar {
+                width: 260px;
+                background-color: #1e293b; /* Dark Slate Background */
+                color: #f8fafc;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                transition: all 0.3s ease;
+            }
+
+            .sidebar-brand {
+                padding: 1.25rem 1.5rem;
+                font-weight: 700;
+                font-size: 1.2rem;
+                color: #fff;
+                text-decoration: none;
+                border-bottom: 1px solid #334155;
+            }
+
+            .sidebar-menu {
+                padding: 1rem 0;
+                list-style: none;
+                margin: 0;
+            }
+
+                .sidebar-menu .nav-link {
+                    color: #94a3b8;
+                    padding: 0.75rem 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    font-weight: 500;
+                    border-left: 4px solid transparent;
+                    transition: all 0.2s;
+                }
+
+                    .sidebar-menu .nav-link:hover,
+                    .sidebar-menu .nav-link.active {
+                        color: #ffffff;
+                        background-color: #334155;
+                        border-left-color: #3b82f6; /* Accent Blue line */
+                    }
+
+                    .sidebar-menu .nav-link i {
+                        font-size: 1.2rem;
+                        margin-right: 0.75rem;
+                    }
+
+            /* Submenu / Dropdown in Sidebar */
+            .sidebar-dropdown .dropdown-menu {
+                position: static !important;
+                transform: none !important;
+                background-color: #0f172a;
+                border: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+
+            .sidebar-dropdown .dropdown-item {
+                color: #94a3b8;
+                padding: 0.6rem 1.5rem 0.6rem 3.25rem;
+                font-size: 0.9rem;
+            }
+
+                .sidebar-dropdown .dropdown-item:hover,
+                .sidebar-dropdown .dropdown-item.active {
+                    color: #fff;
+                    background-color: #1e293b;
+                }
+
+            /* Main Content Wrapper */
+            .admin-content-wrapper {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                overflow-x: hidden;
+            }
+
+            .admin-navbar {
+                background-color: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .admin-main {
+                padding: 2rem;
+                flex-grow: 1;
+            }
+
+            .admin-footer {
+                background-color: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                padding: 1rem 2rem;
+                color: #64748b;
+            }
+    </style>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- ==================== LEFT SIDEBAR NAVIGATION ==================== -->
+        <aside class="admin-sidebar">
+            <a asp-controller="AdminDashboard" asp-action="Index" class="sidebar-brand d-flex align-items-center">
+                <i class="bi bi-shield-lock-fill text-primary fs-3 me-2"></i>
+                <span>ARS Admin</span>
+            </a>
+
+            @{
+                // Helper check active controller/action để highlight menu
+                string currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+                string currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+            }
+
+            <ul class="sidebar-menu">
+                <!-- 1. Tổng quan -->
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Admin" && currentAction == "Index" ? "active" : "")"
+                       asp-controller="Admin" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                </li>
+
+                <!-- 2. Quản lý bài đăng -->
+                @if (User.HasClaim("Permission", "ViewJob") || User.HasClaim("Permission", "ManageRoles"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "JobManagement" ? "active" : "")"
+                           asp-controller="JobManagement" asp-action="Index">
+                            <i class="bi bi-file-earmark-post"></i>
+                            <span>Quản lý bài đăng</span>
+                        </a>
+                    </li>
+                }
+
+                <!-- 3. Quản lý người dùng -->
+                @if (User.HasClaim("Permission", "ManageUsers"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "UserManagement" ? "active" : "")"
+                           asp-controller="UserManagement" asp-action="Index">
+                            <i class="bi bi-people"></i>
+                            <span>Quản lý người dùng</span>
+                        </a>
+                    </li>
+                }
+
+                @if (User.HasClaim("Permission", "ManageUsers"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "ApplicationManagement" ? "active" : "")"
+                           asp-controller="ApplicationManagement" asp-action="Index">
+                            <i class="bi bi-people"></i>
+                            <span>Quản lý đơn ứng tuyển</span>
+                        </a>
+                    </li>
+                }
+
+                <!-- 4. Báo cáo -->
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Report" ? "active" : "")"
+                       asp-controller="Report" asp-action="Index">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span>Báo cáo</span>
+                    </a>
+                </li>
+
+                <!-- 5. Cài đặt hệ thống (Dropdown Accordion/Collapse) -->
+                <li class="nav-item sidebar-dropdown">
+                    <a class="nav-link d-flex justify-content-between align-items-center @(currentController == "Setting" || currentController == "Role" ? "active" : "")"
+                       data-bs-toggle="collapse" href="#settingSubmenu" role="button" aria-expanded="false" aria-controls="settingSubmenu">
+                        <div>
+                            <i class="bi bi-gear"></i>
+                            <span>Cài đặt hệ thống</span>
+                        </div>
+                        <i class="bi bi-chevron-down fs-7"></i>
+                    </a>
+
+                    <div class="collapse @(currentController == "Skill" || currentController == "Role" ? "show" : "")" id="settingSubmenu">
+                        <ul class="dropdown-menu d-block">
+                            <li>
+                                <a class="dropdown-item @(currentController == "Skill" ? "active" : "")"
+                                   asp-controller="Skill" asp-action="Index">
+                                    <i class="bi bi-tools me-2"></i>Kỹ năng nghề nghiệp
+                                </a>
+                            </li>
+                            @if (User.HasClaim("Permission", "ManageRoles"))
+                            {
+                                <li>
+                                    <a class="dropdown-item @(currentController == "Role" ? "active" : "")"
+                                       asp-controller="Role" asp-action="Index">
+                                        <i class="bi bi-shield-check me-2"></i>Vai trò và quyền
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+
+            <!-- Về trang người dùng -->
+            <div class="mt-auto p-3 border-top border-secondary border-opacity-25">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light btn-sm w-100">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Xem trang Client
+                </a>
+            </div>
+        </aside>
+
+        <!-- ==================== MAIN CONTENT AREA ==================== -->
+        <div class="admin-content-wrapper">
+            <!-- Top Navigation / User Header -->
+            <nav class="admin-navbar d-flex justify-content-between align-items-center">
+                <div class="fw-semibold text-secondary">
+                    <i class="bi bi-layout-sidebar me-2"></i> Trang quản trị hệ thống
+                </div>
+
+                <div class="d-flex align-items-center">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle d-flex align-items-center border" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle fs-5 text-primary me-2"></i>
+                                <span class="fw-medium">@User.Identity.Name</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </nav>
+
+            <!-- Main Body Content -->
+            <main role="main" class="admin-main">
+                @RenderBody()
+            </main>
+
+            <!-- Admin Footer -->
+            <footer class="admin-footer text-center text-md-start d-flex justify-content-between align-items-center">
+                <div>
+                    &copy; @DateTime.Now.Year - <strong>ARS Recruitment System</strong>. All rights reserved.
+                </div>
+                <div class="text-muted small">
+                    Version 1.0.0
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
