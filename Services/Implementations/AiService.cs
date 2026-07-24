@@ -75,7 +75,15 @@ public class AiService : IAiService
             model = _settings.Model,
             message,
             history = new List<object>(),
-            think = false
+            think = false,
+            // Tùy chọn tăng tốc: giới hạn độ dài output + giảm nhiệt độ (ổn định, ngắn gọn hơn).
+            // Chỉ có tác dụng nếu server LAN chuyển tiếp "options" xuống Ollama; nếu không, bị bỏ qua vô hại.
+            options = new
+            {
+                num_predict = 800,   // chặn trần token sinh ra -> giảm thời gian decode
+                temperature = 0.2,   // ít lan man hơn
+                top_p = 0.9
+            }
         };
 
         using var req = new HttpRequestMessage(HttpMethod.Post, "api/chat")
@@ -151,13 +159,14 @@ CHỈ trả về JSON đúng schema sau, không thêm bất kỳ chữ nào khá
     ""education"": <0-100>,
     ""achievement"": <0-100>
   }},
-  ""matched_skills"": [""kỹ năng/kinh nghiệm trong CV KHỚP yêu cầu JD""],
+  ""matched_skills"": [""kỹ năng/kinh nghiệm trong CV KHỚP yêu cầu JD (để MẢNG RỖNG [] nếu không có gì khớp)""],
   ""missing_skills"": [""yêu cầu quan trọng của JD hoặc must-have mà CV còn THIẾU""],
-  ""strengths"": [""2-4 điểm mạnh nổi bật so với JD""],
-  ""concerns"": [""2-4 điểm yếu / rủi ro so với JD""],
+  ""strengths"": [""CHỈ ghi điểm mạnh THỰC SỰ liên quan/đáp ứng JD. KHÔNG bịa, KHÔNG ghi điểm mạnh chung chung không liên quan JD. Nếu CV trái ngành / không phù hợp thì để MẢNG RỖNG []""],
+  ""concerns"": [""Liệt kê ĐẦY ĐỦ, TRUNG THỰC mọi điểm yếu / thiếu sót / rủi ro so với JD — không giới hạn số lượng, CV càng yếu thì càng ghi nhiều""],
   ""summary"": ""2-3 câu tiếng Việt giải thích điểm số"",
   ""recommendation"": ""<một trong: Mời phỏng vấn | Cân nhắc thêm | Loại>""
 }}
+LƯU Ý QUAN TRỌNG: Đánh giá phải trung thực. Nếu match_score thấp (dưới 40) hoặc ứng viên trái ngành, ""strengths"" và ""matched_skills"" NÊN để rỗng []; chỉ nêu điểm mạnh khi nó thực sự phục vụ được công việc trong JD.
 
 # TRỌNG SỐ CHẤM ĐIỂM (tổng 100) — match_score ≈ trung bình có trọng số của breakdown
 - Kinh nghiệm liên quan: {s.WeightExperience}%
