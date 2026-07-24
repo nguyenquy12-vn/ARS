@@ -63,18 +63,37 @@
 
 <div class="mb-3">
     <label asp-for="Description" class="form-label fw-semibold"></label>
-    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+    <textarea asp-for="Description" class="form-control js-mde" rows="5"></textarea>
     <span asp-validation-for="Description" class="text-danger small"></span>
 </div>
 
 <div class="mb-3">
     <label asp-for="Requirements" class="form-label fw-semibold"></label>
-    <textarea asp-for="Requirements" class="form-control" rows="4"></textarea>
+    <textarea asp-for="Requirements" class="form-control js-mde" rows="4"></textarea>
     <span asp-validation-for="Requirements" class="text-danger small"></span>
 </div>
 
 <div class="mb-3">
     <label asp-for="Benefits" class="form-label fw-semibold"></label>
-    <textarea asp-for="Benefits" class="form-control" rows="3"></textarea>
+    <textarea asp-for="Benefits" class="form-control js-mde" rows="3"></textarea>
     <span asp-validation-for="Benefits" class="text-danger small"></span>
 </div>
+
+@* Trình soạn thảo Markdown: bôi đậm, in nghiêng, danh sách, xuống dòng, xem trước... *@
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script>
+    (function () {
+        function initMde(el) {
+            new EasyMDE({
+                element: el,
+                spellChecker: false,
+                status: false,
+                minHeight: "120px",
+                toolbar: ["bold", "italic", "heading", "|", "unordered-list", "ordered-list", "quote", "|", "link", "preview", "guide"],
+                placeholder: "Hỗ trợ định dạng Markdown: **đậm**, *nghiêng*, - danh sách, xuống dòng..."
+            });
+        }
+        document.querySelectorAll("textarea.js-mde").forEach(initMde);
+    })();
+</script>

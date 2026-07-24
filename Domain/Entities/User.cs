@@ -36,6 +36,20 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    // ==========================================
+    // CÀI ĐẶT GỬI MAIL (SMTP) - dùng khi hẹn phỏng vấn / thông báo ứng viên
+    // ==========================================
+    [StringLength(150)]
+    public string? SmtpHost { get; set; }        // vd: smtp.gmail.com
+    public int? SmtpPort { get; set; }           // vd: 587
+    [StringLength(150)]
+    public string? SmtpUsername { get; set; }    // email đăng nhập SMTP
+    [StringLength(255)]
+    public string? SmtpPassword { get; set; }    // mật khẩu ứng dụng (App Password)
+    [StringLength(150)]
+    public string? SmtpFromEmail { get; set; }   // email hiển thị người gửi
+    public bool SmtpEnableSsl { get; set; } = true;
+
     public Company? Company { get; set; }
 
     public ICollection<Application> Applications { get; set; } = new List<Application>();

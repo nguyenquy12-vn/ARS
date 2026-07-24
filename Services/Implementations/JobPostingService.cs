@@ -67,7 +67,12 @@ public class JobPostingService : IJobPostingService
                 CreatedAt = j.CreatedAt,
                 CategoryName = j.JobCategory != null ? j.JobCategory.Name : string.Empty,
                 CompanyName = j.Company != null ? j.Company.CompanyName : string.Empty,
-                ApplicationCount = j.Applications.Count
+                ApplicationCount = j.Applications.Count,
+                AiWeightExperience = j.AiWeightExperience,
+                AiWeightSkills = j.AiWeightSkills,
+                AiWeightEducation = j.AiWeightEducation,
+                AiWeightAchievement = j.AiWeightAchievement,
+                AiPriorityNote = j.AiPriorityNote
             })
             .FirstOrDefaultAsync();
     }

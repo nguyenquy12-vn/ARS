@@ -1,0 +1,90 @@
+@* Modal chi tiết CV/ứng viên (điểm mạnh, điểm yếu, kỹ năng...). Dùng chung cho Kho CV và trang Ứng viên. *@
+<div class="modal fade" id="cvDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1" id="cvdName"></h5>
+                    <div class="text-muted small" id="cvdContact"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-4" id="cvdStats"></div>
+
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Đánh giá AI</h6>
+                <div class="cvd-callout eval mb-4" id="cvdSummary"></div>
+
+                <div id="cvdStrengthsBlock" class="mb-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm mạnh</h6>
+                    <ul class="cvd-list pos" id="cvdStrengths"></ul>
+                </div>
+
+                <div id="cvdWeaknessesBlock" class="mb-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm yếu</h6>
+                    <ul class="cvd-list neg" id="cvdWeaknesses"></ul>
+                </div>
+
+                <div id="cvdSkillsBlock" class="mb-3">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Kỹ năng</h6>
+                    <div id="cvdSkills"></div>
+                </div>
+
+                <a href="#" id="cvdPdf" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Mở CV (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        function parseArr(s) {
+            try { return JSON.parse(s || "[]"); } catch { return []; }
+        }
+        window.openCvDetail = function (el) {
+            const d = el.dataset;
+            document.getElementById("cvdName").textContent = d.name || "(Không rõ)";
+            const contact = [d.email, d.phone].filter(x => x && x.trim()).join(" · ");
+            document.getElementById("cvdContact").textContent = contact;
+
+            const stats = [];
+            if (d.title) stats.push(["Vị trí", d.title]);
+            stats.push(["KN tổng", d.total || "—"]);
+            stats.push(["Loại", d.type || "—"]);
+            document.getElementById("cvdStats").innerHTML = stats.map(s =>
+                `<div class="col-6 col-md-3"><div class="cvd-stat"><div class="v">${escapeHtml(s[1])}</div><div class="l">${escapeHtml(s[0])}</div></div></div>`
+            ).join("");
+
+            document.getElementById("cvdSummary").textContent = d.summary || "Chưa có đánh giá. Bấm \"Phân tích CV bằng AI\" để tạo.";
+
+            fillList("cvdStrengths", "cvdStrengthsBlock", parseArr(d.strengths));
+            fillList("cvdWeaknesses", "cvdWeaknessesBlock", parseArr(d.weaknesses));
+
+            const skills = parseArr(d.skills);
+            document.getElementById("cvdSkillsBlock").style.display = skills.length ? "" : "none";
+            document.getElementById("cvdSkills").innerHTML = skills.map(s =>
+                `<span class="badge rounded-pill bg-light text-dark border me-1 mb-1">${escapeHtml(s)}</span>`
+            ).join("");
+
+            const pdf = document.getElementById("cvdPdf");
+            if (d.pdf) { pdf.style.display = ""; pdf.href = d.pdf; } else { pdf.style.display = "none"; }
+
+            new bootstrap.Modal(document.getElementById("cvDetailModal")).show();
+        };
+
+        function fillList(listId, blockId, arr) {
+            const block = document.getElementById(blockId);
+            const list = document.getElementById(listId);
+            if (!arr.length) { block.style.display = "none"; return; }
+            block.style.display = "";
+            list.innerHTML = arr.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? "").replace(/[&<>"']/g, c =>
+                ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
+    })();
+</script>
