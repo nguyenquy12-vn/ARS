@@ -399,34 +399,55 @@ public class ApplicationService : IApplicationService
         var scored = 0;
         string? lastError = null;
 
-        foreach (var app in applications)
+        // Lọc các đơn cần chấm
+        var toScore = applications
+            .Where(app => rescoreAll || app.AiScoredAt == null)
+            .Select(app =>
+            {
+                var cvText = app.Resume?.RawTextContent;
+                if (string.IsNullOrWhiteSpace(cvText)) cvText = app.CoverLetter;
+                return new { App = app, CvText = cvText };
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x.CvText))
+            .ToList();
+
+        // Gọi AI SONG SONG tối đa 4 luồng (chỉ phần mạng, KHÔNG chạm DbContext).
+        var gate = new SemaphoreSlim(4);
+        var aiTasks = toScore.Select(async x =>
         {
-            if (!rescoreAll && app.AiScoredAt != null) continue;
-
-            var cvText = app.Resume?.RawTextContent;
-            if (string.IsNullOrWhiteSpace(cvText)) cvText = app.CoverLetter;
-            if (string.IsNullOrWhiteSpace(cvText)) continue;
-
-            // Trích xuất + chấm điểm chạy song song để nhanh hơn
-            var needExtract = app.Resume != null && app.Resume.AiAnalyzedAt == null
-                && !string.IsNullOrWhiteSpace(app.Resume.RawTextContent);
-            var extractTask = needExtract ? _aiService.ExtractCvInfoAsync(app.Resume!.RawTextContent!) : null;
-            var matchTask = _aiService.MatchCvAsync(job.Title, job.Description, job.Requirements, cvText, settings);
-
-            if (extractTask != null)
+            await gate.WaitAsync();
+            try
             {
-                var extracted = await extractTask;
-                if (extracted.IsSuccess) ApplyExtractToResume(app.Resume!, extracted);
+                var needExtract = x.App.Resume != null && x.App.Resume.AiAnalyzedAt == null
+                    && !string.IsNullOrWhiteSpace(x.App.Resume.RawTextContent);
+                var extractTask = needExtract ? _aiService.ExtractCvInfoAsync(x.App.Resume!.RawTextContent!) : null;
+                var matchTask = _aiService.MatchCvAsync(job.Title, job.Description, job.Requirements, x.CvText!, settings);
+
+                var extracted = extractTask != null ? await extractTask : null;
+                var match = await matchTask;
+                return new { x.App, Extracted = extracted, Match = match };
             }
-
-            var match = await matchTask;
-            if (!match.IsSuccess)
+            finally
             {
-                lastError = match.ErrorMessage;
+                gate.Release();
+            }
+        });
+
+        var results = await Task.WhenAll(aiTasks);
+
+        // Ghi kết quả vào DbContext TUẦN TỰ (thread-safe).
+        foreach (var r in results)
+        {
+            if (r.Extracted != null && r.Extracted.IsSuccess)
+                ApplyExtractToResume(r.App.Resume!, r.Extracted);
+
+            if (!r.Match.IsSuccess)
+            {
+                lastError = r.Match.ErrorMessage;
                 continue;
             }
 
-            ApplyMatchResult(app, match);
+            ApplyMatchResult(r.App, r.Match);
             scored++;
         }
 
