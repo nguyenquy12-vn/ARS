@@ -22,4 +22,11 @@ public class JobPostingDetail
     public string CategoryName { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public int ApplicationCount { get; set; }
+
+    // Cài đặt chấm điểm AI
+    public int AiWeightExperience { get; set; }
+    public int AiWeightSkills { get; set; }
+    public int AiWeightEducation { get; set; }
+    public int AiWeightAchievement { get; set; }
+    public string? AiPriorityNote { get; set; }
 }

@@ -29,6 +29,8 @@ public static class ErrorMessage
     public const string CvContentMissing = "Hồ sơ ứng viên chưa có nội dung CV để chấm điểm.";
     public const string AiNotConfigured = "Chưa cấu hình Gemini API Key. Vui lòng đặt 'Gemini:ApiKey' trong User Secrets.";
     public const string AiEvaluationError = "Có lỗi xảy ra khi chấm điểm CV bằng AI. Vui lòng thử lại.";
+    public const string AiQuotaExceeded = "Gemini đã hết hạn mức (429 Too Many Requests). Vui lòng đợi ít phút rồi thử lại, hoặc dùng API key khác.";
+    public const string AiTimeout = "AI phản hồi quá lâu (timeout). Vui lòng thử lại sau.";
 
     public const string UserNotFound = "Người dùng không tồn tại";
 

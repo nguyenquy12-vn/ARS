@@ -95,12 +95,13 @@ public class AuthController : Controller
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity));
+
             switch (user.RoleName)
             {
+                case "Recruiter":
+                    return RedirectToAction("Index", "JobPosting");
                 case "Admin":
                     return RedirectToAction("Index", "Admin");
-                case "Candidate":
-                    return RedirectToAction("Index", "Home");
                 default:
                     return RedirectToAction("Index", "Home");
             }

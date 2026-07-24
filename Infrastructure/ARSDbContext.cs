@@ -19,6 +19,8 @@ public class ARSDbContext : DbContext
     public DbSet<JobPosting> JobPostings { get; set; }
     public DbSet<JobCategory> JobCategories { get; set; }
     public DbSet<Resume> Resumes { get; set; }
+    public DbSet<CvBankEntry> CvBankEntries { get; set; }
+    public DbSet<CvFolder> CvFolders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +64,27 @@ public class ARSDbContext : DbContext
             .WithMany(u => u.Applications)
             .HasForeignKey(a => a.CandidateId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Kho CV thuộc về một Recruiter; xoá tài khoản thì xoá luôn CV đã lưu
+        modelBuilder.Entity<CvBankEntry>()
+            .HasOne(c => c.Recruiter)
+            .WithMany()
+            .HasForeignKey(c => c.RecruiterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Thư mục phân loại CV thuộc về Recruiter (Restrict để tránh nhiều đường cascade)
+        modelBuilder.Entity<CvFolder>()
+            .HasOne(f => f.Recruiter)
+            .WithMany()
+            .HasForeignKey(f => f.RecruiterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Khi xoá thư mục thì CV bên trong quay về "chưa phân loại" (FolderId = null)
+        modelBuilder.Entity<CvBankEntry>()
+            .HasOne(c => c.Folder)
+            .WithMany(f => f.CvBankEntries)
+            .HasForeignKey(c => c.FolderId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Seed: Roles
         modelBuilder.Entity<Role>().HasData(

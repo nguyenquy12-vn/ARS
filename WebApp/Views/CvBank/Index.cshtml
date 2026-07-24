@@ -1,0 +1,391 @@
+@model List<Services.DTOs.CvBank.CvBankItemDto>
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Kho CV";
+    var filter = ViewBag.Filter as Services.DTOs.CvBank.CvBankFilter ?? new Services.DTOs.CvBank.CvBankFilter();
+    var folders = ViewBag.Folders as List<Services.DTOs.CvBank.CvFolderDto> ?? new List<Services.DTOs.CvBank.CvFolderDto>();
+    var currentFolder = filter.FolderId;
+    var folderJd = ViewBag.CurrentFolder as Services.DTOs.CvBank.CvFolderDto;
+    string TabClass(int? id) => currentFolder == id ? "btn-primary" : "btn-outline-primary";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<!-- Thư mục phân loại CV -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="fw-semibold me-1"><i class="bi bi-folder2 me-1"></i> Thư mục:</span>
+            <a asp-action="Index" class="btn btn-sm @TabClass(null)">Tất cả</a>
+            <a asp-action="Index" asp-route-FolderId="-1" class="btn btn-sm @TabClass(-1)">Chưa phân loại</a>
+            @foreach (var f in folders)
+            {
+                <div class="btn-group">
+                    <a asp-action="Index" asp-route-FolderId="@f.Id" class="btn btn-sm @TabClass(f.Id)">
+                        @f.Name <span class="badge bg-light text-dark border ms-1">@f.Count</span>
+                    </a>
+                    <form asp-action="DeleteFolder" asp-route-id="@f.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Xoá thư mục @f.Name? CV bên trong sẽ về Chưa phân loại.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Xoá thư mục">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+        <form asp-action="CreateFolder" method="post" class="d-flex align-items-center gap-2" style="max-width: 420px;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="folderId" value="@currentFolder" />
+            <input type="text" name="name" class="form-control form-control-sm" placeholder="Tên thư mục mới (VD: Backend, Fresher...)" required />
+            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">+ Tạo thư mục</button>
+        </form>
+    </div>
+</div>
+
+<!-- Import CV -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="folderId" value="@currentFolder" />
+            <label class="fw-semibold mb-0 me-2"><i class="bi bi-cloud-upload me-1"></i> Import CV:</label>
+            <input type="file" name="files" accept="application/pdf" multiple required class="form-control" style="max-width: 380px;" />
+            <button type="submit" class="btn btn-primary fw-semibold">Upload &amp; Phân tích</button>
+            <span class="text-muted small">
+                @if (currentFolder is > 0)
+                {
+                    var fname = folders.FirstOrDefault(x => x.Id == currentFolder)?.Name;
+                    <text>CV mới sẽ vào thư mục <strong>@fname</strong> · </text>
+                }
+                Chỉ hỗ trợ PDF · tối đa 10MB/file
+            </span>
+        </form>
+    </div>
+</div>
+
+@if (folderJd != null)
+{
+    <!-- JD & chấm điểm cho thư mục -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-1"></i> JD & chấm điểm cho thư mục "@folderJd.Name"</h6>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#folderJdPanel">
+                        <i class="bi bi-pencil me-1"></i> Sửa JD / cài đặt
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="startCvScoring(false)" id="btnCvScoreNew">
+                        <i class="bi bi-clipboard-check me-1"></i> Chấm CV chưa chấm
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(confirm('Chấm lại toàn bộ CV trong thư mục?')) startCvScoring(true)" id="btnCvScoreAll">
+                        <i class="bi bi-arrow-repeat me-1"></i> Chấm lại tất cả
+                    </button>
+                </div>
+            </div>
+
+            @if (!folderJd.HasJd)
+            {
+                <div class="alert alert-warning py-2 small mb-3">Thư mục chưa có JD. Bấm <strong>Sửa JD / cài đặt</strong> để nhập trước khi chấm điểm.</div>
+            }
+
+            <div class="collapse @(folderJd.HasJd ? "" : "show")" id="folderJdPanel">
+                <form asp-action="SaveFolderJd" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="folderId" value="@folderJd.Id" />
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-1">Mô tả công việc (JD)</label>
+                        <textarea name="jdDescription" rows="4" class="form-control" placeholder="Mô tả vị trí, nhiệm vụ...">@folderJd.JdDescription</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-1">Yêu cầu</label>
+                        <textarea name="jdRequirements" rows="4" class="form-control" placeholder="Kỹ năng, kinh nghiệm yêu cầu...">@folderJd.JdRequirements</textarea>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Kinh nghiệm (%)</label>
+                        <input type="number" name="weightExperience" value="@folderJd.AiWeightExperience" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Kỹ năng (%)</label>
+                        <input type="number" name="weightSkills" value="@folderJd.AiWeightSkills" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Học vấn (%)</label>
+                        <input type="number" name="weightEducation" value="@folderJd.AiWeightEducation" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small text-muted mb-1">Thành tựu (%)</label>
+                        <input type="number" name="weightAchievement" value="@folderJd.AiWeightAchievement" min="0" max="100" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-1">Ưu tiên / must-have</label>
+                        <input type="text" name="priorityNote" value="@folderJd.AiPriorityNote" class="form-control" placeholder="VD: bắt buộc 3 năm React..." />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-sm">Lưu JD</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Thanh tiến trình chấm CV -->
+            <div id="cvScoreProgress" style="display:none;" class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold small" id="cvScoreLabel">Đang chuẩn bị...</span>
+                    <span class="text-muted small" id="cvScoreCount">0 / 0</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" id="cvScoreBar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Bộ lọc -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="FolderId" value="@currentFolder" />
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Tìm kiếm (tên / skill)</label>
+                <input type="text" name="Search" value="@filter.Search" class="form-control" placeholder="VD: Python, Nguyễn..." />
+            </div>
+            <div class="col-auto">
+                <label class="form-label small text-muted mb-1">Kinh nghiệm tổng ≥</label>
+                <input type="number" name="MinTotalExperience" value="@(filter.MinTotalExperience)" min="0" step="0.5" class="form-control" style="width: 120px;" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label small text-muted mb-1">Loại</label>
+                <select name="Type" class="form-select" style="width: 180px;">
+                    <option value="" selected="@(string.IsNullOrEmpty(filter.Type))">Tất cả</option>
+                    <option value="fresher" selected="@(filter.Type == "fresher")">Fresher</option>
+                    <option value="exp2" selected="@(filter.Type == "exp2")">KN tổng ≥ 2 năm</option>
+                    <option value="any" selected="@(filter.Type == "any")">Bất kỳ điều kiện trên</option>
+                </select>
+            </div>
+            <div class="col-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Lọc</button>
+                <a asp-action="Index" class="btn btn-secondary">Reset</a>
+                <a asp-action="ExportCsv"
+                   asp-route-Search="@filter.Search"
+                   asp-route-MinTotalExperience="@(filter.MinTotalExperience)"
+                   asp-route-Type="@filter.Type"
+                   asp-route-FolderId="@currentFolder"
+                   class="btn btn-success"><i class="bi bi-filetype-csv me-1"></i> Export CSV</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="text-muted small mb-2">Hiển thị @Model.Count CV</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên</th>
+                    <th>Title</th>
+                    <th class="text-center">KN tổng</th>
+                    <th>Loại</th>
+                    <th>Skills</th>
+                    <th>Tóm tắt</th>
+                    <th class="text-center">Điểm AI</th>
+                    <th>Thư mục</th>
+                    <th class="text-center">File</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-5">
+                            Chưa có CV nào. Dùng <strong>Import CV</strong> ở trên để tải PDF lên và để AI phân tích.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var cv in Model)
+                    {
+                        var loai = cv.IsFresher ? "Fresher" : $"{cv.TotalYearsExperience:0.#}y+";
+                        <tr data-cv-id="@cv.Id" data-scored="@(cv.HasMatch ? 1 : 0)" data-name="@cv.Name">
+                            <td>
+                                <a role="button" class="text-decoration-none fw-semibold"
+                                   onclick="openCvDetail(this)"
+                                   data-name="@cv.Name"
+                                   data-email="@cv.Email"
+                                   data-phone="@cv.Phone"
+                                   data-title="@cv.CurrentTitle"
+                                   data-total="@(cv.TotalYearsExperience.ToString("0.#"))y"
+                                   data-ai="@(cv.AiYearsExperience.ToString("0.#"))y"
+                                   data-type="@loai"
+                                   data-summary="@cv.Summary"
+                                   data-skills="@JsonSerializer.Serialize(cv.Skills)"
+                                   data-strengths="@JsonSerializer.Serialize(cv.Strengths)"
+                                   data-weaknesses="@JsonSerializer.Serialize(cv.Weaknesses)"
+                                   data-pdf="@Url.Action("ViewPdf", new { id = cv.Id })">
+                                    @(string.IsNullOrWhiteSpace(cv.Name) ? "(Không rõ)" : cv.Name)
+                                </a>
+                                @if (!string.IsNullOrWhiteSpace(cv.Email))
+                                {
+                                    <div class="text-muted small">@cv.Email</div>
+                                }
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(cv.CurrentTitle) ? "—" : cv.CurrentTitle)</td>
+                            <td class="text-center">@cv.TotalYearsExperience.ToString("0.#")y</td>
+                            <td>
+                                @if (cv.IsFresher)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">Fresher</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success-subtle text-success-emphasis">@cv.TotalYearsExperience.ToString("0.#")y+</span>
+                                }
+                            </td>
+                            <td style="max-width: 260px;">
+                                @foreach (var skill in cv.Skills.Take(8))
+                                {
+                                    <span class="badge rounded-pill bg-light text-dark border me-1 mb-1">@skill</span>
+                                }
+                                @if (cv.Skills.Count > 8)
+                                {
+                                    <span class="text-muted small">+@(cv.Skills.Count - 8)</span>
+                                }
+                            </td>
+                            <td style="max-width: 320px;">
+                                <div class="r-clamp2">@cv.Summary</div>
+                            </td>
+                            <td class="text-center" id="cvscore-@cv.Id">
+                                @if (cv.MatchScore.HasValue)
+                                {
+                                    <a role="button" class="text-decoration-none"
+                                       onclick="openApplicantMatch(this)"
+                                       data-name="@cv.Name"
+                                       data-email="@cv.Email"
+                                       data-score="@cv.MatchScore"
+                                       data-verdict="@cv.MatchVerdict"
+                                       data-summary="@cv.Summary"
+                                       data-matched="@JsonSerializer.Serialize(cv.MatchedSkills)"
+                                       data-missing="@JsonSerializer.Serialize(cv.MissingSkills)"
+                                       data-strengths="@JsonSerializer.Serialize(cv.MatchStrengths)"
+                                       data-concerns="@JsonSerializer.Serialize(cv.MatchConcerns)"
+                                       data-pdf="@Url.Action("ViewPdf", new { id = cv.Id })">
+                                        <span class="r-score @(cv.MatchScore >= 70 ? "r-score-hi" : cv.MatchScore >= 50 ? "r-score-md" : "r-score-lo")">
+                                            @cv.MatchScore<span class="unit">/100</span>
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(cv.MatchVerdict))
+                                        {
+                                            <div><span class="badge bg-secondary-subtle text-dark">@cv.MatchVerdict</span></div>
+                                        }
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="r-no-score">Chưa chấm</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="MoveToFolder" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="cvId" value="@cv.Id" />
+                                    <input type="hidden" name="currentFolder" value="@currentFolder" />
+                                    <select name="folderId" class="form-select form-select-sm" style="min-width: 140px;"
+                                            onchange="this.form.submit()">
+                                        <option value="" selected="@(cv.FolderId == null)">— Chưa phân loại —</option>
+                                        @foreach (var f in folders)
+                                        {
+                                            <option value="@f.Id" selected="@(cv.FolderId == f.Id)">@f.Name</option>
+                                        }
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="ViewPdf" asp-route-id="@cv.Id" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </a>
+                            </td>
+                            <td class="text-end">
+                                <form asp-action="Delete" asp-route-id="@cv.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xoá CV này khỏi kho?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@await Html.PartialAsync("_CvDetailModal")
+@await Html.PartialAsync("_ApplicantMatchModal")
+
+@section Scripts {
+    <script>
+        function startCvScoring(rescore) {
+            const rows = Array.from(document.querySelectorAll('tr[data-cv-id]'));
+            const targets = rows.filter(r => rescore || r.dataset.scored !== '1');
+            if (!targets.length) {
+                alert(rescore ? 'Không có CV nào để chấm.' : 'Tất cả CV đã được chấm.');
+                return;
+            }
+
+            const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenEl ? tokenEl.value : '';
+            const panel = document.getElementById('cvScoreProgress');
+            const bar = document.getElementById('cvScoreBar');
+            const label = document.getElementById('cvScoreLabel');
+            const count = document.getElementById('cvScoreCount');
+            const b1 = document.getElementById('btnCvScoreNew');
+            const b2 = document.getElementById('btnCvScoreAll');
+
+            panel.style.display = '';
+            b1.disabled = true; b2.disabled = true;
+            let done = 0, ok = 0, firstErr = null;
+
+            (async function () {
+                for (const row of targets) {
+                    const id = row.dataset.cvId;
+                    const name = row.dataset.name || ('#' + id);
+                    label.textContent = `Đang chấm ${done + 1}/${targets.length}: ${name}`;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+                    try {
+                        const res = await fetch('/CvBank/ScoreCvOne/' + id, {
+                            method: 'POST', headers: { 'RequestVerificationToken': token }
+                        });
+                        const d = await res.json();
+                        if (d.ok) { ok++; updateCvScoreCell(id, d.score, d.verdict); row.dataset.scored = '1'; }
+                        else if (!firstErr) firstErr = d.error;
+                    } catch (e) { if (!firstErr) firstErr = 'Lỗi kết nối AI.'; }
+                    done++;
+                    count.textContent = `${done}/${targets.length}`;
+                    bar.style.width = (done / targets.length * 100) + '%';
+                }
+                label.textContent = `Hoàn thành ${ok}/${targets.length}` + (firstErr ? ` · Lỗi: ${firstErr}` : '');
+                b1.disabled = false; b2.disabled = false;
+                setTimeout(() => location.reload(), 1500);
+            })();
+        }
+
+        function updateCvScoreCell(id, score, verdict) {
+            const cell = document.getElementById('cvscore-' + id);
+            if (!cell) return;
+            const cls = score >= 70 ? 'r-score-hi' : score >= 50 ? 'r-score-md' : 'r-score-lo';
+            cell.innerHTML = `<span class="r-score ${cls}">${score}<span class="unit">/100</span></span>`
+                + (verdict ? `<div><span class="badge bg-secondary-subtle text-dark">${verdict}</span></div>` : '');
+        }
+    </script>
+}

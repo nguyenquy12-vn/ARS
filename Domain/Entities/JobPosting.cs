@@ -62,5 +62,16 @@ public class JobPosting
     [Required]
     public DateTime ExpiredAt { get; set; }
 
+    // ==========================================
+    // CÀI ĐẶT CHẤM ĐIỂM AI CHO TIN NÀY (trọng số các tiêu chí, tổng nên = 100)
+    // ==========================================
+    public int AiWeightExperience { get; set; } = 35;  // Kinh nghiệm liên quan
+    public int AiWeightSkills { get; set; } = 40;      // Kỹ năng khớp yêu cầu
+    public int AiWeightEducation { get; set; } = 10;   // Học vấn / chứng chỉ
+    public int AiWeightAchievement { get; set; } = 15; // Thành tựu / dự án
+
+    // Ghi chú ưu tiên (must-have, kỹ năng nào tính điểm cao...) do recruiter tự nhập
+    public string? AiPriorityNote { get; set; }
+
     public ICollection<Application> Applications { get; set; } = new List<Application>();
 }

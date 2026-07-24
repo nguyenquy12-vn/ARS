@@ -12,11 +12,13 @@ public class ApplicationService : IApplicationService
 {
     private readonly ARSDbContext _context;
     private readonly IAiService _aiService;
+    private readonly IEmailService _emailService;
 
-    public ApplicationService(ARSDbContext context, IAiService aiService)
+    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService)
     {
         _context = context;
         _aiService = aiService;
+        _emailService = emailService;
     }
 
     public async Task<bool> ApplyJobAsync(int candidateId, int jobId, string cvFilePath, string cvFileName, string? coverLetter)
@@ -111,22 +113,93 @@ public class ApplicationService : IApplicationService
 
     public async Task<List<ApplicantListItem>> GetApplicantsForJobAsync(int jobId, int recruiterId)
     {
-        return await _context.Set<Domain.Entities.Application>()
+        // Chỉ đọc dữ liệu (kể cả kết quả AI đã cache). KHÔNG gọi AI ở đây để trang không bị treo
+        // khi server AI không phản hồi. Việc phân tích do recruiter bấm nút (AnalyzeApplicantsAsync).
+        var applications = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.Resume)
             .Where(a => a.JobPostingId == jobId && a.JobPosting!.Company!.RecruiterId == recruiterId)
             .OrderByDescending(a => a.AiMatchScore ?? -1)
             .ThenByDescending(a => a.AppliedAt)
-            .Select(a => new ApplicantListItem
-            {
-                Id = a.Id,
-                CandidateName = a.Candidate != null ? a.Candidate.FullName : string.Empty,
-                CandidateEmail = a.Candidate != null ? a.Candidate.Email : string.Empty,
-                ResumeTitle = a.Resume != null ? a.Resume.Title : string.Empty,
-                CoverLetter = a.CoverLetter,
-                AppliedAt = a.AppliedAt,
-                Status = a.Status,
-                AiMatchScore = a.AiMatchScore
-            })
             .ToListAsync();
+
+        return applications.Select(a => new ApplicantListItem
+        {
+            Id = a.Id,
+            CandidateName = a.Candidate != null ? a.Candidate.FullName : string.Empty,
+            CandidateEmail = a.Candidate != null ? a.Candidate.Email : string.Empty,
+            ResumeTitle = a.Resume != null ? a.Resume.Title : string.Empty,
+            CoverLetter = a.CoverLetter,
+            AppliedAt = a.AppliedAt,
+            Status = a.Status,
+            AiMatchScore = a.AiMatchScore,
+            Verdict = a.AiVerdict,
+            Recommendation = a.AiRecommendation,
+            MatchSummary = a.AiFeedback,
+            MatchedSkills = SplitLines(a.AiMatchedSkills),
+            MissingSkills = SplitLines(a.AiMissingSkills),
+            MatchStrengths = SplitLines(a.AiStrengths),
+            MatchConcerns = SplitLines(a.AiConcerns),
+            HasScore = a.AiScoredAt != null,
+            CvTitle = a.Resume?.AiTitle,
+            TotalYears = a.Resume?.AiTotalYears,
+            AiYears = a.Resume?.AiAiYears,
+            IsFresher = a.Resume?.AiIsFresher,
+            Skills = !string.IsNullOrWhiteSpace(a.Resume?.AiSkills)
+                ? a.Resume!.AiSkills!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            Summary = a.Resume?.AiSummary,
+            Strengths = !string.IsNullOrWhiteSpace(a.Resume?.AiStrengths)
+                ? a.Resume!.AiStrengths!.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            Weaknesses = !string.IsNullOrWhiteSpace(a.Resume?.AiWeaknesses)
+                ? a.Resume!.AiWeaknesses!.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                : new List<string>(),
+            ResumeFilePath = a.Resume?.FilePath,
+            InterviewAt = a.InterviewAt,
+            InterviewNote = a.InterviewNote
+        }).ToList();
+    }
+
+    public async Task<int> AnalyzeApplicantsAsync(int jobId, int recruiterId)
+    {
+        var resumes = await _context.Set<Domain.Entities.Application>()
+            .Where(a => a.JobPostingId == jobId && a.JobPosting!.Company!.RecruiterId == recruiterId)
+            .Select(a => a.Resume!)
+            .Where(r => r != null && r.AiAnalyzedAt == null && r.RawTextContent != null)
+            .Distinct()
+            .ToListAsync();
+
+        var analyzed = 0;
+        foreach (var resume in resumes)
+        {
+            var extracted = await _aiService.ExtractCvInfoAsync(resume.RawTextContent!);
+            if (!extracted.IsSuccess) continue;
+
+            ApplyExtractToResume(resume, extracted);
+            analyzed++;
+        }
+
+        if (analyzed > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        return analyzed;
+    }
+
+    private static void ApplyExtractToResume(Domain.Entities.Resume resume, Services.DTOs.CvBank.CvExtractResult extracted)
+    {
+        resume.AiName = extracted.Name;
+        resume.AiTitle = extracted.CurrentTitle;
+        resume.AiTotalYears = extracted.TotalYearsExperience;
+        resume.AiAiYears = extracted.AiYearsExperience;
+        resume.AiIsFresher = extracted.IsFresher;
+        resume.AiSkills = extracted.Skills.Count > 0 ? string.Join(", ", extracted.Skills) : null;
+        resume.AiSummary = extracted.Summary;
+        resume.AiStrengths = extracted.Strengths.Count > 0 ? string.Join("\n", extracted.Strengths) : null;
+        resume.AiWeaknesses = extracted.Weaknesses.Count > 0 ? string.Join("\n", extracted.Weaknesses) : null;
+        resume.AiAnalyzedAt = DateTime.UtcNow;
     }
 
     public async Task<ApplicationDetail?> GetDetailAsync(int applicationId, int recruiterId)
@@ -156,6 +229,8 @@ public class ApplicationService : IApplicationService
     public async Task<ApplicationResult> UpdateStatusAsync(int applicationId, int recruiterId, ApplicationStatus status)
     {
         var application = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.JobPosting)
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPosting!.Company!.RecruiterId == recruiterId);
 
         if (application == null)
@@ -168,12 +243,86 @@ public class ApplicationService : IApplicationService
         try
         {
             await _context.SaveChangesAsync();
+
+            // Gửi email thông báo khi Đạt / Từ chối
+            if (status is ApplicationStatus.Accepted or ApplicationStatus.Rejected)
+            {
+                await NotifyStatusAsync(application, recruiterId, status);
+            }
+
             return ApplicationResult.Success(application.Id, application.JobPostingId);
         }
         catch (Exception)
         {
             return ApplicationResult.Failure(ErrorMessage.ApplicationSaveError);
         }
+    }
+
+    public async Task<(bool ok, string? error, string? mailInfo)> ScheduleInterviewAsync(int applicationId, int recruiterId, DateTime interviewAt, string? note)
+    {
+        var application = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.JobPosting)
+            .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPosting!.Company!.RecruiterId == recruiterId);
+
+        if (application == null)
+        {
+            return (false, ErrorMessage.ApplicationNotFound, null);
+        }
+
+        application.InterviewAt = interviewAt;
+        application.InterviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        application.Status = ApplicationStatus.Interview;
+        await _context.SaveChangesAsync();
+
+        // Gửi email mời phỏng vấn
+        var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
+        var candidateEmail = application.Candidate?.Email;
+        if (recruiter == null || string.IsNullOrWhiteSpace(candidateEmail))
+        {
+            return (true, null, "Đã lưu lịch nhưng chưa gửi được email (thiếu thông tin).");
+        }
+
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+        var subject = $"[Mời phỏng vấn] {jobTitle}";
+        var body = $@"
+<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Bạn được mời tham gia phỏng vấn cho vị trí <strong>{jobTitle}</strong>.</p>
+<ul>
+  <li><strong>Thời gian:</strong> {interviewAt:HH:mm dddd, dd/MM/yyyy}</li>
+  {(string.IsNullOrWhiteSpace(note) ? "" : $"<li><strong>Địa điểm / Ghi chú:</strong> {note}</li>")}
+</ul>
+<p>Vui lòng phản hồi email này để xác nhận. Trân trọng,<br/>{recruiter.FullName}</p>";
+
+        var (ok, error) = await _emailService.SendAsync(recruiter, candidateEmail, subject, body);
+        var mailInfo = ok ? $"Đã gửi email mời phỏng vấn tới {candidateEmail}." : $"Đã lưu lịch. Gửi email lỗi: {error}";
+        return (true, null, mailInfo);
+    }
+
+    private async Task NotifyStatusAsync(Domain.Entities.Application application, int recruiterId, ApplicationStatus status)
+    {
+        var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
+        var candidateEmail = application.Candidate?.Email;
+        if (recruiter == null || string.IsNullOrWhiteSpace(candidateEmail)) return;
+
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+        string subject, body;
+        if (status == ApplicationStatus.Accepted)
+        {
+            subject = $"[Kết quả ứng tuyển] Chúc mừng - {jobTitle}";
+            body = $@"<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Chúc mừng! Hồ sơ của bạn cho vị trí <strong>{jobTitle}</strong> đã được chấp nhận. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.</p>
+<p>Trân trọng,<br/>{recruiter.FullName}</p>";
+        }
+        else
+        {
+            subject = $"[Kết quả ứng tuyển] {jobTitle}";
+            body = $@"<p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
+<p>Cảm ơn bạn đã ứng tuyển vị trí <strong>{jobTitle}</strong>. Rất tiếc, hồ sơ của bạn chưa phù hợp ở thời điểm này. Chúc bạn sớm tìm được công việc phù hợp.</p>
+<p>Trân trọng,<br/>{recruiter.FullName}</p>";
+        }
+
+        await _emailService.SendAsync(recruiter, candidateEmail, subject, body);
     }
 
     public async Task<ApplicationResult> EvaluateWithAiAsync(int applicationId, int recruiterId)
@@ -204,15 +353,15 @@ public class ApplicationService : IApplicationService
             application.JobPosting.Title,
             application.JobPosting.Description,
             application.JobPosting.Requirements,
-            cvText);
+            cvText,
+            BuildSettings(application.JobPosting));
 
         if (!match.IsSuccess)
         {
             return ApplicationResult.Failure(match.ErrorMessage ?? ErrorMessage.AiEvaluationError);
         }
 
-        application.AiMatchScore = match.MatchScore;
-        application.AiFeedback = match.Feedback;
+        ApplyMatchResult(application, match);
 
         try
         {
@@ -231,4 +380,213 @@ public class ApplicationService : IApplicationService
             return ApplicationResult.Failure(ErrorMessage.ApplicationSaveError);
         }
     }
+
+    public async Task<(int scored, string? error)> ScoreApplicantsAsync(int jobId, int recruiterId, bool rescoreAll)
+    {
+        var job = await _context.JobPostings
+            .FirstOrDefaultAsync(j => j.Id == jobId && j.Company!.RecruiterId == recruiterId);
+        if (job == null)
+        {
+            return (0, ErrorMessage.JobNotFound);
+        }
+
+        var applications = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Resume)
+            .Where(a => a.JobPostingId == jobId)
+            .ToListAsync();
+
+        var settings = BuildSettings(job);
+        var scored = 0;
+        string? lastError = null;
+
+        foreach (var app in applications)
+        {
+            if (!rescoreAll && app.AiScoredAt != null) continue;
+
+            var cvText = app.Resume?.RawTextContent;
+            if (string.IsNullOrWhiteSpace(cvText)) cvText = app.CoverLetter;
+            if (string.IsNullOrWhiteSpace(cvText)) continue;
+
+            // Trích xuất + chấm điểm chạy song song để nhanh hơn
+            var needExtract = app.Resume != null && app.Resume.AiAnalyzedAt == null
+                && !string.IsNullOrWhiteSpace(app.Resume.RawTextContent);
+            var extractTask = needExtract ? _aiService.ExtractCvInfoAsync(app.Resume!.RawTextContent!) : null;
+            var matchTask = _aiService.MatchCvAsync(job.Title, job.Description, job.Requirements, cvText, settings);
+
+            if (extractTask != null)
+            {
+                var extracted = await extractTask;
+                if (extracted.IsSuccess) ApplyExtractToResume(app.Resume!, extracted);
+            }
+
+            var match = await matchTask;
+            if (!match.IsSuccess)
+            {
+                lastError = match.ErrorMessage;
+                continue;
+            }
+
+            ApplyMatchResult(app, match);
+            scored++;
+        }
+
+        if (scored > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        return (scored, scored == 0 ? lastError : null);
+    }
+
+    public async Task<(bool ok, string? error, int score, string? verdict)> ScoreApplicantAsync(int applicationId, int recruiterId)
+    {
+        var app = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.JobPosting)
+            .Include(a => a.Resume)
+            .FirstOrDefaultAsync(a => a.Id == applicationId && a.JobPosting!.Company!.RecruiterId == recruiterId);
+
+        if (app == null || app.JobPosting == null)
+        {
+            return (false, ErrorMessage.ApplicationNotFound, 0, null);
+        }
+
+        var cvText = app.Resume?.RawTextContent;
+        if (string.IsNullOrWhiteSpace(cvText)) cvText = app.CoverLetter;
+        if (string.IsNullOrWhiteSpace(cvText))
+        {
+            return (false, ErrorMessage.CvContentMissing, 0, null);
+        }
+
+        // Chạy song song: trích xuất CV (nếu cần) + chấm điểm theo JD -> nhanh gần gấp đôi
+        var needExtract = app.Resume != null && app.Resume.AiAnalyzedAt == null
+            && !string.IsNullOrWhiteSpace(app.Resume.RawTextContent);
+        var extractTask = needExtract
+            ? _aiService.ExtractCvInfoAsync(app.Resume!.RawTextContent!)
+            : null;
+        var matchTask = _aiService.MatchCvAsync(
+            app.JobPosting.Title, app.JobPosting.Description, app.JobPosting.Requirements, cvText, BuildSettings(app.JobPosting));
+
+        if (extractTask != null)
+        {
+            var extracted = await extractTask;
+            if (extracted.IsSuccess) ApplyExtractToResume(app.Resume!, extracted);
+        }
+
+        var match = await matchTask;
+
+        if (!match.IsSuccess)
+        {
+            return (false, match.ErrorMessage ?? ErrorMessage.AiEvaluationError, 0, null);
+        }
+
+        ApplyMatchResult(app, match);
+        await _context.SaveChangesAsync();
+        return (true, null, match.MatchScore, match.Verdict);
+    }
+
+    public async Task<bool> SaveJdSettingsAsync(int jobId, int recruiterId, JdEvalSettings settings)
+    {
+        var job = await _context.JobPostings
+            .FirstOrDefaultAsync(j => j.Id == jobId && j.Company!.RecruiterId == recruiterId);
+        if (job == null) return false;
+
+        job.AiWeightExperience = Math.Clamp(settings.WeightExperience, 0, 100);
+        job.AiWeightSkills = Math.Clamp(settings.WeightSkills, 0, 100);
+        job.AiWeightEducation = Math.Clamp(settings.WeightEducation, 0, 100);
+        job.AiWeightAchievement = Math.Clamp(settings.WeightAchievement, 0, 100);
+        job.AiPriorityNote = string.IsNullOrWhiteSpace(settings.PriorityNote) ? null : settings.PriorityNote.Trim();
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<(bool ok, string? error)> ApplyAsync(int jobId, int candidateId, string fileName, string filePath, byte[] pdfBytes, string? coverLetter)
+    {
+        var job = await _context.JobPostings.FirstOrDefaultAsync(j => j.Id == jobId);
+        if (job == null || job.Status != JobStatus.Active)
+        {
+            return (false, "Tin tuyển dụng không tồn tại hoặc đã đóng.");
+        }
+
+        var already = await _context.Set<Domain.Entities.Application>()
+            .AnyAsync(a => a.JobPostingId == jobId && a.CandidateId == candidateId);
+        if (already)
+        {
+            return (false, "Bạn đã ứng tuyển tin này rồi.");
+        }
+
+        // Đọc text từ PDF để phục vụ AI chấm điểm sau này
+        string? rawText = null;
+        try
+        {
+            using var ms = new MemoryStream(pdfBytes);
+            rawText = PdfTextExtractor.Extract(ms);
+        }
+        catch
+        {
+            // Không đọc được text vẫn cho ứng tuyển; recruiter vẫn xem được file PDF
+        }
+
+        var resume = new Domain.Entities.Resume
+        {
+            CandidateId = candidateId,
+            Title = fileName,
+            FilePath = filePath,
+            RawTextContent = rawText,
+            IsDefault = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Resumes.Add(resume);
+        await _context.SaveChangesAsync();
+
+        var application = new Domain.Entities.Application
+        {
+            JobPostingId = jobId,
+            CandidateId = candidateId,
+            ResumeId = resume.Id,
+            CoverLetter = string.IsNullOrWhiteSpace(coverLetter) ? null : coverLetter.Trim(),
+            Status = ApplicationStatus.Pending,
+            AppliedAt = DateTime.UtcNow
+        };
+        _context.Set<Domain.Entities.Application>().Add(application);
+        await _context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<bool> HasAppliedAsync(int jobId, int candidateId)
+    {
+        return await _context.Set<Domain.Entities.Application>()
+            .AnyAsync(a => a.JobPostingId == jobId && a.CandidateId == candidateId);
+    }
+
+    private static JdEvalSettings BuildSettings(Domain.Entities.JobPosting job) => new()
+    {
+        WeightExperience = job.AiWeightExperience,
+        WeightSkills = job.AiWeightSkills,
+        WeightEducation = job.AiWeightEducation,
+        WeightAchievement = job.AiWeightAchievement,
+        PriorityNote = job.AiPriorityNote
+    };
+
+    private static void ApplyMatchResult(Domain.Entities.Application app, CvMatchResult match)
+    {
+        app.AiMatchScore = match.MatchScore;
+        app.AiFeedback = string.IsNullOrWhiteSpace(match.Summary) ? match.Feedback : match.Summary;
+        app.AiVerdict = match.Verdict;
+        app.AiMatchedSkills = JoinLines(match.MatchedSkills);
+        app.AiMissingSkills = JoinLines(match.MissingSkills);
+        app.AiStrengths = JoinLines(match.Strengths);
+        app.AiConcerns = JoinLines(match.Concerns);
+        app.AiRecommendation = match.Recommendation;
+        app.AiScoredAt = DateTime.UtcNow;
+    }
+
+    private static string? JoinLines(List<string> items) =>
+        items.Count > 0 ? string.Join("\n", items) : null;
+
+    private static List<string> SplitLines(string? s) =>
+        string.IsNullOrWhiteSpace(s)
+            ? new List<string>()
+            : s.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 }

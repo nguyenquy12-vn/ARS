@@ -44,12 +44,29 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<ICvBankService, CvBankService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Gemini AI service (API key được cấu hình qua User Secrets: "Gemini:ApiKey")
-builder.Services.AddScoped<IAiService>(_ => new GeminiAiService(
-    builder.Configuration["Gemini:ApiKey"],
-    builder.Configuration["Gemini:Model"] ?? "gemini-2.0-flash"));
+// AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
+builder.Services.AddSingleton(new AiSettings
+{
+    Model = builder.Configuration["Ai:Model"] ?? "gemma4:12b"
+});
+builder.Services.AddHttpClient<IAiService, AiService>(client =>
+{
+    var baseUrl = builder.Configuration["Ai:BaseUrl"] ?? "http://localhost:11434/v1/";
+    if (!baseUrl.EndsWith('/')) baseUrl += "/";
+    client.BaseAddress = new Uri(baseUrl);
+
+    var timeout = builder.Configuration.GetValue<int?>("Ai:TimeoutSeconds") ?? 120;
+    client.Timeout = TimeSpan.FromSeconds(timeout);
+
+    var apiKey = builder.Configuration["Ai:ApiKey"];
+    if (!string.IsNullOrWhiteSpace(apiKey))
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+});
 
 // Register Mapster mappings
 var config = TypeAdapterConfig.GlobalSettings;
