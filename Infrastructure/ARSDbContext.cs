@@ -19,6 +19,7 @@ public class ARSDbContext : DbContext
     public DbSet<JobPosting> JobPostings { get; set; }
     public DbSet<JobCategory> JobCategories { get; set; }
     public DbSet<Resume> Resumes { get; set; }
+    public DbSet<EmailVerification> EmailVerifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +63,13 @@ public class ARSDbContext : DbContext
             .WithMany(u => u.Applications)
             .HasForeignKey(a => a.CandidateId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // EmailVerification configuration
+        modelBuilder.Entity<EmailVerification>()
+            .HasOne(ev => ev.User)
+            .WithMany()
+            .HasForeignKey(ev => ev.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Seed: Roles
         modelBuilder.Entity<Role>().HasData(

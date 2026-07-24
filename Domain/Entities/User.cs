@@ -39,4 +39,13 @@ public class User
     public Company? Company { get; set; }
 
     public ICollection<Application> Applications { get; set; } = new List<Application>();
+
+    // Email verification & external login support
+    public bool IsEmailVerified { get; set; } = false;
+
+    [StringLength(100)]
+    public string? ExternalProvider { get; set; }
+
+    [StringLength(200)]
+    public string? ExternalId { get; set; }
 }

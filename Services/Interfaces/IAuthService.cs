@@ -9,6 +9,14 @@ public interface IAuthService
 
     Task<BoolResponse> RegisterCandidateAsync(RegisterRequest request);
 
+    Task<BoolResponse> VerifyEmailOtpAsync(string email, string code);
+
+    Task<BoolResponse> ResendEmailOtpAsync(string email);
+
+    Task<int> GetResendCooldownSecondsAsync(string email);
+
+    Task<UserAuthResponse?> GetOrCreateExternalUserAsync(string provider, string providerKey, string? email, string? fullName);
+
     Task<BoolResponse> LockAccountAsync(int userId);
 
     Task<BoolResponse> UnlockAccountAsync(int userId);
