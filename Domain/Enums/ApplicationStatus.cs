@@ -7,9 +7,6 @@ public enum ApplicationStatus
     EvaluatingAI = 3, // AI đang phân tích chấm điểm (nếu cần trạng thái chờ)
     Accepted = 4,   // Nhận vào phỏng vấn / Đạt
     Rejected = 5,   // Từ chối / Loại
-<<<<<<< HEAD
-    Interview = 6   // Đã hẹn lịch phỏng vấn
-=======
-    Withdrawn = 6   // Ứng viên tự rút lui / từ chối các bước sau
->>>>>>> origin/features
+    Interview = 6,  // Đã hẹn lịch phỏng vấn
+    Withdrawn = 7   // Ứng viên tự rút lui / từ chối các bước sau
 }

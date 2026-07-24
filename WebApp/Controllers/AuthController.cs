@@ -95,27 +95,16 @@ public class AuthController : Controller
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity));
-<<<<<<< HEAD
 
-            // Điều hướng theo vai trò: Recruiter về khu vực quản lý tin tuyển dụng,
-            // các vai trò khác (Candidate/Guest) về trang chủ.
-            if (user.RoleName == "Recruiter")
-            {
-                return RedirectToAction("Index", "JobPosting");
-            }
-
-            return RedirectToAction("Index", "Home");
-=======
             switch (user.RoleName)
             {
+                case "Recruiter":
+                    return RedirectToAction("Index", "JobPosting");
                 case "Admin":
                     return RedirectToAction("Index", "Admin");
-                case "Candidate":
-                    return RedirectToAction("Index", "Home");
                 default:
                     return RedirectToAction("Index", "Home");
             }
->>>>>>> origin/features
         }
 
         ModelState.AddModelError(string.Empty, result.ErrorMessage);
