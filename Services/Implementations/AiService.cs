@@ -180,6 +180,12 @@ QUAN TRỌNG: Đây là điều kiện BẮT BUỘC. Hãy kiểm tra kỹ ứng 
 - Nếu ứng viên KHÔNG đáp ứng dù chỉ một must-have (ví dụ yêu cầu 4 năm kinh nghiệm nhưng ứng viên chỉ có 3 năm): match_score KHÔNG được vượt quá 50, verdict CHỈ được là ""Cân nhắc"" hoặc ""Chưa phù hợp"", và phải ghi rõ điểm thiếu vào ""missing_skills"" + ""concerns"".
 - Chỉ khi ứng viên đáp ứng ĐẦY ĐỦ must-have thì mới được xét các mức điểm cao (""Phù hợp"", ""Rất phù hợp"").
 
+# QUY TẮC ĐIỂM SÀN (RẤT QUAN TRỌNG)
+- Nếu ""matched_skills"" RỖNG (không có kỹ năng/kinh nghiệm nào của CV khớp yêu cầu JD): match_score BẮT BUỘC nằm trong khoảng 0-10, verdict = ""Chưa phù hợp"", recommendation = ""Loại"".
+- Nếu ứng viên TRÁI NGÀNH hoàn toàn so với JD (ví dụ chuyên môn Marketing ứng tuyển vị trí Lập trình): match_score BẮT BUỘC nằm trong khoảng 0-10. KHÔNG cộng điểm ""học vấn"" hay ""thái độ"" chung chung cho ngành không liên quan.
+- Điểm học vấn/thành tựu CHỈ được tính khi nó liên quan trực tiếp đến JD. Bằng cấp/thành tựu thuộc ngành khác KHÔNG được cộng điểm.
+- Đừng cho điểm ""an ủi"": nếu CV không đáp ứng gì, hãy cho điểm gần 0 thay vì 10-20.
+
 Thang verdict: 85-100 Rất phù hợp; 70-84 Phù hợp; 50-69 Cân nhắc; dưới 50 Chưa phù hợp.
 
 # MÔ TẢ CÔNG VIỆC
@@ -207,6 +213,16 @@ Yêu cầu: {requirements}
             var strengths = ReadList(root, "strengths");
             var concerns = ReadList(root, "concerns");
             var recommendation = ReadString(root, "recommendation");
+
+            // ÉP ĐIỂM SÀN (deterministic, không phụ thuộc AI):
+            // Không có kỹ năng nào khớp JD => ứng viên trái ngành / không đáp ứng => kẹp điểm rất thấp.
+            if (matched.Count == 0 && score > 10)
+            {
+                score = 10;
+                verdict = "Chưa phù hợp";
+                recommendation = "Loại";
+                strengths = new List<string>(); // không có điểm mạnh phục vụ JD
+            }
 
             var feedback = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(summary)) feedback.AppendLine(summary);
