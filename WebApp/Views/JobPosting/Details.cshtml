@@ -68,16 +68,26 @@
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body p-4">
             <h5 class="fw-bold">Mô tả công việc</h5>
-            <p style="white-space: pre-line">@Model.Description</p>
+            <div class="md-content">@Model.Description</div>
 
             <h5 class="fw-bold mt-4">Yêu cầu ứng viên</h5>
-            <p style="white-space: pre-line">@Model.Requirements</p>
+            <div class="md-content">@Model.Requirements</div>
 
             @if (!string.IsNullOrWhiteSpace(Model.Benefits))
             {
                 <h5 class="fw-bold mt-4">Quyền lợi</h5>
-                <p style="white-space: pre-line">@Model.Benefits</p>
+                <div class="md-content">@Model.Benefits</div>
             }
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script>
+        document.querySelectorAll('.md-content').forEach(function (el) {
+            el.innerHTML = DOMPurify.sanitize(marked.parse(el.textContent.trim()));
+        });
+    </script>
+}
