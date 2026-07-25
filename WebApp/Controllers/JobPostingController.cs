@@ -9,7 +9,7 @@ using WebApp.Models.JobPosting;
 
 namespace WebApp.Controllers;
 
-[Authorize(Roles = "Recruiter")]
+[Authorize]
 public class JobPostingController : Controller
 {
     private readonly IJobPostingService _jobPostingService;
