@@ -1,0 +1,89 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Xác thực Email";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body p-4 p-sm-5">
+                    <h3 class="card-title text-center mb-4 fw-bold text-primary">XÁC THỰC EMAIL</h3>
+
+                    <p class="text-muted small text-center">Vui lòng nhập mã OTP đã được gửi tới email: <strong>@ViewBag.Email</strong></p>
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success small">@TempData["SuccessMessage"]</div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger small">@TempData["ErrorMessage"]</div>
+                    }
+
+                    <form asp-action="VerifyEmailPost" asp-controller="Auth" method="post">
+                        <input type="hidden" name="email" value="@ViewBag.Email" />
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Mã xác thực (OTP)</label>
+                            <input name="code" type="text" class="form-control" placeholder="Nhập mã OTP" />
+                        </div>
+
+                        <div class="d-grid mb-2">
+                            <button type="submit" class="btn btn-primary">Xác thực</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center small">
+                        @{ var cooldown = (int?)(ViewBag.ResendCooldownSeconds ?? 0) ?? 0; }
+                        <form id="resendForm" asp-action="ResendOtp" asp-controller="Auth" method="post" class="d-inline">
+                            <input type="hidden" name="email" value="@ViewBag.Email" />
+                            <button id="resendBtn" type="submit" class="btn btn-link" @(cooldown>0?"disabled":"")>
+                                <span id="resendText">Gửi lại mã (Resend OTP)</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+            var cooldown = @((int)(ViewBag.ResendCooldownSeconds ?? 0));
+            var resendBtn = document.getElementById('resendBtn');
+            var resendText = document.getElementById('resendText');
+            var resendForm = document.getElementById('resendForm');
+
+            function startCountdown(seconds) {
+                if (!resendBtn) return;
+                resendBtn.disabled = true;
+                var remaining = seconds;
+                resendText.textContent = 'Gửi lại mã (' + remaining + 's)';
+                var iv = setInterval(function(){
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(iv);
+                        resendBtn.disabled = false;
+                        resendText.textContent = 'Gửi lại mã (Resend OTP)';
+                    } else {
+                        resendText.textContent = 'Gửi lại mã (' + remaining + 's)';
+                    }
+                }, 1000);
+            }
+
+            if (cooldown > 0) {
+                startCountdown(cooldown);
+            }
+
+            // When the user clicks resend, disable immediately and start cooldown (optimistic)
+            if (resendForm) {
+                resendForm.addEventListener('submit', function(){
+                    startCountdown(60); // client-side fallback; server will enforce exact remaining seconds
+                });
+            }
+        })();
+    </script>
+}

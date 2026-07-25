@@ -34,6 +34,8 @@ public static class ErrorMessage
 
     public const string UserNotFound = "Người dùng không tồn tại";
 
+    public const string EmailNotVerified = "Email chưa được xác thực. Vui lòng kiểm tra hộp thư và nhập mã OTP.";
+
     public const string InvalidPassword = "Invalid password.";
     public const string UserAlreadyExists = "User already exists.";
     public const string InvalidCredentials = "Invalid credentials.";
