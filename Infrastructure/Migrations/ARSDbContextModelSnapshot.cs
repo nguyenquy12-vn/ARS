@@ -212,11 +212,7 @@ namespace Infrastructure.Migrations
                         });
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Domain.Entities.EmailVerification", b =>
-=======
             modelBuilder.Entity("Domain.Entities.CvBankEntry", b =>
->>>>>>> origin/features
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -224,20 +220,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-<<<<<<< HEAD
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("UserId")
-=======
                     b.Property<double>("AiYearsExperience")
                         .HasColumnType("float");
 
@@ -365,20 +347,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("RecruiterId")
->>>>>>> origin/features
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-<<<<<<< HEAD
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EmailVerifications");
-=======
                     b.HasIndex("RecruiterId");
 
                     b.ToTable("CvFolders");
->>>>>>> origin/features
                 });
 
             modelBuilder.Entity("Domain.Entities.JobCategory", b =>
@@ -1001,21 +976,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("ExternalId")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ExternalProvider")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsEmailVerified")
-                        .HasColumnType("bit");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1067,7 +1031,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@ars.com",
                             FullName = "Hệ Thống Admin",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0123456789",
                             RoleId = 1,
@@ -1080,7 +1043,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter1@fpt.com",
                             FullName = "Nguyễn Văn Tuyển FPT",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0987654321",
                             RoleId = 2,
@@ -1093,7 +1055,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter2@viettel.com",
                             FullName = "Trần Thị Duyệt Viettel",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0912345678",
                             RoleId = 2,
@@ -1106,7 +1067,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate1@gmail.com",
                             FullName = "Lê Văn Pro .NET",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0333444555",
                             RoleId = 3,
@@ -1119,7 +1079,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate2@gmail.com",
                             FullName = "Nguyễn Thị Fresher",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0333444666",
                             RoleId = 3,
@@ -1132,7 +1091,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate3@gmail.com",
                             FullName = "Trần Văn Intern",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0333444777",
                             RoleId = 3,
@@ -1145,7 +1103,6 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate4@gmail.com",
                             FullName = "Hoàng Lệ Trái Ngành",
-                            IsEmailVerified = false,
                             PasswordHash = "$2a$12$AZ2uR7y2CIwawpCEIjfrBOUtjC5PSpDFH5gWJn2Y0bgJUGGBkYvuy",
                             PhoneNumber = "0333444888",
                             RoleId = 3,
@@ -1192,17 +1149,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Recruiter");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Domain.Entities.EmailVerification", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-=======
             modelBuilder.Entity("Domain.Entities.CvBankEntry", b =>
                 {
                     b.HasOne("Domain.Entities.CvFolder", "Folder")
@@ -1230,7 +1176,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Recruiter");
->>>>>>> origin/features
                 });
 
             modelBuilder.Entity("Domain.Entities.JobPosting", b =>
