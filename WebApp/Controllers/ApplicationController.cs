@@ -8,7 +8,7 @@ using WebApp.Models.Application;
 
 namespace WebApp.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Recruiter")]
 public class ApplicationController : Controller
 {
     private readonly IApplicationService _applicationService;

@@ -19,12 +19,8 @@ public class ARSDbContext : DbContext
     public DbSet<JobPosting> JobPostings { get; set; }
     public DbSet<JobCategory> JobCategories { get; set; }
     public DbSet<Resume> Resumes { get; set; }
-<<<<<<< HEAD
-    public DbSet<EmailVerification> EmailVerifications { get; set; }
-=======
     public DbSet<CvBankEntry> CvBankEntries { get; set; }
     public DbSet<CvFolder> CvFolders { get; set; }
->>>>>>> origin/features
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,15 +65,6 @@ public class ARSDbContext : DbContext
             .HasForeignKey(a => a.CandidateId)
             .OnDelete(DeleteBehavior.Restrict);
 
-<<<<<<< HEAD
-        // EmailVerification configuration
-        modelBuilder.Entity<EmailVerification>()
-            .HasOne(ev => ev.User)
-            .WithMany()
-            .HasForeignKey(ev => ev.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-=======
         // Kho CV thuộc về một Recruiter; xoá tài khoản thì xoá luôn CV đã lưu
         modelBuilder.Entity<CvBankEntry>()
             .HasOne(c => c.Recruiter)
@@ -99,7 +86,6 @@ public class ARSDbContext : DbContext
             .HasForeignKey(c => c.FolderId)
             .OnDelete(DeleteBehavior.SetNull);
 
->>>>>>> origin/features
         // Seed: Roles
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = 1, Name = "Admin", DisplayedName = "Quản trị viên", Description = "Quản trị viên toàn quyền hệ thống" },
