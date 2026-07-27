@@ -1,0 +1,27 @@
+@model Services.DTOs.Role.RoleDto
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Role";
+}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input asp-for="Name" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Displayed Name</label>
+                <input asp-for="DisplayedName" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+            </div>
+            <button class="btn btn-primary">Create</button>
+            <a class="btn btn-secondary ms-2" asp-action="Index">Cancel</a>
+        </form>
+    </div>
+</div>

@@ -54,7 +54,20 @@ public class AuthService : IAuthService
 
         if (!user.IsEmailVerified)
         {
-            return LoginResponse.Failure(ErrorMessage.EmailNotVerified);
+            // Allow legacy/existing accounts (created before EmailVerification was enforced)
+            // to sign in without OTP if they don't have any EmailVerification records.
+            var hasVerificationRecord = await _context.EmailVerifications.AnyAsync(e => e.UserId == user.Id);
+            if (!hasVerificationRecord)
+            {
+                // mark as verified to avoid asking again
+                user.IsEmailVerified = true;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                return LoginResponse.Failure(ErrorMessage.EmailNotVerified);
+            }
         }
 
         var userResponse = _mapper.Map<UserAuthResponse>(user);

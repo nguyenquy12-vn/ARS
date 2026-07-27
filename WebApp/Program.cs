@@ -23,6 +23,35 @@ var authBuilder = builder.Services.AddAuthentication(options =>
         options.AccessDeniedPath = "/404";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
+
+        // Clear TempData when the cookie middleware automatically redirects to login
+        options.Events = new CookieAuthenticationEvents
+        {
+        OnRedirectToLogin = context =>
+        {
+            try
+            {
+                var logger = context.HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILoggerFactory)) as Microsoft.Extensions.Logging.ILoggerFactory;
+                logger?.CreateLogger("AuthEvents")?.LogInformation("OnRedirectToLogin invoked for {Path}", context.Request.Path);
+
+                var factory = context.HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory)) as Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionaryFactory;
+                var tempData = factory?.GetTempData(context.HttpContext);
+                if (tempData != null)
+                {
+                    tempData.Clear();
+                    logger?.CreateLogger("AuthEvents")?.LogInformation("Cleared TempData during redirect to login for {Path}", context.Request.Path);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                var logger = context.HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILoggerFactory)) as Microsoft.Extensions.Logging.ILoggerFactory;
+                logger?.CreateLogger("AuthEvents")?.LogWarning(ex, "Failed to clear TempData during OnRedirectToLogin for {Path}", context.Request.Path);
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        }
+        };
     })
     // cookie used to temporarily store external authentication info
     .AddCookie("External", options =>
@@ -94,7 +123,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<ARSDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
+    // Use connection string from appsettings.json (DefaultConnection)
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services from the Services project
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -105,6 +135,8 @@ builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<ICvBankService, CvBankService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
 builder.Services.AddSingleton(new AiSettings

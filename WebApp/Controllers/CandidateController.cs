@@ -30,6 +30,8 @@ public class CandidateController : Controller
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdString, out int candidateId))
         {
+            // clear TempData to avoid showing unrelated messages on the login page
+            TempData.Clear();
             return RedirectToAction("Login", "Auth");
         }
 
@@ -73,6 +75,7 @@ public class CandidateController : Controller
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdString, out int candidateId))
         {
+            TempData.Clear();
             return RedirectToAction("Login", "Auth");
         }
 
@@ -92,6 +95,7 @@ public class CandidateController : Controller
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdString, out int candidateId))
         {
+            TempData.Clear();
             return RedirectToAction("Login", "Auth");
         }
 

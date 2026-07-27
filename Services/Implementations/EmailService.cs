@@ -1,9 +1,12 @@
-<<<<<<< HEAD
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Services.Interfaces;
 using System.Net;
 using System.Net.Mail;
+using Domain.Entities;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace Services.Implementations;
 
@@ -18,6 +21,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
+    // Legacy / global SMTP sending (used by system-level emails)
     public async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
         // Read SMTP config from configuration
@@ -47,7 +51,7 @@ public class EmailService : IEmailService
             }
         }
 
-        using var client = new SmtpClient(host, port)
+        using var client = new System.Net.Mail.SmtpClient(host, port)
         {
             EnableSsl = bool.Parse(_config["Smtp:EnableSsl"] ?? "true")
         };
@@ -72,21 +76,15 @@ public class EmailService : IEmailService
         {
             _logger.LogError(ex, "Failed to send email to {Email}", to);
             throw;
-=======
-using Domain.Entities;
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
-using Services.Interfaces;
+        }
+    }
 
-namespace Services.Implementations;
-
-// Gửi email qua SMTP dùng cấu hình lưu trong hồ sơ cá nhân của recruiter.
-// Dùng MailKit để hỗ trợ cả SSL ngầm định (port 465) lẫn STARTTLS (port 587).
-public class EmailService : IEmailService
-{
+    // Per-user SMTP sending (recruiter-configured SMTP)
     public async Task<(bool ok, string? error)> SendAsync(User sender, string toEmail, string subject, string htmlBody)
     {
+        if (sender is null)
+            return (false, "Sender is null");
+
         if (string.IsNullOrWhiteSpace(sender.SmtpHost) || sender.SmtpPort is null or 0
             || string.IsNullOrWhiteSpace(sender.SmtpUsername) || string.IsNullOrWhiteSpace(sender.SmtpPassword))
         {
@@ -109,12 +107,12 @@ public class EmailService : IEmailService
             message.Subject = subject;
             message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
-            // Port 465 = SSL ngầm định; 587 (hoặc bật SSL) = STARTTLS; còn lại = không mã hoá
+            // Port 465 = SSL on connect; 587 = STARTTLS; else = none
             SecureSocketOptions secure = port == 465
                 ? SecureSocketOptions.SslOnConnect
                 : sender.SmtpEnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None;
 
-            using var client = new SmtpClient();
+            using var client = new MailKit.Net.Smtp.SmtpClient();
             await client.ConnectAsync(sender.SmtpHost, port, secure);
             await client.AuthenticateAsync(sender.SmtpUsername, sender.SmtpPassword);
             await client.SendAsync(message);
@@ -124,8 +122,8 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to send per-user email to {Email}", toEmail);
             return (false, "Gửi email thất bại: " + ex.Message);
->>>>>>> origin/features
         }
     }
 }

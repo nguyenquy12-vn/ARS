@@ -1,0 +1,44 @@
+@model List<Services.DTOs.Role.RoleDto>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý vai trò";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Roles</h3>
+    <a class="btn btn-primary" asp-action="Create">Create Role</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Displayed</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Name</td>
+                        <td>@r.DisplayedName</td>
+                        <td>@r.Description</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-roleId="@r.Id">Edit</a>
+                            <form method="post" asp-action="Delete" asp-route-roleId="@r.Id" style="display:inline-block;margin-left:6px">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

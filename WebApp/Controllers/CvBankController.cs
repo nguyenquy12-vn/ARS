@@ -76,7 +76,7 @@ public class CvBankController : Controller
     public async Task<IActionResult> CreateFolder(string name, int? folderId)
     {
         var (ok, error) = await _cvBankService.CreateFolderAsync(CurrentUserId, name);
-        if (ok) TempData["Success"] = "Đã tạo thư mục.";
+        if (ok) TempData["SuccessMessage"] = "Đã tạo thư mục.";
         else TempData["Error"] = error;
         return RedirectToAction(nameof(Index), new { FolderId = folderId });
     }
@@ -86,7 +86,7 @@ public class CvBankController : Controller
     public async Task<IActionResult> DeleteFolder(int id)
     {
         await _cvBankService.DeleteFolderAsync(CurrentUserId, id);
-        TempData["Success"] = "Đã xoá thư mục (CV bên trong chuyển về chưa phân loại).";
+        TempData["SuccessMessage"] = "Đã xoá thư mục (CV bên trong chuyển về chưa phân loại).";
         return RedirectToAction(nameof(Index));
     }
 
@@ -95,7 +95,7 @@ public class CvBankController : Controller
     public async Task<IActionResult> MoveToFolder(int cvId, int? folderId, int? currentFolder)
     {
         await _cvBankService.MoveToFolderAsync(CurrentUserId, cvId, folderId);
-        TempData["Success"] = "Đã chuyển CV.";
+        TempData["SuccessMessage"] = "Đã chuyển CV.";
         return RedirectToAction(nameof(Index), new { FolderId = currentFolder });
     }
 
@@ -175,7 +175,7 @@ public class CvBankController : Controller
             {
                 System.IO.File.Delete(physicalPath);
             }
-            TempData["Success"] = "Đã xoá CV khỏi kho.";
+        TempData["SuccessMessage"] = "Đã xoá CV khỏi kho.";
         }
 
         return RedirectToAction(nameof(Index));

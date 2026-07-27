@@ -1,10 +1,105 @@
-﻿@{
+@model WebApp.Models.Admin.AdminDashboardViewModel
+
+@{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Quản lý Vai trò và Quyền";
+    ViewData["Title"] = "Tổng quan";
 }
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h3>Nội dung trang quản trị ở đây...</h3>
+<div class="container-fluid">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-people fs-2 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted">Người dùng</div>
+                        <h4 class="fw-bold">@Model.TotalUsers</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-briefcase fs-2 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted">Tin tuyển dụng</div>
+                        <h4 class="fw-bold">@Model.TotalJobs</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-building fs-2 text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted">Công ty</div>
+                        <h4 class="fw-bold">@Model.TotalCompanies</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-file-earmark-text fs-2 text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted">Ứng tuyển</div>
+                        <h4 class="fw-bold">@Model.TotalApplications</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Người dùng mới</div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var u in Model.RecentUsers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-medium">@u.FullName</div>
+                                    <div class="text-muted small">@u.Email</div>
+                                </div>
+                                <div class="text-muted small">@u.CreatedAt.ToString("dd/MM/yyyy")</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Ứng tuyển mới</div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var a in Model.RecentApplications)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div>Application #@a.Id</div>
+                                    <div class="text-muted small">Candidate: @a.CandidateId • Job: @a.JobPostingId</div>
+                                </div>
+                                <div class="text-muted small">@a.AppliedAt.ToString("dd/MM/yyyy")</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

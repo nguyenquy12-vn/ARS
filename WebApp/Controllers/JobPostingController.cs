@@ -68,7 +68,7 @@ public class JobPostingController : Controller
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Đăng tin tuyển dụng thành công.";
+            TempData["SuccessMessage"] = "Đăng tin tuyển dụng thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -108,7 +108,7 @@ public class JobPostingController : Controller
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Cập nhật tin tuyển dụng thành công.";
+            TempData["SuccessMessage"] = "Cập nhật tin tuyển dụng thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -126,11 +126,11 @@ public class JobPostingController : Controller
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Đã xóa tin tuyển dụng.";
+            TempData["SuccessMessage"] = "Đã xóa tin tuyển dụng.";
         }
         else
         {
-            TempData["Error"] = result.ErrorMessage;
+            TempData["ErrorMessage"] = result.ErrorMessage;
         }
 
         return RedirectToAction(nameof(Index));

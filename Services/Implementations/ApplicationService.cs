@@ -5,6 +5,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Services.DTOs.Application;
 using Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Services.Implementations;
 
@@ -13,12 +14,14 @@ public class ApplicationService : IApplicationService
     private readonly ARSDbContext _context;
     private readonly IAiService _aiService;
     private readonly IEmailService _emailService;
+    private readonly ILogger<ApplicationService> _logger;
 
-    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService)
+    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService, ILogger<ApplicationService> logger)
     {
         _context = context;
         _aiService = aiService;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<bool> ApplyJobAsync(int candidateId, int jobId, string cvFilePath, string cvFileName, string? coverLetter)
@@ -67,27 +70,36 @@ public class ApplicationService : IApplicationService
 
     public async Task<List<ApplicationDto>> GetMyApplicationsAsync(int candidateId)
     {
-        var applications = await _context.Set<Application>()
-            .Include(a => a.JobPosting)
-            .ThenInclude(j => j.Company)
-            .Where(a => a.CandidateId == candidateId)
-            .OrderByDescending(a => a.AppliedAt)
-            .Select(a => new ApplicationDto
-            {
-                Id = a.Id,
-                JobPostingId = a.JobPostingId,
-                JobTitle = a.JobPosting.Title,
-                CompanyName = a.JobPosting.Company.CompanyName,
-                CompanyLogoPath = a.JobPosting.Company.LogoPath,
-                AppliedAt = a.AppliedAt,
-                Status = a.Status.ToString(),
-                CoverLetter = a.CoverLetter,
-                CancelReason = a.CancelReason,
-                AiMatchScore = a.AiMatchScore
-            })
-            .ToListAsync();
+        try
+        {
+            var applications = await _context.Set<Application>()
+                .Include(a => a.JobPosting)
+                .ThenInclude(j => j.Company)
+                .Where(a => a.CandidateId == candidateId)
+                .OrderByDescending(a => a.AppliedAt)
+                .Select(a => new ApplicationDto
+                {
+                    Id = a.Id,
+                    JobPostingId = a.JobPostingId,
+                    JobTitle = a.JobPosting.Title,
+                    CompanyName = a.JobPosting.Company.CompanyName,
+                    CompanyLogoPath = a.JobPosting.Company.LogoPath,
+                    AppliedAt = a.AppliedAt,
+                    Status = a.Status.ToString(),
+                    CoverLetter = a.CoverLetter,
+                    CancelReason = a.CancelReason,
+                    AiMatchScore = a.AiMatchScore
+                })
+                .ToListAsync();
 
-        return applications;
+            return applications;
+        }
+        catch (System.Exception ex)
+        {
+            _logger?.LogError(ex, "Error fetching applications for candidate {CandidateId}", candidateId);
+            // Return empty list so UI can show 'no applications' instead of throwing
+            return new List<ApplicationDto>();
+        }
     }
 
     public async Task<bool> WithdrawApplicationAsync(int candidateId, int applicationId, string reason)

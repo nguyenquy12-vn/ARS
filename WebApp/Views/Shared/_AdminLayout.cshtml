@@ -133,10 +133,11 @@
     <div class="admin-wrapper">
         <!-- ==================== LEFT SIDEBAR NAVIGATION ==================== -->
         <aside class="admin-sidebar">
-            <a asp-controller="AdminDashboard" asp-action="Index" class="sidebar-brand d-flex align-items-center">
+            <a asp-controller="Admin" asp-action="Index" class="sidebar-brand d-flex align-items-center">
                 <i class="bi bi-shield-lock-fill text-primary fs-3 me-2"></i>
                 <span>ARS Admin</span>
             </a>
+            <!-- Admin link intentionally kept; permission checks unchanged -->
 
             @{
                 // Helper check active controller/action để highlight menu
@@ -220,8 +221,8 @@
                             @if (User.HasClaim("Permission", "ManageRoles"))
                             {
                                 <li>
-                                    <a class="dropdown-item @(currentController == "Role" ? "active" : "")"
-                                       asp-controller="Role" asp-action="Index">
+                                    <a class="dropdown-item @(currentController == "RoleManagement" ? "active" : "")"
+                                       asp-controller="RoleManagement" asp-action="Index">
                                         <i class="bi bi-shield-check me-2"></i>Vai trò và quyền
                                     </a>
                                 </li>

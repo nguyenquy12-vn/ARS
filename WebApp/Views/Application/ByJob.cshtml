@@ -82,13 +82,13 @@
     </div>
 </div>
 
-@if (TempData["Success"] != null)
+@if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
-@if (TempData["Error"] != null)
+@if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
 
 <!-- Thống kê -->

@@ -27,10 +27,7 @@
                                 </div>
                             </div>
                         }
-                        @if (TempData["ErrorMessage"] != null)
-                        {
-                            <div class="alert alert-danger small py-2 mb-3">@TempData["ErrorMessage"]</div>
-                        }
+                        <!-- TempData handled in AuthController.Login and copied into ViewBag to avoid duplicate alerts -->
 
                         @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] != null)
                         {

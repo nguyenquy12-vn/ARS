@@ -28,7 +28,8 @@ public class UserStatusValidationMiddleware
                 {
                     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-                    context.Response.Redirect("login?reason=locked");
+                    // Use absolute path to avoid relative redirect issues
+                    context.Response.Redirect("/login?reason=locked");
                     return;
                 }
 

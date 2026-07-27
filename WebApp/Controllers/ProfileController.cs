@@ -7,7 +7,8 @@ using WebApp.Models.Profile;
 
 namespace WebApp.Controllers;
 
-[Authorize(Roles = "Recruiter")]
+// Allow Admins to access recruiter profile editing as well
+[Authorize(Roles = "Recruiter,Admin")]
 public class ProfileController : Controller
 {
     private readonly ARSDbContext _context;

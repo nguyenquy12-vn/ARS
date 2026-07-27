@@ -9,14 +9,14 @@
         <a asp-action="ByJob" asp-route-id="@Model.JobPostingId" class="btn btn-outline-secondary btn-sm">← Danh sách ứng viên</a>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
 
     <div class="row">
         <div class="col-lg-7">

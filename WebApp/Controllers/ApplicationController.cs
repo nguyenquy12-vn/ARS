@@ -52,7 +52,7 @@ public class ApplicationController : Controller
         }
         catch (Exception)
         {
-            TempData["Error"] = "Không kết nối được máy chủ AI. Vui lòng kiểm tra 'Ai:BaseUrl' trong appsettings.json.";
+            TempData["ErrorMessage"] = "Không kết nối được máy chủ AI. Vui lòng kiểm tra 'Ai:BaseUrl' trong appsettings.json.";
         }
 
         return RedirectToAction(nameof(ByJob), new { id });
@@ -73,12 +73,12 @@ public class ApplicationController : Controller
             }
             else
             {
-                TempData["Error"] = error ?? "Không có ứng viên nào cần chấm (hoặc AI không phản hồi).";
+                TempData["ErrorMessage"] = error ?? "Không có ứng viên nào cần chấm (hoặc AI không phản hồi).";
             }
         }
         catch (Exception)
         {
-            TempData["Error"] = "Không kết nối được máy chủ AI. Vui lòng kiểm tra 'Ai:BaseUrl' trong appsettings.json.";
+            TempData["ErrorMessage"] = "Không kết nối được máy chủ AI. Vui lòng kiểm tra 'Ai:BaseUrl' trong appsettings.json.";
         }
 
         return RedirectToAction(nameof(ByJob), new { id });
@@ -142,7 +142,7 @@ public class ApplicationController : Controller
         }
         else
         {
-            TempData["Error"] = result.ErrorMessage;
+            TempData["ErrorMessage"] = result.ErrorMessage;
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -162,7 +162,7 @@ public class ApplicationController : Controller
         }
         else
         {
-            TempData["Error"] = result.ErrorMessage;
+            TempData["ErrorMessage"] = result.ErrorMessage;
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -181,7 +181,7 @@ public class ApplicationController : Controller
         }
         else
         {
-            TempData["Error"] = error;
+            TempData["ErrorMessage"] = error;
         }
         return RedirectToAction(nameof(ByJob), new { id = jobId });
     }
