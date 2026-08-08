@@ -185,4 +185,28 @@ public class ApplicationController : Controller
         }
         return RedirectToAction(nameof(ByJob), new { id = jobId });
     }
+
+    // POST /Application/BulkInterview -> gửi mời phỏng vấn hàng loạt cho nhiều ứng viên
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> BulkInterview(int jobId, int[] ids, DateTime interviewAt, string? note)
+    {
+        var (ok, failed, info) = await _applicationService.BulkScheduleInterviewAsync(jobId, CurrentUserId, ids ?? Array.Empty<int>(), interviewAt, note);
+        TempData[failed > 0 && ok == 0 ? "Error" : "Success"] = info;
+        return RedirectToAction(nameof(ByJob), new { id = jobId });
+    }
+
+    // POST /Application/ChangeStatus -> đổi trạng thái ngay trong danh sách ứng viên
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> ChangeStatus(int id, int jobId, ApplicationStatus status)
+    {
+        var result = await _applicationService.UpdateStatusAsync(id, CurrentUserId, status);
+        TempData[result.IsSuccess ? "Success" : "Error"] = result.IsSuccess
+            ? "Đã cập nhật trạng thái hồ sơ."
+            : result.ErrorMessage;
+        return RedirectToAction(nameof(ByJob), new { id = jobId });
+    }
 }

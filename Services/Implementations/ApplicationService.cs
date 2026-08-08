@@ -299,6 +299,60 @@ public class ApplicationService : IApplicationService
         return (true, null, mailInfo);
     }
 
+    public async Task<(int ok, int failed, string info)> BulkScheduleInterviewAsync(int jobId, int recruiterId, IEnumerable<int> applicationIds, DateTime interviewAt, string? note)
+    {
+        var ids = applicationIds?.Distinct().ToList() ?? new List<int>();
+        if (ids.Count == 0) return (0, 0, "Chưa chọn ứng viên nào.");
+
+        var apps = await _context.Set<Domain.Entities.Application>()
+            .Include(a => a.Candidate)
+            .Include(a => a.JobPosting)
+            .Where(a => ids.Contains(a.Id)
+                && a.JobPostingId == jobId
+                && a.JobPosting!.Company!.RecruiterId == recruiterId)
+            .ToListAsync();
+
+        if (apps.Count == 0) return (0, 0, "Không tìm thấy ứng viên hợp lệ.");
+
+        var trimmedNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        foreach (var app in apps)
+        {
+            app.InterviewAt = interviewAt;
+            app.InterviewNote = trimmedNote;
+            app.Status = ApplicationStatus.Interview;
+        }
+        await _context.SaveChangesAsync();
+
+        var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
+        int ok = 0, failed = 0;
+        if (recruiter != null)
+        {
+            foreach (var app in apps)
+            {
+                var email = app.Candidate?.Email;
+                if (string.IsNullOrWhiteSpace(email)) { failed++; continue; }
+
+                var jobTitle = app.JobPosting?.Title ?? "vị trí ứng tuyển";
+                var subject = $"[Mời phỏng vấn] {jobTitle}";
+                var body = $@"
+<p>Xin chào <strong>{app.Candidate?.FullName}</strong>,</p>
+<p>Bạn được mời tham gia phỏng vấn cho vị trí <strong>{jobTitle}</strong>.</p>
+<ul>
+  <li><strong>Thời gian:</strong> {interviewAt:HH:mm dddd, dd/MM/yyyy}</li>
+  {(string.IsNullOrWhiteSpace(trimmedNote) ? "" : $"<li><strong>Địa điểm / Ghi chú:</strong> {trimmedNote}</li>")}
+</ul>
+<p>Vui lòng phản hồi email này để xác nhận. Trân trọng,<br/>{recruiter.FullName}</p>";
+
+                var (sent, _) = await _emailService.SendAsync(recruiter, email, subject, body);
+                if (sent) ok++; else failed++;
+            }
+        }
+
+        var info = $"Đã lưu lịch PV cho {apps.Count} ứng viên. Email: {ok} gửi thành công"
+            + (failed > 0 ? $", {failed} lỗi/thiếu email." : ".");
+        return (ok, failed, info);
+    }
+
     private async Task NotifyStatusAsync(Domain.Entities.Application application, int recruiterId, ApplicationStatus status)
     {
         var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);

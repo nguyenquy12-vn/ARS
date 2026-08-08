@@ -194,20 +194,17 @@
                     <th>Tên</th>
                     <th>Title</th>
                     <th class="text-center">KN tổng</th>
-                    <th>Loại</th>
                     <th>Skills</th>
-                    <th>Tóm tắt</th>
                     <th class="text-center">Điểm AI</th>
                     <th>Thư mục</th>
-                    <th class="text-center">File</th>
-                    <th></th>
+                    <th class="text-end"></th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-muted py-5">
                             Chưa có CV nào. Dùng <strong>Import CV</strong> ở trên để tải PDF lên và để AI phân tích.
                         </td>
                     </tr>
@@ -241,8 +238,7 @@
                                 }
                             </td>
                             <td>@(string.IsNullOrWhiteSpace(cv.CurrentTitle) ? "—" : cv.CurrentTitle)</td>
-                            <td class="text-center">@cv.TotalYearsExperience.ToString("0.#")y</td>
-                            <td>
+                            <td class="text-center">
                                 @if (cv.IsFresher)
                                 {
                                     <span class="badge bg-warning-subtle text-warning-emphasis">Fresher</span>
@@ -261,9 +257,6 @@
                                 {
                                     <span class="text-muted small">+@(cv.Skills.Count - 8)</span>
                                 }
-                            </td>
-                            <td style="max-width: 320px;">
-                                <div class="r-clamp2">@cv.Summary</div>
                             </td>
                             <td class="text-center" id="cvscore-@cv.Id">
                                 @if (cv.MatchScore.HasValue)
@@ -309,12 +302,10 @@
                                     </select>
                                 </form>
                             </td>
-                            <td class="text-center">
-                                <a asp-action="ViewPdf" asp-route-id="@cv.Id" target="_blank" class="text-decoration-none">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                            <td class="text-end text-nowrap">
+                                <a asp-action="ViewPdf" asp-route-id="@cv.Id" target="_blank" class="btn btn-sm btn-outline-secondary" title="Xem CV PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i>
                                 </a>
-                            </td>
-                            <td class="text-end">
                                 <form asp-action="Delete" asp-route-id="@cv.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Xoá CV này khỏi kho?');">
                                     @Html.AntiForgeryToken()

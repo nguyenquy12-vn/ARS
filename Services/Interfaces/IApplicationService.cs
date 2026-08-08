@@ -40,6 +40,9 @@ public interface IApplicationService
     // Hẹn lịch phỏng vấn cho ứng viên + gửi email mời. Trả về (ok, lỗi, thông tin gửi mail).
     Task<(bool ok, string? error, string? mailInfo)> ScheduleInterviewAsync(int applicationId, int recruiterId, DateTime interviewAt, string? note);
 
+    // Gửi mời phỏng vấn HÀNG LOẠT cho nhiều ứng viên cùng lúc. Trả về (số gửi ok, số lỗi, thông tin).
+    Task<(int ok, int failed, string info)> BulkScheduleInterviewAsync(int jobId, int recruiterId, IEnumerable<int> applicationIds, DateTime interviewAt, string? note);
+
     // Chấm điểm CV bằng Gemini AI và lưu kết quả (AiMatchScore + AiFeedback)
     Task<ApplicationResult> EvaluateWithAiAsync(int applicationId, int recruiterId);
 }
