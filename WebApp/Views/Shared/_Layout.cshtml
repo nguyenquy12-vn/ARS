@@ -48,10 +48,10 @@
                         @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Recruiter"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="JobPosting" asp-action="Index">Tin tuyển dụng</a>
+                                <a class="nav-link" asp-controller="JobPosting" asp-action="Index">Tin tuyển dụng</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Company" asp-action="Index">Hồ sơ công ty</a>
+                                <a class="nav-link" asp-controller="Company" asp-action="Index">Hồ sơ công ty</a>
                             </li>
                         }
                     </ul>
@@ -130,12 +130,16 @@
     
     <script>
         // Navbar scroll effect
-        $(window).scroll(function() {
-            if ($(this).scrollTop() > 50) {
-                $('.main-header').addClass('scrolled');
-            } else {
-                $('.main-header').removeClass('scrolled');
+        $(function() {
+            function checkScroll() {
+                if ($(window).scrollTop() > 50) {
+                    $('.main-header').addClass('scrolled');
+                } else {
+                    $('.main-header').removeClass('scrolled');
+                }
             }
+            $(window).scroll(checkScroll);
+            checkScroll(); // trigger immediately on load
         });
     </script>
 </body>
