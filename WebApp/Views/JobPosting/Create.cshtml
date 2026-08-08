@@ -1,0 +1,27 @@
+@model WebApp.Models.JobPosting.JobPostingFormViewModel
+@{
+    ViewData["Title"] = "Đăng tin tuyển dụng";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary mb-0">Đăng tin tuyển dụng mới</h3>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Quay lại danh sách</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <partial name="_FormFields" model="Model" />
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary fw-semibold">Đăng tin</button>
+                    <a asp-action="Index" class="btn btn-light">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

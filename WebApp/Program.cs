@@ -44,6 +44,11 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
+// Gemini AI service (API key được cấu hình qua User Secrets: "Gemini:ApiKey")
+builder.Services.AddScoped<IAiService>(_ => new GeminiAiService(
+    builder.Configuration["Gemini:ApiKey"],
+    builder.Configuration["Gemini:Model"] ?? "gemini-2.0-flash"));
+
 // Register Mapster mappings
 var config = TypeAdapterConfig.GlobalSettings;
 
@@ -54,6 +59,20 @@ builder.Services.AddScoped<IMapper, Mapper>();
 
 
 var app = builder.Build();
+
+// Tự động cập nhật hạn nộp hồ sơ của tất cả công việc thành năm 2027 khi ứng dụng chạy
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
+        dbContext.Database.ExecuteSqlRaw("UPDATE JobPostings SET ExpiredAt = '2027-12-31 23:59:59' WHERE ExpiredAt < '2027-01-01'");
+    }
+    catch
+    {
+        // Bỏ qua nếu DB chưa được khởi tạo
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

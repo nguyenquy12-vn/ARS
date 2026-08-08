@@ -1,0 +1,71 @@
+@model Services.DTOs.Company.CompanyProfileDto
+@{
+    ViewData["Title"] = "Hồ sơ công ty";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary mb-0">Hồ sơ công ty</h3>
+        <a asp-action="Edit" class="btn btn-outline-primary fw-semibold">Chỉnh sửa</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-3 text-center mb-3">
+                    @if (!string.IsNullOrWhiteSpace(Model.LogoPath))
+                    {
+                        <img src="@Model.LogoPath" alt="Logo" class="img-fluid rounded border" style="max-height: 120px;" />
+                    }
+                    else
+                    {
+                        <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                             style="height: 120px;">
+                            <span class="text-muted small">Chưa có logo</span>
+                        </div>
+                    }
+                </div>
+                <div class="col-md-9">
+                    <h4 class="fw-bold mb-3">@Model.CompanyName</h4>
+                    <div class="row mb-2">
+                        <div class="col-md-3 text-muted">Mã số thuế</div>
+                        <div class="col-md-9">@Model.TaxCode</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-3 text-muted">Quy mô</div>
+                        <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.CompanySize) ? "—" : Model.CompanySize)</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-3 text-muted">Địa chỉ</div>
+                        <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.Address) ? "—" : Model.Address)</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-3 text-muted">Website</div>
+                        <div class="col-md-9">
+                            @if (!string.IsNullOrWhiteSpace(Model.Website))
+                            {
+                                <a href="@Model.Website" target="_blank" rel="noopener">@Model.Website</a>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Overview))
+            {
+                <hr />
+                <h5 class="fw-bold">Giới thiệu</h5>
+                <p style="white-space: pre-line">@Model.Overview</p>
+            }
+        </div>
+    </div>
+</div>

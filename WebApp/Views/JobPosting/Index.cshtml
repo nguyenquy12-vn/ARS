@@ -1,0 +1,84 @@
+@model List<Services.DTOs.JobPosting.JobPostingListItem>
+@{
+    ViewData["Title"] = "Tin tuyển dụng của tôi";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary mb-0">Tin tuyển dụng của tôi</h3>
+        <a asp-action="Create" class="btn btn-primary fw-semibold">+ Đăng tin mới</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Bạn chưa có tin tuyển dụng nào. Bấm <strong>"Đăng tin mới"</strong> để bắt đầu.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tiêu đề</th>
+                            <th>Ngành nghề</th>
+                            <th>Địa điểm</th>
+                            <th>Loại hình</th>
+                            <th class="text-center">Ứng viên</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th>Hạn nộp</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@job.Title</td>
+                                <td>@job.CategoryName</td>
+                                <td>@job.Location</td>
+                                <td>@job.JobType</td>
+                                <td class="text-center">@job.ApplicationCount</td>
+                                <td class="text-center">
+                                    <span class="badge @StatusBadge(job.Status)">@job.Status</span>
+                                </td>
+                                <td>@job.ExpiredAt.ToString("dd/MM/yyyy")</td>
+                                <td class="text-end text-nowrap">
+                                    <a asp-action="Details" asp-route-id="@job.Id" class="btn btn-sm btn-outline-secondary">Xem</a>
+                                    <a asp-controller="Application" asp-action="ByJob" asp-route-id="@job.Id" class="btn btn-sm btn-outline-info">Ứng viên</a>
+                                    <a asp-action="Edit" asp-route-id="@job.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form asp-action="Delete" asp-route-id="@job.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    string StatusBadge(Domain.Enums.JobStatus status) => status switch
+    {
+        Domain.Enums.JobStatus.Active => "bg-success",
+        Domain.Enums.JobStatus.Draft => "bg-secondary",
+        Domain.Enums.JobStatus.Closed => "bg-warning text-dark",
+        Domain.Enums.JobStatus.Archived => "bg-dark",
+        _ => "bg-secondary"
+    };
+}

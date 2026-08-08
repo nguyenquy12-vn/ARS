@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -163,6 +163,82 @@ public class ARSDbContext : DbContext
                 Vacancies = 3,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 ExpiredAt = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new JobPosting
+            {
+                Id = 2,
+                CompanyId = 1,
+                Title = "Chuyên viên Marketing Digital",
+                Description = "Lên kế hoạch và triển khai các chiến dịch quảng cáo trên nền tảng Digital (Facebook, Google).",
+                Requirements = "Tối thiểu 1 năm kinh nghiệm chạy Ads. Có khả năng sáng tạo nội dung.",
+                Benefits = "Thưởng theo KPIs, môi trường trẻ trung năng động.",
+                Location = "Thanh Xuân, Hà Nội",
+                JobType = JobType.FullTime,
+                WorkMode = WorkMode.Onsite,
+                JobCategoryId = 3,
+                MinSalary = 10000000,
+                MaxSalary = 20000000,
+                Status = JobStatus.Active,
+                Vacancies = 2,
+                CreatedAt = new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc),
+                ExpiredAt = new DateTime(2026, 2, 5, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new JobPosting
+            {
+                Id = 3,
+                CompanyId = 1,
+                Title = "Nhân viên Telesales",
+                Description = "Tư vấn sản phẩm dịch vụ của công ty đến với khách hàng qua điện thoại.",
+                Requirements = "Giọng nói chuẩn, giao tiếp tốt, không yêu cầu kinh nghiệm (được đào tạo).",
+                Benefits = "Hoa hồng cao, phụ cấp ăn trưa và đi lại.",
+                Location = "Đống Đa, Hà Nội",
+                JobType = JobType.FullTime,
+                WorkMode = WorkMode.Onsite,
+                JobCategoryId = 2,
+                MinSalary = 7000000,
+                MaxSalary = 15000000,
+                Status = JobStatus.Active,
+                Vacancies = 5,
+                CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, DateTimeKind.Utc),
+                ExpiredAt = new DateTime(2026, 3, 10, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new JobPosting
+            {
+                Id = 4,
+                CompanyId = 1,
+                Title = "Thực tập sinh ReactJS",
+                Description = "Tham gia phát triển các tính năng Front-end cho dự án công ty bằng ReactJS.",
+                Requirements = "Sinh viên năm cuối hoặc mới ra trường, nắm chắc HTML/CSS/JS cơ bản.",
+                Benefits = "Hỗ trợ dấu mộc thực tập, trợ cấp 3 triệu/tháng, cơ hội lên nhân viên chính thức.",
+                Location = "Quận 1, TP. HCM",
+                JobType = JobType.Internship,
+                WorkMode = WorkMode.Remote,
+                JobCategoryId = 1,
+                MinSalary = 3000000,
+                MaxSalary = 5000000,
+                Status = JobStatus.Active,
+                Vacancies = 4,
+                CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc),
+                ExpiredAt = new DateTime(2026, 2, 15, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new JobPosting
+            {
+                Id = 5,
+                CompanyId = 1,
+                Title = "Kế toán tổng hợp",
+                Description = "Chịu trách nhiệm kiểm tra đối chiếu số liệu, lập báo cáo tài chính hàng tháng/quý.",
+                Requirements = "Tốt nghiệp đại học chuyên ngành Kế toán, trên 3 năm kinh nghiệm làm tổng hợp.",
+                Benefits = "Chế độ BHYT, BHXH đầy đủ, thưởng lễ tết hấp dẫn.",
+                Location = "Hải Châu, Đà Nẵng",
+                JobType = JobType.FullTime,
+                WorkMode = WorkMode.Onsite,
+                JobCategoryId = 4,
+                MinSalary = 12000000,
+                MaxSalary = 18000000,
+                Status = JobStatus.Active,
+                Vacancies = 1,
+                CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc),
+                ExpiredAt = new DateTime(2026, 3, 20, 0, 0, 0, DateTimeKind.Utc)
             }
         );
 
