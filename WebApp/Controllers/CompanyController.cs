@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.Company;
 using Services.Interfaces;
 using WebApp.Models.Company;
+using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
 [Authorize(Roles = "Recruiter")]
+[RequireActiveRecruiterPlan]
 public class CompanyController : Controller
 {
     private readonly ICompanyService _companyService;

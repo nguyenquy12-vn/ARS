@@ -10,12 +10,16 @@ public class CandidateController : Controller
 {
     private readonly IApplicationService _applicationService;
     private readonly IWebHostEnvironment _env;
+    private readonly INotificationService _notificationService;
 
-    public CandidateController(IApplicationService applicationService, IWebHostEnvironment env)
+    public CandidateController(IApplicationService applicationService, IWebHostEnvironment env, INotificationService notificationService)
     {
         _applicationService = applicationService;
         _env = env;
+        _notificationService = notificationService;
     }
+
+    private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpPost]
     public async Task<IActionResult> Apply(int jobId, IFormFile cvFile, string? coverLetter)
@@ -26,35 +30,30 @@ public class CandidateController : Controller
             return RedirectToAction("Detail", "Job", new { id = jobId });
         }
 
-        // Lấy CandidateId từ Cookie (ClaimTypes.NameIdentifier)
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdString, out int candidateId))
         {
             return RedirectToAction("Login", "Auth");
         }
 
-        // Tạo thư mục nếu chưa có
         var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "cvs");
         if (!Directory.Exists(uploadFolder))
         {
             Directory.CreateDirectory(uploadFolder);
         }
 
-        // Đổi tên file để tránh trùng lặp
         var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(cvFile.FileName)}";
         var filePath = Path.Combine(uploadFolder, fileName);
 
-        // Lưu file vật lý
         using (var stream = new FileStream(filePath, FileMode.Create))
         {
             await cvFile.CopyToAsync(stream);
         }
 
-        // Đường dẫn ảo lưu vào DB
         var dbFilePath = $"/uploads/cvs/{fileName}";
 
         var result = await _applicationService.ApplyJobAsync(candidateId, jobId, dbFilePath, cvFile.FileName, coverLetter);
-        
+
         if (result)
         {
             TempData["SuccessMessage"] = "CV của bạn đã được gửi đi!";
@@ -106,5 +105,37 @@ public class CandidateController : Controller
         }
 
         return RedirectToAction(nameof(MyApplications));
+    }
+
+    // ====== NOTIFICATION ACTIONS ======
+
+    [HttpGet]
+    public async Task<IActionResult> Notifications()
+    {
+        var notifications = await _notificationService.GetByUserAsync(CurrentUserId);
+        return View(notifications);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkRead(int id)
+    {
+        await _notificationService.MarkAsReadAsync(id, CurrentUserId);
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAllRead()
+    {
+        await _notificationService.MarkAllAsReadAsync(CurrentUserId);
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUnreadCount()
+    {
+        var count = await _notificationService.GetUnreadCountAsync(CurrentUserId);
+        return Json(new { count });
     }
 }

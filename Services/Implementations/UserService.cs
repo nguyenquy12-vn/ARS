@@ -71,4 +71,24 @@ public class UserService : IUserService
 
         return UserDetailsResponse.Success(_mapper.Map<UserDto>(user), resumes, companyProfile);
     }
+
+    public async Task<(bool IsSuccess, string? ErrorMessage)> PromoteCandidateAsync(int userId, string targetRole)
+    {
+        if (targetRole is not ("Recruiter" or "Admin"))
+            return (false, "Vai trò nâng cấp không hợp lệ.");
+
+        var user = await _context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == userId);
+        if (user is null)
+            return (false, ErrorMessage.UserNotFound);
+        if (user.Role?.Name != "Candidate")
+            return (false, "Chỉ có thể nâng quyền tài khoản đang là Ứng viên.");
+
+        var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == targetRole);
+        if (role is null)
+            return (false, "Không tìm thấy vai trò đích.");
+
+        user.RoleId = role.Id;
+        await _context.SaveChangesAsync();
+        return (true, null);
+    }
 }

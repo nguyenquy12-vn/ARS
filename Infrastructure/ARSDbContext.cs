@@ -21,6 +21,8 @@ public class ARSDbContext : DbContext
     public DbSet<Resume> Resumes { get; set; }
     public DbSet<CvBankEntry> CvBankEntries { get; set; }
     public DbSet<CvFolder> CvFolders { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<PaymentOrder> PaymentOrders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +53,14 @@ public class ARSDbContext : DbContext
         modelBuilder.Entity<Company>()
             .HasIndex(c => c.TaxCode)
             .IsUnique();
+
+        modelBuilder.Entity<PaymentOrder>()
+            .Property(p => p.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PaymentOrder>()
+            .Property(p => p.Amount)
+            .HasPrecision(18, 2);
 
         // Prevent multiple cascade paths
         modelBuilder.Entity<Application>()
