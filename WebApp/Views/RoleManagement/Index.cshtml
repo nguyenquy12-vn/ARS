@@ -1,4 +1,4 @@
-@model List<Services.DTOs.Role.RoleDto>
+﻿@model List<Services.DTOs.Role.RoleDto>
 
 @{
     Layout = "_AdminLayout";
@@ -33,6 +33,7 @@
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-roleId="@r.Id">Edit</a>
                             <form method="post" asp-action="Delete" asp-route-roleId="@r.Id" style="display:inline-block;margin-left:6px">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>
                         </td>

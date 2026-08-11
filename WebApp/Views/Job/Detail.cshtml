@@ -1,7 +1,8 @@
-@model Services.DTOs.JobPosting.JobPostingDetailDto
+﻿@model Services.DTOs.JobPosting.JobPostingDetailDto
 
 @{
     ViewData["Title"] = Model?.Title ?? "Chi tiết việc làm";
+    var isExpired = Model?.ExpiredAt < DateTime.UtcNow;
 }
 
 @functions {
@@ -103,7 +104,14 @@
                 <!-- Company Card -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4 text-center p-4">
                     <div class="company-logo-large mx-auto mb-3 bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm">
-                        @(string.IsNullOrEmpty(Model?.CompanyLogoPath) ? Model?.CompanyName.Substring(0,1).ToUpper() : $"<img src='{Model?.CompanyLogoPath}' alt='logo' class='img-fluid rounded-circle'>")
+                        @if (string.IsNullOrEmpty(Model?.CompanyLogoPath))
+                        {
+                            @(string.IsNullOrEmpty(Model?.CompanyName) ? "?" : Model.CompanyName.Substring(0, 1).ToUpper())
+                        }
+                        else
+                        {
+                            <img src="@Model.CompanyLogoPath" alt="logo" class="img-fluid rounded-circle" />
+                        }
                     </div>
                     <h5 class="fw-bold mb-2">@Model?.CompanyName</h5>
                     
@@ -198,7 +206,13 @@
 
                         @if (User.IsInRole("Candidate"))
                         {
-                            @if (ViewBag.HasApplied == true)
+                            @if (isExpired)
+                            {
+                                <button class="btn btn-secondary w-100 rounded-pill py-3 fw-bold shadow mb-3" disabled>
+                                    <i class="bi bi-calendar-x me-2"></i> Tin tuyển dụng đã hết hạn
+                                </button>
+                            }
+                            else if (ViewBag.HasApplied == true)
                             {
                                 <button class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow mb-3" disabled>
                                     <i class="bi bi-check-circle-fill me-2"></i> Bạn đã ứng tuyển tin này
@@ -231,7 +245,7 @@
     </div>
 </div>
 
-@if (User.Identity?.IsAuthenticated == true && User.IsInRole("Candidate") && ViewBag.HasApplied != true)
+@if (User.Identity?.IsAuthenticated == true && User.IsInRole("Candidate") && ViewBag.HasApplied != true && !isExpired)
 {
     <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

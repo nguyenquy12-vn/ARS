@@ -1,12 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
+using Domain.Enums;
+using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
-using Infrastructure;
-using Domain.Enums;
-using WebApp.Models.Job;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using WebApp.Models.Job;
 
 namespace WebApp.Controllers;
 
@@ -17,8 +16,11 @@ public class JobController : Controller
     private readonly IWebHostEnvironment _env;
     private readonly ARSDbContext _context;
 
-    public JobController(IJobPostingService jobPostingService, IApplicationService applicationService,
-        IWebHostEnvironment env, ARSDbContext context)
+    public JobController(
+        IJobPostingService jobPostingService,
+        IApplicationService applicationService,
+        IWebHostEnvironment env,
+        ARSDbContext context)
     {
         _jobPostingService = jobPostingService;
         _applicationService = applicationService;
@@ -29,7 +31,6 @@ public class JobController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(string? keyword, int? categoryId, JobType? jobType, WorkMode? workMode)
     {
-        // Recruiter không xem trang việc làm dành cho candidate/guest
         if (User.Identity?.IsAuthenticated == true && User.IsInRole("Recruiter"))
         {
             return RedirectToAction("Index", "JobPosting");
@@ -54,7 +55,6 @@ public class JobController : Controller
     [HttpGet]
     public async Task<IActionResult> Detail(int id)
     {
-        // Recruiter không xem trang chi tiết việc làm phía candidate
         if (User.Identity?.IsAuthenticated == true && User.IsInRole("Recruiter"))
         {
             return RedirectToAction("Index", "JobPosting");
@@ -66,7 +66,6 @@ public class JobController : Controller
             return NotFound();
         }
 
-        // Cho candidate biết đã ứng tuyển tin này chưa
         if (User.Identity?.IsAuthenticated == true && User.IsInRole("Candidate"))
         {
             var candidateId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -76,7 +75,6 @@ public class JobController : Controller
         return View(jobDetail);
     }
 
-    // POST /Job/Apply -> ứng viên nộp CV (PDF) + lời nhắn
     [HttpPost]
     [Authorize(Roles = "Candidate")]
     [ValidateAntiForgeryToken]
@@ -91,22 +89,11 @@ public class JobController : Controller
             return RedirectToAction(nameof(Detail), new { id });
         }
 
-        if (!cvFile.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)
-            || cvFile.ContentType != "application/pdf")
-        {
-            TempData["ApplyError"] = "Chỉ chấp nhận file PDF.";
-            return RedirectToAction(nameof(Detail), new { id });
-        }
-
         if (cvFile.Length > 10 * 1024 * 1024)
         {
             TempData["ApplyError"] = "File quá lớn (tối đa 10MB).";
             return RedirectToAction(nameof(Detail), new { id });
         }
-
-        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "cv");
-        Directory.CreateDirectory(uploadDir);
-        var storedName = $"{Guid.NewGuid():N}.pdf";
 
         byte[] bytes;
         using (var ms = new MemoryStream())
@@ -114,6 +101,16 @@ public class JobController : Controller
             await cvFile.CopyToAsync(ms);
             bytes = ms.ToArray();
         }
+
+        if (!IsPdfFile(cvFile.FileName, bytes))
+        {
+            TempData["ApplyError"] = "Chỉ chấp nhận file PDF hợp lệ.";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "cv");
+        Directory.CreateDirectory(uploadDir);
+        var storedName = $"{Guid.NewGuid():N}.pdf";
 
         var (ok, error) = await _applicationService.ApplyAsync(
             id, candidateId, Path.GetFileName(cvFile.FileName), $"/uploads/cv/{storedName}", bytes, coverLetter);
@@ -129,5 +126,19 @@ public class JobController : Controller
         }
 
         return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    private static bool IsPdfFile(string fileName, byte[] bytes)
+    {
+        if (!fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) || bytes.Length < 5)
+        {
+            return false;
+        }
+
+        return bytes[0] == 0x25
+            && bytes[1] == 0x50
+            && bytes[2] == 0x44
+            && bytes[3] == 0x46
+            && bytes[4] == 0x2D;
     }
 }

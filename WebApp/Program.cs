@@ -1,4 +1,4 @@
-using Domain.Enums;
+﻿using Domain.Enums;
 using Infrastructure;
 using Mapster;
 using MapsterMapper;
@@ -113,14 +113,18 @@ builder.Services.AddAuthorization(options =>
     {
         string permissionName = permission.ToString();
 
-        // Toàn bộ controller dùng quy ước "Can<Permission>" (vd: CanViewJob)
+        // ToÃ n bá»™ controller dÃ¹ng quy Æ°á»›c "Can<Permission>" (vd: CanViewJob)
         options.AddPolicy($"Can{permissionName}", policy =>
             policy.RequireClaim("Permission", permissionName));
     }
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+});
+builder.Services.AddMemoryCache();
 
 builder.Services.AddDbContext<ARSDbContext>(options =>
     // Use connection string from appsettings.json (DefaultConnection)
@@ -175,19 +179,6 @@ if (string.IsNullOrWhiteSpace(googleClientId) || string.IsNullOrWhiteSpace(googl
     app.Logger.LogWarning("Google authentication is not configured. External login with Google will be disabled.");
 }
 
-// Tự động cập nhật hạn nộp hồ sơ của tất cả công việc thành năm 2027 khi ứng dụng chạy
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
-        dbContext.Database.ExecuteSqlRaw("UPDATE JobPostings SET ExpiredAt = '2027-12-31 23:59:59' WHERE ExpiredAt < '2027-01-01'");
-    }
-    catch
-    {
-        // Bỏ qua nếu DB chưa được khởi tạo
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

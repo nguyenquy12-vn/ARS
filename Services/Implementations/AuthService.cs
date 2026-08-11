@@ -5,9 +5,11 @@ using Infrastructure;
 using Mapster;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Services.DTOs.Auth;
 using Services.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 
 namespace Services.Implementations;
 
@@ -17,14 +19,18 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly Services.Interfaces.IEmailService _emailService;
     private readonly Microsoft.Extensions.Logging.ILogger<AuthService> _logger;
+    private readonly IMemoryCache _cache;
     private const int ResendCooldownSeconds = 60; // cooldown duration in seconds
+    private const int MaxOtpAttempts = 5;
+    private static readonly TimeSpan OtpAttemptWindow = TimeSpan.FromMinutes(15);
 
-    public AuthService(ARSDbContext context, IMapper mapper, Services.Interfaces.IEmailService emailService, Microsoft.Extensions.Logging.ILogger<AuthService> logger)
+    public AuthService(ARSDbContext context, IMapper mapper, Services.Interfaces.IEmailService emailService, Microsoft.Extensions.Logging.ILogger<AuthService> logger, IMemoryCache cache)
     {
         _context = context;
         _mapper = mapper;
         _emailService = emailService;
         _logger = logger;
+        _cache = cache;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -105,7 +111,7 @@ public class AuthService : IAuthService
         }
 
         // Create new OTP
-        var code = new Random().Next(100000, 999999).ToString();
+        var code = GenerateOtpCode();
         var ev = new Domain.Entities.EmailVerification
         {
             UserId = user.Id,
@@ -163,7 +169,7 @@ public class AuthService : IAuthService
             await _context.SaveChangesAsync();
 
             // Generate OTP and store
-            var code = new Random().Next(100000, 999999).ToString();
+            var code = GenerateOtpCode();
             var ev = new Domain.Entities.EmailVerification
             {
                 UserId = newUser.Id,
@@ -192,6 +198,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to register candidate with email {Email}", request.Email);
             return BoolResponse.Failure(ErrorMessage.ExceptionError);
         }
     }
@@ -201,6 +208,13 @@ public class AuthService : IAuthService
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null) return BoolResponse.Failure(ErrorMessage.UserNotFound);
 
+        var attemptKey = GetOtpAttemptKey(user.Id);
+        var attempts = _cache.Get<int>(attemptKey);
+        if (attempts >= MaxOtpAttempts)
+        {
+            return BoolResponse.Failure("Bạn đã nhập sai OTP quá nhiều lần. Vui lòng gửi lại mã mới hoặc thử lại sau.");
+        }
+
         var ev = await _context.EmailVerifications
             .Where(e => e.UserId == user.Id && !e.IsUsed && e.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(e => e.Id)
@@ -208,13 +222,18 @@ public class AuthService : IAuthService
 
         if (ev == null) return BoolResponse.Failure("Verification code expired or not found");
 
-        if (ev.Code != code) return BoolResponse.Failure("Invalid verification code");
+        if (ev.Code != code)
+        {
+            _cache.Set(attemptKey, attempts + 1, OtpAttemptWindow);
+            return BoolResponse.Failure("Invalid verification code");
+        }
 
         ev.IsUsed = true;
         user.IsEmailVerified = true;
         _context.EmailVerifications.Update(ev);
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
+        _cache.Remove(attemptKey);
 
         return BoolResponse.Success();
     }
@@ -264,6 +283,20 @@ public class AuthService : IAuthService
         return _mapper.Map<UserAuthResponse>(newUser);
     }
 
+    public async Task<List<string>> GetPermissionsForRoleAsync(string roleName)
+    {
+        if (string.IsNullOrWhiteSpace(roleName))
+        {
+            return new List<string>();
+        }
+
+        return await _context.RolePermissions
+            .Where(rp => rp.Role != null && rp.Role.Name == roleName)
+            .Select(rp => rp.Permission != null ? rp.Permission.Name : string.Empty)
+            .Where(name => name != string.Empty)
+            .ToListAsync();
+    }
+
     public async Task<int> GetResendCooldownSecondsAsync(string email)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
@@ -284,10 +317,17 @@ public class AuthService : IAuthService
 
     public async Task<BoolResponse> LockAccountAsync(int userId)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
         {
             return BoolResponse.Failure(ErrorMessage.UserNotFound);
+        }
+
+        if (string.Equals(user.Role?.Name, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            return BoolResponse.Failure("Không thể khóa tài khoản quản trị viên.");
         }
 
         user.Status = UserStatus.Locked;
@@ -314,5 +354,10 @@ public class AuthService : IAuthService
         return BoolResponse.Success();
 
     }
+
+    private static string GenerateOtpCode() =>
+        RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+
+    private static string GetOtpAttemptKey(int userId) => $"otp:attempts:{userId}";
 
 }

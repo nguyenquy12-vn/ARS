@@ -179,26 +179,6 @@
                     </li>
                 }
 
-                @if (User.HasClaim("Permission", "ManageUsers"))
-                {
-                    <li class="nav-item">
-                        <a class="nav-link @(currentController == "ApplicationManagement" ? "active" : "")"
-                           asp-controller="ApplicationManagement" asp-action="Index">
-                            <i class="bi bi-people"></i>
-                            <span>Quản lý đơn ứng tuyển</span>
-                        </a>
-                    </li>
-                }
-
-                <!-- 4. Báo cáo -->
-                <li class="nav-item">
-                    <a class="nav-link @(currentController == "Report" ? "active" : "")"
-                       asp-controller="Report" asp-action="Index">
-                        <i class="bi bi-bar-chart-line"></i>
-                        <span>Báo cáo</span>
-                    </a>
-                </li>
-
                 <!-- 5. Cài đặt hệ thống (Dropdown Accordion/Collapse) -->
                 <li class="nav-item sidebar-dropdown">
                     <a class="nav-link d-flex justify-content-between align-items-center @(currentController == "Setting" || currentController == "Role" ? "active" : "")"
@@ -210,14 +190,8 @@
                         <i class="bi bi-chevron-down fs-7"></i>
                     </a>
 
-                    <div class="collapse @(currentController == "Skill" || currentController == "Role" ? "show" : "")" id="settingSubmenu">
+                    <div class="collapse @(currentController == "RoleManagement" ? "show" : "")" id="settingSubmenu">
                         <ul class="dropdown-menu d-block">
-                            <li>
-                                <a class="dropdown-item @(currentController == "Skill" ? "active" : "")"
-                                   asp-controller="Skill" asp-action="Index">
-                                    <i class="bi bi-tools me-2"></i>Kỹ năng nghề nghiệp
-                                </a>
-                            </li>
                             @if (User.HasClaim("Permission", "ManageRoles"))
                             {
                                 <li>

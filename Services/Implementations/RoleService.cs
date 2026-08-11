@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Services.DTOs.Role;
@@ -9,6 +10,12 @@ namespace Services.Implementations;
 public class RoleService : IRoleService
 {
     private readonly ARSDbContext _context;
+    private static readonly HashSet<string> SystemRoles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Admin",
+        "Recruiter",
+        "Candidate"
+    };
 
     public RoleService(ARSDbContext context)
     {
@@ -49,7 +56,10 @@ public class RoleService : IRoleService
     {
         var role = await _context.Roles.FindAsync(dto.Id);
         if (role == null) return dto;
-        role.Name = dto.Name;
+        if (!SystemRoles.Contains(role.Name))
+        {
+            role.Name = dto.Name;
+        }
         role.DisplayedName = dto.DisplayedName;
         role.Description = dto.Description;
         _context.Roles.Update(role);
@@ -61,6 +71,11 @@ public class RoleService : IRoleService
     {
         var role = await _context.Roles.FindAsync(roleId);
         if (role == null) return false;
+        if (SystemRoles.Contains(role.Name)) return false;
+
+        var isInUse = await _context.Users.AnyAsync(u => u.RoleId == roleId);
+        if (isInUse) return false;
+
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
         return true;
@@ -70,6 +85,8 @@ public class RoleService : IRoleService
     {
         var role = await _context.Roles.FindAsync(roleId);
         if (role == null) return false;
+
+        permissionIds = NormalizeSystemRolePermissions(role.Name, permissionIds);
 
         // Remove existing
         var existing = _context.RolePermissions.Where(rp => rp.RoleId == roleId);
@@ -83,5 +100,27 @@ public class RoleService : IRoleService
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private static List<int> NormalizeSystemRolePermissions(string roleName, List<int> permissionIds)
+    {
+        var normalized = permissionIds.Distinct().ToList();
+
+        if (string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized.Add((int)PermissionType.ManageRoles);
+            normalized.Add((int)PermissionType.ManageUsers);
+        }
+        else if (string.Equals(roleName, "Recruiter", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized.Add((int)PermissionType.ViewJob);
+        }
+        else if (string.Equals(roleName, "Candidate", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized.Add((int)PermissionType.ViewJob);
+            normalized.Add((int)PermissionType.ApplyJob);
+        }
+
+        return normalized.Distinct().ToList();
     }
 }

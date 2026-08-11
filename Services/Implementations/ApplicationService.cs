@@ -73,17 +73,15 @@ public class ApplicationService : IApplicationService
         try
         {
             var applications = await _context.Set<Application>()
-                .Include(a => a.JobPosting)
-                .ThenInclude(j => j.Company)
                 .Where(a => a.CandidateId == candidateId)
                 .OrderByDescending(a => a.AppliedAt)
                 .Select(a => new ApplicationDto
                 {
                     Id = a.Id,
                     JobPostingId = a.JobPostingId,
-                    JobTitle = a.JobPosting.Title,
-                    CompanyName = a.JobPosting.Company.CompanyName,
-                    CompanyLogoPath = a.JobPosting.Company.LogoPath,
+                    JobTitle = a.JobPosting != null ? a.JobPosting.Title : string.Empty,
+                    CompanyName = a.JobPosting != null && a.JobPosting.Company != null ? a.JobPosting.Company.CompanyName : string.Empty,
+                    CompanyLogoPath = a.JobPosting != null && a.JobPosting.Company != null ? a.JobPosting.Company.LogoPath : null,
                     AppliedAt = a.AppliedAt,
                     Status = a.Status.ToString(),
                     CoverLetter = a.CoverLetter,
@@ -536,7 +534,7 @@ public class ApplicationService : IApplicationService
     public async Task<(bool ok, string? error)> ApplyAsync(int jobId, int candidateId, string fileName, string filePath, byte[] pdfBytes, string? coverLetter)
     {
         var job = await _context.JobPostings.FirstOrDefaultAsync(j => j.Id == jobId);
-        if (job == null || job.Status != JobStatus.Active)
+        if (job == null || job.Status != JobStatus.Active || job.ExpiredAt < DateTime.UtcNow)
         {
             return (false, "Tin tuyển dụng không tồn tại hoặc đã đóng.");
         }

@@ -17,6 +17,8 @@ public interface IAuthService
 
     Task<UserAuthResponse?> GetOrCreateExternalUserAsync(string provider, string providerKey, string? email, string? fullName);
 
+    Task<List<string>> GetPermissionsForRoleAsync(string roleName);
+
     Task<BoolResponse> LockAccountAsync(int userId);
 
     Task<BoolResponse> UnlockAccountAsync(int userId);

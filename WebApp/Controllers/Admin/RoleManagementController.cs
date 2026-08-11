@@ -31,6 +31,7 @@ public class RoleManagementController : Controller
     }
 
     [HttpPost("create")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(RoleDto dto)
     {
         if (!ModelState.IsValid) return View(dto);
@@ -47,6 +48,7 @@ public class RoleManagementController : Controller
     }
 
     [HttpPost("edit/{roleId}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int roleId, RoleDto dto, int[] permissions)
     {
         if (!ModelState.IsValid) return View(await _roleService.GetRoleDetailsAsync(roleId));
@@ -60,6 +62,7 @@ public class RoleManagementController : Controller
     }
 
     [HttpPost("delete/{roleId}")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int roleId)
     {
         await _roleService.DeleteRoleAsync(roleId);

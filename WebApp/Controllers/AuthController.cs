@@ -115,6 +115,12 @@ public class AuthController : Controller
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, user.RoleName)
         };
 
+        var permissions = await _authService.GetPermissionsForRoleAsync(user.RoleName);
+        foreach (var permission in permissions)
+        {
+            claims.Add(new System.Security.Claims.Claim("Permission", permission));
+        }
+
         var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new System.Security.Claims.ClaimsPrincipal(claimsIdentity));
         // Clear temporary external cookie
@@ -203,7 +209,7 @@ public class AuthController : Controller
         // Gọi Service xử lý tạo tài khoản
         var result = await _authService.LoginAsync(loginDto);
 
-        if (result.IsSuccess)
+        if (result.IsSuccess && result.User != null)
         {
             var user = result.User;
             var claims = new List<Claim>
@@ -223,7 +229,12 @@ public class AuthController : Controller
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity));
+                new ClaimsPrincipal(claimsIdentity),
+                new AuthenticationProperties
+                {
+                    IsPersistent = model.RememberMe,
+                    ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
+                });
 
             switch (user.RoleName)
             {

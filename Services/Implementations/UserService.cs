@@ -99,7 +99,7 @@ public class UserService : IUserService
             }
 
             List<ResumeDto>? resumes = null;
-            CompanyProfileDto companyProfile = null;
+            CompanyProfileDto? companyProfile = null;
 
             if (user.Role != null)
             {
@@ -109,7 +109,27 @@ public class UserService : IUserService
                         .Include(r => r.Applications)
                         .ThenInclude(a => a.JobPosting)
                         .Where(r => r.CandidateId == user.Id)
-                        .Select(r => _mapper.Map<ResumeDto>(r))
+                        .Select(r => new ResumeDto
+                        {
+                            Id = r.Id,
+                            CandidateId = r.CandidateId,
+                            Title = r.Title,
+                            FilePath = r.FilePath,
+                            IsDefault = r.IsDefault,
+                            CreatedAt = r.CreatedAt,
+                            UpdatedAt = r.UpdatedAt,
+                            Applications = r.Applications
+                                .OrderByDescending(a => a.AppliedAt)
+                                .Select(a => new CandidateApplicationDto
+                                {
+                                    Id = a.Id,
+                                    JobPostingId = a.JobPostingId,
+                                    JobTitle = a.JobPosting != null ? a.JobPosting.Title : string.Empty,
+                                    AppliedAt = a.AppliedAt,
+                                    Status = a.Status.ToString()
+                                })
+                                .ToList()
+                        })
                         .ToListAsync();
                 }
                 else if (user.Role.Name == "Recruiter")

@@ -29,7 +29,7 @@ public class EmailService : IEmailService
         var port = int.Parse(_config["Smtp:Port"] ?? "25");
         var user = _config["Smtp:User"];
         var pass = _config["Smtp:Pass"];
-        var from = _config["Smtp:From"] ?? user;
+        var from = _config["Smtp:From"] ?? user ?? "no-reply@localhost";
 
         // If no SMTP host configured, fall back to saving emails to disk for local testing
         if (string.IsNullOrWhiteSpace(host))

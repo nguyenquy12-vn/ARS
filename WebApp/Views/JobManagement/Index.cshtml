@@ -28,7 +28,7 @@
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="Active" selected="@(Context.Request.Query["status"] == "Active")">Hoạt động (Active)</option>
                     <option value="Draft" selected="@(Context.Request.Query["status"] == "Draft")">Bản nháp (Draft)</option>
-                    <option value="Closed" selected="@(Context.Request.Query["status"] == "Closed")">Đã đóng (Closed)</option>
+                    <option value="Closed" selected="@(Context.Request.Query["status"] == "Closed")">�� d�ng (Closed)</option>
                     <option value="Archived" selected="@(Context.Request.Query["status"] == "Archived")">Lưu trữ (Archived)</option>
                 </select>
             </div>
@@ -77,11 +77,11 @@
                             <tr>
                                 <td class="ps-4 fw-bold text-secondary">#@item.Id</td>
                                 <td>
-                                    <a asp-action="Details" asp-route-jobId="@item.Id" class="fw-bold text-dark text-decoration-none d-block mb-1">
+                                    <a asp-controller="JobManagement" asp-action="Details" asp-route-jobId="@item.Id" class="fw-bold text-dark text-decoration-none d-block mb-1">
                                         @item.Title
                                     </a>
                                     <span class="badge bg-light text-secondary border fw-normal fs-8">
-                                        <i class="bi bi-tag me-1"></i>@(string.IsNullOrEmpty(item.JobCategoryName) ? "Chưa phân loại" : item.JobCategoryName)
+                                        <i class="bi bi-tag me-1"></i>@(string.IsNullOrEmpty(item.JobCategoryName) ? "Chua ph�n lo?i" : item.JobCategoryName)
                                     </span>
                                 </td>
                                 <td class="text-center">
@@ -105,7 +105,7 @@
                                     else if (string.Equals(item.Status, "Closed", StringComparison.OrdinalIgnoreCase))
                                     {
                                         <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
-                                            <i class="bi bi-x-circle-fill me-1"></i> Đã đóng
+                                            <i class="bi bi-x-circle-fill me-1"></i> �� d�ng
                                         </span>
                                     }
                                     else
@@ -121,7 +121,7 @@
                                 <td class="fs-7">
                                     @if (item.ExpiredAt < DateTime.UtcNow)
                                     {
-                                        <span class="text-danger fw-medium" title="Đã hết hạn">
+                                        <span class="text-danger fw-medium" title="�� h?t h?n">
                                             <i class="bi bi-exclamation-circle me-1"></i>@item.ExpiredAt.ToString("dd/MM/yyyy")
                                         </span>
                                     }

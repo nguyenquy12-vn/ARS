@@ -54,6 +54,11 @@
                             <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
 
+                        <div class="form-check mb-3">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label small">Ghi nhớ đăng nhập</label>
+                        </div>
+
                         <!-- Nút Đăng nhập -->
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg fs-6 fw-semibold rounded-2 py-2 shadow-sm">

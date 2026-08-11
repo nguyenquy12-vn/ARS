@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 using WebApp.Models.Admin;
+using System.Security.Claims;
 
 namespace WebApp.Controllers.Admin;
 
@@ -48,6 +49,7 @@ public class UserManagementController : Controller
     }
 
     [HttpPost("bulk")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> BulkAction(string action, int[] userIds)
     {
         if (userIds == null || userIds.Length == 0)
@@ -55,10 +57,17 @@ public class UserManagementController : Controller
             return BadRequest("No users selected");
         }
 
+        var currentUserId = GetCurrentUserId();
+
         if (action == "lock")
         {
             foreach (var id in userIds)
             {
+                if (id == currentUserId || await IsAdminUserAsync(id))
+                {
+                    continue;
+                }
+
                 await _authService.LockAccountAsync(id);
             }
         }
@@ -86,7 +95,7 @@ public class UserManagementController : Controller
         foreach (var id in ids)
         {
             var r = await _userService.GetUserByIdAsync(id);
-            if (r.IsSuccess)
+            if (r.IsSuccess && r.User != null)
             {
                 list.Add(r.User);
             }
@@ -104,8 +113,21 @@ public class UserManagementController : Controller
     }
 
     [HttpPost("lock")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> LockAccount(int userId)
     {
+        if (userId == GetCurrentUserId())
+        {
+            TempData["ErrorMessage"] = "Không thể khóa chính tài khoản đang đăng nhập.";
+            return RedirectToAction("Index");
+        }
+
+        if (await IsAdminUserAsync(userId))
+        {
+            TempData["ErrorMessage"] = "Không thể khóa tài khoản quản trị viên.";
+            return RedirectToAction("Index");
+        }
+
         // Gọi service để khóa tài khoản
         var result = await _authService.LockAccountAsync(userId);
 
@@ -123,6 +145,7 @@ public class UserManagementController : Controller
     }
 
     [HttpPost("unlock")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UnlockAccount(int userId)
     {
         // Gọi service để mở khóa tài khoản
@@ -166,5 +189,19 @@ public class UserManagementController : Controller
             _logger.LogError(ex, "Error loading user details for id {UserId}. Redirecting back to index.", userId);
             return RedirectToAction("Index");
         }
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(value, out var id) ? id : null;
+    }
+
+    private async Task<bool> IsAdminUserAsync(int userId)
+    {
+        var result = await _userService.GetUserByIdAsync(userId);
+        return result.IsSuccess
+            && result.User != null
+            && string.Equals(result.User.RoleName, "Admin", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -3,22 +3,24 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Edit Role";
+    var role = Model.Role ?? new Services.DTOs.Role.RoleDto();
 }
 
 <div class="card">
     <div class="card-body">
         <form method="post">
+            @Html.AntiForgeryToken()
             <div class="mb-3">
                 <label class="form-label">Name</label>
-                <input asp-for="Role.Name" class="form-control" />
+                <input name="Name" value="@role.Name" class="form-control" />
             </div>
             <div class="mb-3">
                 <label class="form-label">Displayed Name</label>
-                <input asp-for="Role.DisplayedName" class="form-control" />
+                <input name="DisplayedName" value="@role.DisplayedName" class="form-control" />
             </div>
             <div class="mb-3">
                 <label class="form-label">Description</label>
-                <textarea asp-for="Role.Description" class="form-control"></textarea>
+                <textarea name="Description" class="form-control">@role.Description</textarea>
             </div>
 
             <h5>Permissions</h5>

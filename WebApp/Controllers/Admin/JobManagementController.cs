@@ -4,6 +4,7 @@ using Services.Interfaces;
 namespace WebApp.Controllers.Admin;
 
 [Route("admin/jobs")]
+[Microsoft.AspNetCore.Authorization.Authorize(Policy = "CanManageUsers")]
 public class JobManagementController : Controller
 {
 

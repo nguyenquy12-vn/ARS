@@ -200,7 +200,7 @@ public class JobPostingService : IJobPostingService
         var query = _context.JobPostings
             .Include(x => x.Company)
             .Include(x => x.JobCategory)
-            .Where(x => x.Status == JobStatus.Active)
+            .Where(x => x.Status == JobStatus.Active && x.ExpiredAt >= DateTime.UtcNow)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(keyword))
@@ -300,7 +300,7 @@ public class JobPostingService : IJobPostingService
         var jobs = await _context.JobPostings
             .Include(x => x.Company)
             .Include(x => x.JobCategory)
-            .Where(x => x.Status == JobStatus.Active)
+            .Where(x => x.Status == JobStatus.Active && x.ExpiredAt >= DateTime.UtcNow)
             .OrderByDescending(x => x.CreatedAt)
             .Take(count)
             .Select(x => new JobPostingListDto
@@ -330,27 +330,91 @@ public class JobPostingService : IJobPostingService
 
     public async Task<List<JobListItem>> GetAllJobsAsync()
     {
-        var jobs = await _context.JobPostings
-            .Include(j => j.Company)
-            .Include(j => j.JobCategory)
-            .Include(j => j.Applications)
-            .ToListAsync();
-        return _mapper.Map<List<JobListItem>>(jobs);
+        try
+        {
+            var jobs = await _context.JobPostings
+                .Include(j => j.Company)
+                .Include(j => j.JobCategory)
+                .Include(j => j.Applications)
+                .ToListAsync();
+            return _mapper.Map<List<JobListItem>>(jobs);
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex)
+        {
+            // If the Applications table is missing (e.g., database not migrated), avoid throwing and return minimal data.
+            // Log where appropriate via exception message (caller can log). Fallback to basic projection without Applications.
+            var fallback = await _context.JobPostings
+                .Include(j => j.Company)
+                .Include(j => j.JobCategory)
+                .Select(j => new JobListItem
+                {
+                    Id = j.Id,
+                    Title = j.Title,
+                    JobCategoryName = j.JobCategory != null ? j.JobCategory.Name : string.Empty,
+                    ApplicationsCount = 0,
+                    Status = j.Status.ToString(),
+                    CreatedAt = j.CreatedAt,
+                    ExpiredAt = j.ExpiredAt
+                })
+                .ToListAsync();
+
+            return fallback;
+        }
     }
 
     public async Task<JobDetailsResponse> GetJobDetailsAsync(int id)
     {
-        var job = await _context.JobPostings
-            .Include(j => j.Company)
-            .Include(j => j.JobCategory)
-            .Include(j => j.Applications)
-            .ThenInclude(a => a.Candidate)
-            .FirstOrDefaultAsync(j => j.Id == id);
-        if (job == null)
+        try
         {
-            return JobDetailsResponse.Failure(ErrorMessage.JobNotFound);
+            var job = await _context.JobPostings
+                .Include(j => j.Company)
+                .Include(j => j.JobCategory)
+                .Include(j => j.Applications)
+                .ThenInclude(a => a.Candidate)
+                .FirstOrDefaultAsync(j => j.Id == id);
+            if (job == null)
+            {
+                return JobDetailsResponse.Failure(ErrorMessage.JobNotFound);
+            }
+
+            return JobDetailsResponse.Success(_mapper.Map<JobDto>(job));
         }
-        
-        return JobDetailsResponse.Success(_mapper.Map<JobDto>(job));
+        catch (Microsoft.Data.SqlClient.SqlException ex)
+        {
+            // Fallback: the Applications table might be missing. Return job details without applications to avoid crashing the app.
+            var job = await _context.JobPostings
+                .Include(j => j.Company)
+                .Include(j => j.JobCategory)
+                .FirstOrDefaultAsync(j => j.Id == id);
+
+            if (job == null)
+            {
+                return JobDetailsResponse.Failure(ErrorMessage.JobNotFound);
+            }
+
+            var dto = new Services.DTOs.JobPosting.JobDto
+            {
+                Id = job.Id,
+                JobCategoryName = job.JobCategory != null ? job.JobCategory.Name : string.Empty,
+                RecruiterId = job.Company?.RecruiterId ?? 0,
+                CompanyName = job.Company?.CompanyName ?? string.Empty,
+                Title = job.Title,
+                Description = job.Description,
+                Requirements = job.Requirements,
+                Benefits = job.Benefits,
+                Location = job.Location,
+                JobType = job.JobType.ToString(),
+                WorkMode = job.WorkMode.ToString(),
+                MinSalary = job.MinSalary,
+                MaxSalary = job.MaxSalary,
+                Vacancies = job.Vacancies,
+                Status = job.Status.ToString(),
+                CreatedAt = job.CreatedAt,
+                ExpiredAt = job.ExpiredAt,
+                Applications = new List<Services.DTOs.Application.JobApplicationDto>()
+            };
+
+            return JobDetailsResponse.Success(dto);
+        }
     }
 }
