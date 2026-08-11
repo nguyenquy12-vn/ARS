@@ -27,6 +27,14 @@ public class PaymentManagementController : Controller
         ViewBag.MonthRevenue = successful.Where(x => x.ReviewedAt?.ToLocalTime().Year == today.Year && x.ReviewedAt?.ToLocalTime().Month == today.Month).Sum(x => x.Amount);
         ViewBag.TodayRevenue = successful.Where(x => x.ReviewedAt?.ToLocalTime().Date == today).Sum(x => x.Amount);
         ViewBag.SuccessCount = successful.Count;
+        ViewBag.StarterSales = successful.Count(x => x.PlanCode == "Starter");
+        ViewBag.ProSales = successful.Count(x => x.PlanCode == "Pro");
+        ViewBag.DailyRevenue = Enumerable.Range(0, 7)
+            .Select(offset => today.AddDays(offset - 6))
+            .Select(day => new RevenuePoint(day.ToString("dd/MM"), successful
+                .Where(x => x.ReviewedAt?.ToLocalTime().Date == day)
+                .Sum(x => x.Amount)))
+            .ToList();
         return View(orders);
     }
 
@@ -79,4 +87,6 @@ public class PaymentManagementController : Controller
         TempData["Success"] = "Đã cập nhật trạng thái đơn thanh toán.";
         return RedirectToAction(nameof(Index));
     }
+
+    public sealed record RevenuePoint(string Label, decimal Amount);
 }
