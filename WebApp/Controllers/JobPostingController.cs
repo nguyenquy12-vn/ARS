@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Services.DTOs.JobPosting;
 using Services.Interfaces;
 using WebApp.Models.JobPosting;
+using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
 [Authorize(Roles = "Recruiter")]
+[RequireActiveRecruiterPlan]
 public class JobPostingController : Controller
 {
     private readonly IJobPostingService _jobPostingService;

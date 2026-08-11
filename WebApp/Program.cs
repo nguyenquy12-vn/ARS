@@ -48,6 +48,7 @@ builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<ICvBankService, CvBankService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
 builder.Services.AddSingleton(new AiSettings
@@ -86,6 +87,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
+        dbContext.Database.Migrate();
         dbContext.Database.ExecuteSqlRaw("UPDATE JobPostings SET ExpiredAt = '2027-12-31 23:59:59' WHERE ExpiredAt < '2027-01-01'");
     }
     catch

@@ -5,19 +5,23 @@ using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.Application;
 using Services.Interfaces;
 using WebApp.Models.Application;
+using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
 [Authorize(Roles = "Recruiter")]
+[RequireActiveRecruiterPlan]
 public class ApplicationController : Controller
 {
     private readonly IApplicationService _applicationService;
     private readonly IJobPostingService _jobPostingService;
+    private readonly INotificationService _notificationService;
 
-    public ApplicationController(IApplicationService applicationService, IJobPostingService jobPostingService)
+    public ApplicationController(IApplicationService applicationService, IJobPostingService jobPostingService, INotificationService notificationService)
     {
         _applicationService = applicationService;
         _jobPostingService = jobPostingService;
+        _notificationService = notificationService;
     }
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -208,5 +212,37 @@ public class ApplicationController : Controller
             ? "Đã cập nhật trạng thái hồ sơ."
             : result.ErrorMessage;
         return RedirectToAction(nameof(ByJob), new { id = jobId });
+    }
+
+    // ====== NOTIFICATION ACTIONS FOR RECRUITER ======
+
+    [HttpGet]
+    public async Task<IActionResult> Notifications()
+    {
+        var notifications = await _notificationService.GetByUserAsync(CurrentUserId);
+        return View(notifications);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkRead(int id)
+    {
+        await _notificationService.MarkAsReadAsync(id, CurrentUserId);
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAllRead()
+    {
+        await _notificationService.MarkAllAsReadAsync(CurrentUserId);
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUnreadCount()
+    {
+        var count = await _notificationService.GetUnreadCountAsync(CurrentUserId);
+        return Json(new { count });
     }
 }

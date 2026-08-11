@@ -1,0 +1,125 @@
+@using Domain.Entities
+@model List<Notification>
+@{
+    ViewData["Title"] = "Hộp thư thông báo";
+    var unreadCount = Model.Count(n => !n.IsRead);
+
+    string GetIcon(string type) => type switch
+    {
+        "Interview"      => "bi-calendar-check-fill",
+        "StatusAccepted" => "bi-patch-check-fill",
+        "StatusRejected" => "bi-x-circle-fill",
+        _                => "bi-bell-fill"
+    };
+
+    string GetTypeClass(string type) => type switch
+    {
+        "Interview"      => "type-interview",
+        "StatusAccepted" => "type-accepted",
+        "StatusRejected" => "type-rejected",
+        _                => "type-general"
+    };
+
+    string TimeAgo(DateTime dt)
+    {
+        var diff = DateTime.UtcNow - dt;
+        if (diff.TotalMinutes < 1)  return "Vừa xong";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} phút trước";
+        if (diff.TotalHours < 24)   return $"{(int)diff.TotalHours} giờ trước";
+        if (diff.TotalDays < 7)     return $"{(int)diff.TotalDays} ngày trước";
+        return dt.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+    }
+}
+
+<!-- Page Header -->
+<div class="notif-page-header">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <i class="bi bi-bell-fill fs-3"></i>
+            <h1 class="h2 mb-0 fw-bold">Hộp thư thông báo</h1>
+            @if (unreadCount > 0)
+            {
+                <span class="badge rounded-pill" style="background: #ef4444; font-size: 0.85rem; padding: 6px 14px;">
+                    @unreadCount chưa đọc
+                </span>
+            }
+        </div>
+        <p class="text-white-50 mb-0">Cập nhật mới nhất từ nhà tuyển dụng về hồ sơ và lịch phỏng vấn của bạn.</p>
+    </div>
+</div>
+
+<!-- Inbox Content -->
+<div class="py-5" style="background: var(--light-bg); min-height: 60vh;">
+    <div class="container">
+        <div class="notif-inbox">
+
+            @if (Model.Any())
+            {
+                <!-- Actions bar -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <p class="text-muted mb-0">
+                        <strong>@Model.Count</strong> thông báo · <strong>@unreadCount</strong> chưa đọc
+                    </p>
+                    @if (unreadCount > 0)
+                    {
+                        <form asp-action="MarkAllRead" asp-controller="Candidate" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm" 
+                                    style="background: var(--grad-primary); color: #fff; border-radius: 10px; padding: 7px 20px; font-weight: 600;">
+                                <i class="bi bi-check2-all me-1"></i> Đánh dấu tất cả đã đọc
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <!-- Notification cards -->
+                @foreach (var n in Model)
+                {
+                    <div class="notif-card @(n.IsRead ? "" : "unread")">
+                        <!-- Icon -->
+                        <div class="notif-icon @GetTypeClass(n.Type)">
+                            <i class="bi @GetIcon(n.Type)"></i>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="notif-body">
+                            <div class="notif-title">@n.Title</div>
+                            <div class="notif-msg">@Html.Raw(n.Message)</div>
+                            <div class="notif-time">
+                                <i class="bi bi-clock me-1"></i>@TimeAgo(n.CreatedAt)
+                            </div>
+                        </div>
+
+                        <!-- Mark as read button (only for unread) -->
+                        @if (!n.IsRead)
+                        {
+                            <div>
+                                <form asp-action="MarkRead" asp-controller="Candidate" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@n.Id" />
+                                    <button type="submit" class="notif-mark-read">
+                                        <i class="bi bi-check me-1"></i> Đánh dấu đọc
+                                    </button>
+                                </form>
+                                <div class="notif-unread-dot"></div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="notif-empty">
+                    <i class="bi bi-bell-slash"></i>
+                    <h5 class="fw-bold text-muted">Chưa có thông báo nào</h5>
+                    <p class="text-muted">Khi nhà tuyển dụng cập nhật hồ sơ hoặc mời bạn phỏng vấn, thông báo sẽ xuất hiện ở đây.</p>
+                    <a asp-controller="Job" asp-action="Index" class="btn mt-2"
+                       style="background: var(--grad-primary); color: #fff; border-radius: 12px; padding: 10px 28px; font-weight: 600;">
+                        <i class="bi bi-search me-2"></i> Tìm việc làm
+                    </a>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

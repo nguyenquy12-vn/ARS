@@ -181,6 +181,17 @@
                 @if (User.HasClaim("Permission", "ManageUsers"))
                 {
                     <li class="nav-item">
+                        <a class="nav-link @(currentController == "PaymentManagement" ? "active" : "")"
+                           asp-controller="PaymentManagement" asp-action="Index">
+                            <i class="bi bi-credit-card-check"></i>
+                            <span>Duyệt thanh toán</span>
+                        </a>
+                    </li>
+                }
+
+                @if (User.HasClaim("Permission", "ManageUsers"))
+                {
+                    <li class="nav-item">
                         <a class="nav-link @(currentController == "ApplicationManagement" ? "active" : "")"
                            asp-controller="ApplicationManagement" asp-action="Index">
                             <i class="bi bi-people"></i>

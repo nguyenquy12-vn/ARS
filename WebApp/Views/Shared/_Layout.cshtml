@@ -55,10 +55,20 @@
                             </li>
                         }
                     </ul>
-                    <div class="d-flex auth-section">
+                    <div class="d-flex auth-section align-items-center gap-2">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <span class="navbar-text text-white me-3 d-flex align-items-center">
+                            @if (User.HasClaim("Permission", "ApplyJob"))
+                            {
+                                <!-- Bell notification for candidates -->
+                                <a asp-controller="Candidate" asp-action="Notifications"
+                                   class="notif-bell position-relative text-white me-1" title="Hộp thư thông báo"
+                                   id="notif-bell-link">
+                                    <i class="bi bi-bell-fill fs-5"></i>
+                                    <span class="notif-badge d-none" id="notif-badge">0</span>
+                                </a>
+                            }
+                            <span class="navbar-text text-white me-1 d-flex align-items-center">
                                 <i class="bi bi-person-circle fs-5 me-2"></i> Xin chào, @User.Identity.Name!
                             </span>
                             <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
@@ -139,7 +149,22 @@
                 }
             }
             $(window).scroll(checkScroll);
-            checkScroll(); // trigger immediately on load
+            checkScroll();
+
+            // Fetch unread notification count for candidates
+            function fetchNotifCount() {
+                var $badge = $('#notif-badge');
+                if ($badge.length === 0) return;
+                $.getJSON('/Candidate/GetUnreadCount', function(data) {
+                    if (data.count > 0) {
+                        $badge.text(data.count).removeClass('d-none');
+                    } else {
+                        $badge.addClass('d-none');
+                    }
+                });
+            }
+            fetchNotifCount();
+            setInterval(fetchNotifCount, 60000); // refresh every 60s
         });
     </script>
 </body>

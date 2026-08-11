@@ -13,18 +13,22 @@ public class ApplicationService : IApplicationService
     private readonly ARSDbContext _context;
     private readonly IAiService _aiService;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
-    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService)
+    public ApplicationService(ARSDbContext context, IAiService aiService, IEmailService emailService, INotificationService notificationService)
     {
         _context = context;
         _aiService = aiService;
         _emailService = emailService;
+        _notificationService = notificationService;
     }
 
     public async Task<bool> ApplyJobAsync(int candidateId, int jobId, string cvFilePath, string cvFileName, string? coverLetter)
     {
         // 1. Kiểm tra việc làm có tồn tại và còn hạn không
-        var job = await _context.JobPostings.FindAsync(jobId);
+        var job = await _context.JobPostings
+            .Include(j => j.Company)
+            .FirstOrDefaultAsync(j => j.Id == jobId);
         if (job == null || job.Status != JobStatus.Active || job.ExpiredAt < DateTime.UtcNow)
         {
             return false;
@@ -61,6 +65,23 @@ public class ApplicationService : IApplicationService
         };
         _context.Set<Application>().Add(application);
         await _context.SaveChangesAsync();
+
+        // 5. Gửi thông báo cho Recruiter
+        var recruiterId = job.Company?.RecruiterId;
+        if (recruiterId.HasValue)
+        {
+            var candidate = await _context.Users.FirstOrDefaultAsync(u => u.Id == candidateId);
+            var candidateName = candidate?.FullName ?? "Ứng viên";
+            var jobTitle = job.Title;
+
+            await _notificationService.CreateAsync(
+                recruiterId.Value,
+                $"📄 CV mới: {jobTitle}",
+                $"{candidateName} vừa nộp CV ứng tuyển vị trí {jobTitle}. Hãy vào xem xét hồ sơ ngay!",
+                "NewApplication",
+                job.Id
+            );
+        }
 
         return true;
     }
@@ -99,7 +120,9 @@ public class ApplicationService : IApplicationService
         }
 
         // Không cho phép rút nếu đã bị từ chối hoặc đã rút rồi
-        if (application.Status == ApplicationStatus.Rejected || application.Status == ApplicationStatus.Withdrawn)
+        if (application.Status == ApplicationStatus.Accepted ||
+            application.Status == ApplicationStatus.Rejected ||
+            application.Status == ApplicationStatus.Withdrawn)
         {
             return false;
         }
@@ -275,6 +298,16 @@ public class ApplicationService : IApplicationService
         application.Status = ApplicationStatus.Interview;
         await _context.SaveChangesAsync();
 
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+        var candidateId = application.CandidateId;
+        var timeStr = interviewAt.ToString("HH:mm - dd/MM/yyyy");
+
+        // Tạo thông báo nội bộ cho ứng viên
+        var notifMsg = $"Bạn được mời phỏng vấn cho vị trí <strong>{jobTitle}</strong>.<br/>" +
+                       $"🕐 Thời gian: <strong>{timeStr}</strong>" +
+                       (string.IsNullOrWhiteSpace(note) ? "" : $"<br/>📍 Địa điểm / Link: <strong>{note}</strong>");
+        await _notificationService.CreateAsync(candidateId, $"📅 Mời phỏng vấn: {jobTitle}", notifMsg, "Interview", application.Id);
+
         // Gửi email mời phỏng vấn
         var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
         var candidateEmail = application.Candidate?.Email;
@@ -283,7 +316,6 @@ public class ApplicationService : IApplicationService
             return (true, null, "Đã lưu lịch nhưng chưa gửi được email (thiếu thông tin).");
         }
 
-        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
         var subject = $"[Mời phỏng vấn] {jobTitle}";
         var body = $@"
 <p>Xin chào <strong>{application.Candidate?.FullName}</strong>,</p>
@@ -323,6 +355,17 @@ public class ApplicationService : IApplicationService
         }
         await _context.SaveChangesAsync();
 
+        // Tạo thông báo nội bộ cho từng ứng viên được mời
+        var timeStr = interviewAt.ToString("HH:mm - dd/MM/yyyy");
+        foreach (var app in apps)
+        {
+            var jt = app.JobPosting?.Title ?? "vị trí ứng tuyển";
+            var notifMsg = $"Bạn được mời phỏng vấn cho vị trí <strong>{jt}</strong>.<br/>" +
+                           $"🕐 Thời gian: <strong>{timeStr}</strong>" +
+                           (string.IsNullOrWhiteSpace(trimmedNote) ? "" : $"<br/>📍 Địa điểm / Link: <strong>{trimmedNote}</strong>");
+            await _notificationService.CreateAsync(app.CandidateId, $"📅 Mời phỏng vấn: {jt}", notifMsg, "Interview", app.Id);
+        }
+
         var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
         int ok = 0, failed = 0;
         if (recruiter != null)
@@ -357,9 +400,29 @@ public class ApplicationService : IApplicationService
     {
         var recruiter = await _context.Users.FirstOrDefaultAsync(u => u.Id == recruiterId);
         var candidateEmail = application.Candidate?.Email;
+        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
+
+        // Tạo thông báo nội bộ cho ứng viên
+        if (status == ApplicationStatus.Accepted)
+        {
+            await _notificationService.CreateAsync(
+                application.CandidateId,
+                $"✅ Chúc mừng! Hồ sơ được chấp nhận",
+                $"Hồ sơ của bạn ứng tuyển vị trí <strong>{jobTitle}</strong> đã được <strong>chấp nhận</strong>. Nhà tuyển dụng sẽ sớm liên hệ với bạn.",
+                "StatusAccepted", application.Id);
+        }
+        else if (status == ApplicationStatus.Rejected)
+        {
+            await _notificationService.CreateAsync(
+                application.CandidateId,
+                $"❌ Kết quả ứng tuyển: {jobTitle}",
+                $"Rất tiếc, hồ sơ của bạn ứng tuyển vị trí <strong>{jobTitle}</strong> chưa phù hợp ở thời điểm này. Chúc bạn sớm tìm được công việc ưng ý!",
+                "StatusRejected", application.Id);
+        }
+
+        // Gửi email thông báo
         if (recruiter == null || string.IsNullOrWhiteSpace(candidateEmail)) return;
 
-        var jobTitle = application.JobPosting?.Title ?? "vị trí ứng tuyển";
         string subject, body;
         if (status == ApplicationStatus.Accepted)
         {
