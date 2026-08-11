@@ -5,11 +5,31 @@
     ViewData["Title"] = "Quản lý Người dùng";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    .user-page-header { display:flex; justify-content:space-between; align-items:end; gap:1rem; margin-bottom:1.5rem; }
+    .user-page-kicker { color:#3b82f6; font-size:.75rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+    .user-page-header h3 { color:#0f172a; letter-spacing:-.035em; }
+    .user-filter-card,.user-table-card { border:1px solid #e8edf4 !important; border-radius:16px; box-shadow:0 8px 26px rgba(15,23,42,.045) !important; overflow:hidden; }
+    .user-filter-card .card-body { padding:1.1rem 1.25rem; background:linear-gradient(115deg,#fff 0%,#f8fbff 100%); }
+    .user-filter-label { display:block; margin-bottom:.35rem; color:#64748b; font-size:.73rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .user-filter-card .form-control,.user-filter-card .form-select,.user-filter-card .input-group-text { min-height:44px; border-color:#dbe5ef; background:#fff; }
+    .user-filter-card .form-control:focus,.user-filter-card .form-select:focus { border-color:#60a5fa; box-shadow:0 0 0 .2rem rgba(59,130,246,.12); }
+    .user-filter-card .input-group-text { color:#5790bd; border-right:0; }.user-filter-card .form-control { border-left:0; }
+    .user-filter-count { display:inline-flex; align-items:center; gap:.35rem; padding:.38rem .7rem; border-radius:999px; color:#2563eb; background:#eff6ff; font-size:.8rem; font-weight:700; }
+    .user-table-card .table { margin:0; }.user-table-card thead th { padding:1rem .8rem; border-bottom:1px solid #dce5ee; color:#526b80; background:#f8fafc; font-size:.72rem; font-weight:800; letter-spacing:.055em; text-transform:uppercase; white-space:nowrap; }
+    .user-table-card tbody td { padding:1rem .8rem; border-color:#edf1f5; vertical-align:middle; }.user-table-card tbody tr { transition:background .18s ease; }.user-table-card tbody tr:hover { background:#f8fbff; }
+    .avatar-circle { width:38px !important; height:38px !important; border:1px solid #bfdbfe; background:#eff6ff !important; }.user-role-badge,.user-status-badge { border-radius:999px; font-size:.75rem; font-weight:700; padding:.38rem .65rem !important; }
+    .user-action-cell .btn { border-radius:8px; }.role-promote-form { min-width:205px; }.role-promote-form .form-select { font-size:.75rem; }
+    @@media (max-width: 767.98px) { .user-page-header { align-items:start; flex-direction:column; }.user-table-card tbody td { min-width:130px; }.role-promote-form { min-width:185px; } }
+</style>
+
+<div class="user-page-header">
     <div>
+        <div class="user-page-kicker"><i class="bi bi-people-fill me-1"></i>Quản trị hệ thống</div>
         <h3 class="fw-bold mb-1">Quản lý Người dùng</h3>
         <p class="text-muted mb-0">Quản lý danh sách tài khoản, phân quyền và trạng thái hoạt động trong hệ thống.</p>
     </div>
+    <span class="user-filter-count"><i class="bi bi-person-check-fill"></i><span id="visibleUserCount">@(Model?.Count() ?? 0)</span> tài khoản</span>
 </div>
 
 @if (TempData["Success"] != null)
@@ -22,10 +42,11 @@
 }
 
 <!-- Thẻ Tìm kiếm & Lọc -->
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4 user-filter-card">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-6">
+                <label for="searchInput" class="user-filter-label">Tìm kiếm</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>
@@ -34,6 +55,7 @@
                 </div>
             </div>
             <div class="col-md-3">
+                <label for="roleFilter" class="user-filter-label">Vai trò</label>
                 <select id="roleFilter" class="form-select">
                     <option value="">-- Tất cả Vai trò --</option>
                     <option value="Admin">Admin</option>
@@ -42,6 +64,7 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label for="statusFilter" class="user-filter-label">Trạng thái</label>
                 <select id="statusFilter" class="form-select">
                     <option value="">-- Tất cả Trạng thái --</option>
                     <option value="Active">Active (Hoạt động)</option>
@@ -53,7 +76,7 @@
 </div>
 
 <!-- Bảng Danh sách Người dùng -->
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm user-table-card ui-data-card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="userTable">
@@ -92,27 +115,27 @@
                                 <td>
                                     @if (string.Equals(user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">@user.DisplayedRoleName</span>
+                                        <span class="badge user-role-badge bg-danger-subtle text-danger border border-danger-subtle">@user.DisplayedRoleName</span>
                                     }
                                     else if (string.Equals(user.RoleName, "Recruiter", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">@user.DisplayedRoleName</span>
+                                        <span class="badge user-role-badge bg-primary-subtle text-primary border border-primary-subtle">@user.DisplayedRoleName</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">@user.DisplayedRoleName</span>
+                                        <span class="badge user-role-badge bg-info-subtle text-info border border-info-subtle">@user.DisplayedRoleName</span>
                                     }
                                 </td>
                                 <td>
                                     @if (string.Equals(user.Status, "Active", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <span class="badge bg-success-subtle text-success px-2 py-1">
+                                        <span class="badge user-status-badge bg-success-subtle text-success">
                                             <i class="bi bi-check-circle-fill me-1"></i> Hoạt động
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                        <span class="badge user-status-badge bg-secondary-subtle text-secondary">
                                             <i class="bi bi-slash-circle-fill me-1"></i> Đã khóa
                                         </span>
                                     }
@@ -120,7 +143,7 @@
                                 <td class="text-muted fs-7">
                                     @user.CreatedAt.ToString("dd/MM/yyyy HH:mm")
                                 </td>
-                                <td class="text-end pe-4">
+                                <td class="text-end pe-4 user-action-cell">
                                     <div class="btn-group">
                                         <!-- 1. Xem chi tiết (Đã khớp asp-route-userId) -->
                                         <a asp-action="Details" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary" title="Xem chi tiết">
@@ -129,7 +152,7 @@
 
                                         @if (string.Equals(user.RoleName, "Candidate", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            <form asp-action="PromoteCandidate" method="post" class="d-flex ms-1">
+                                            <form asp-action="PromoteCandidate" method="post" class="d-flex ms-1 role-promote-form">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="userId" value="@user.Id" />
                                                 <select name="targetRole" class="form-select form-select-sm" style="width: 155px;" aria-label="Nâng quyền">
@@ -271,6 +294,10 @@
                         row.hide();
                     }
                 });
+
+                $('#visibleUserCount').text($('#userTable tbody tr:visible').filter(function () {
+                    return $(this).find('td').length > 1;
+                }).length);
             }
 
             $("#searchInput").on("keyup search", filterUsers);

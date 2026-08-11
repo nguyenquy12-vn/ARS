@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="LettuceEncrypt" Version="1.3.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.29" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.29">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

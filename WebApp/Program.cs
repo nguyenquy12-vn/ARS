@@ -4,17 +4,19 @@ using LettuceEncrypt;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Implementations;
 using Services.Interfaces;
 using WebApp.Middlewares;
+using WebApp.Accounts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Cookie Authentication configuration
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+var authentication = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "RecruitmentAuthCookie";
@@ -23,6 +25,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromDays(7); 
         options.SlidingExpiration = true;     
     });
+
+var googleClientId = builder.Configuration["GoogleAuth:ClientId"];
+var googleClientSecret = builder.Configuration["GoogleAuth:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authentication.AddCookie("External")
+    .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.SignInScheme = "External";
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+    });
+}
 
 builder.Services.AddAuthorization(options =>
 {
@@ -38,6 +53,13 @@ builder.Services.AddAuthorization(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(15);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.AddDbContext<ARSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
@@ -51,6 +73,7 @@ builder.Services.AddScoped<ICvBankService, CvBankService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAccountEmailService, AccountEmailService>();
 
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
 builder.Services.AddSingleton(new AiSettings
@@ -157,6 +180,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseMiddleware<UserStatusValidationMiddleware>();
 app.UseAuthorization();
