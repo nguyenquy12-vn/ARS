@@ -94,6 +94,69 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<bool> IsEmailAvailableAsync(string email)
+    {
+        return !await _context.Users.AnyAsync(u => u.Email == email.Trim());
+    }
+
+    public async Task<LoginResponse> LoginWithGoogleAsync(string email, string fullName)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _context.Users.Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+        if (user == null)
+        {
+            var candidateRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Candidate");
+            if (candidateRole == null)
+            {
+                return LoginResponse.Failure(ErrorMessage.CandidateRoleNotAvailable);
+            }
+
+            user = new User
+            {
+                Email = normalizedEmail,
+                FullName = string.IsNullOrWhiteSpace(fullName) ? normalizedEmail.Split('@')[0] : fullName.Trim(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+                RoleId = candidateRole.Id,
+                Role = candidateRole
+            };
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+        }
+
+        if (user.Status == UserStatus.Locked)
+        {
+            return LoginResponse.Failure(ErrorMessage.AccountLocked);
+        }
+
+        var permissions = await _context.RolePermissions
+            .Where(p => p.RoleId == user.RoleId)
+            .Select(p => p.Permission != null ? p.Permission.Name : "Error")
+            .ToListAsync();
+
+        return LoginResponse.Success(_mapper.Map<UserAuthResponse>(user), permissions);
+    }
+
+    public async Task<BoolResponse> ResetPasswordAsync(string email, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email.Trim().ToLowerInvariant());
+        if (user == null) return BoolResponse.Failure("Không tìm thấy tài khoản với email này.");
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+        return BoolResponse.Success();
+    }
+
+    public async Task<BoolResponse> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return BoolResponse.Failure(ErrorMessage.UserNotFound);
+        if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash)) return BoolResponse.Failure("Mật khẩu hiện tại không chính xác.");
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+        return BoolResponse.Success();
+    }
+
     public async Task<BoolResponse> LockAccountAsync(int userId)
     {
         var user = await _context.Users.FindAsync(userId);

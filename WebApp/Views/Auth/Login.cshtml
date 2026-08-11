@@ -1,97 +1,226 @@
-﻿@model WebApp.Models.Auth.LoginViewModel
+@model WebApp.Models.Auth.LoginViewModel
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "Đăng nhập hệ thống";
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập | ARS Recruitment";
 }
 
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body p-4 p-sm-5">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-                    <h3 class="card-title text-center mb-4 fw-bold text-primary">
-                        ĐĂNG NHẬP
-                    </h3>
-                    <p class="text-muted text-center small mb-4">Chào mừng bạn trở lại! Vui lòng điền thông tin tài khoản.</p>
+    <style>
+        :root {
+            --auth-navy: #0b1f3a;
+            --auth-blue: #1267e9;
+            --auth-sky: #51b8ff;
+            --auth-ink: #172b4d;
+            --auth-muted: #70809a;
+        }
 
-                    <!-- Form gửi dữ liệu dạng POST tới hành động Login -->
-                    <form asp-action="Login" asp-controller="Auth" method="post">
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--auth-ink);
+            font-family: "Manrope", sans-serif;
+            background: #f4f8ff;
+        }
 
-                        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
-                        {
-                            <div class="alert alert-danger d-flex align-items-center small py-2 mb-3" role="alert">
-                                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2 fs-5"></i>
-                                <div>
-                                    @ViewBag.ErrorMessage
-                                </div>
-                            </div>
-                        }
+        .auth-shell { min-height: 100vh; display: grid; grid-template-columns: minmax(440px, 1.12fr) minmax(440px, .88fr); }
+        .auth-showcase {
+            position: relative;
+            overflow: hidden;
+            min-height: 700px;
+            padding: clamp(2rem, 4.3vw, 4.5rem);
+            color: #fff;
+            background: radial-gradient(circle at 74% 12%, rgba(80, 188, 255, .52), transparent 26%), linear-gradient(138deg, #07182f 0%, #0d3567 48%, #1267e9 130%);
+        }
+        .auth-showcase::before, .auth-showcase::after { content: ""; position: absolute; border-radius: 999px; pointer-events: none; }
+        .auth-showcase::before { width: 520px; height: 520px; left: -230px; bottom: -270px; border: 1px solid rgba(255,255,255,.13); box-shadow: 0 0 0 60px rgba(255,255,255,.025), 0 0 0 120px rgba(255,255,255,.02); }
+        .auth-showcase::after { width: 300px; height: 300px; right: -135px; top: 38%; border: 1px solid rgba(255,255,255,.16); }
+        .brand { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: .7rem; color: #fff; font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.07rem; font-weight: 800; letter-spacing: -.02em; text-decoration: none; }
+        .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: #fff; color: var(--auth-blue); box-shadow: 0 10px 26px rgba(0,0,0,.18); }
+        .showcase-content { position: relative; z-index: 2; max-width: 590px; margin-top: clamp(3.8rem, 9vh, 7rem); }
+        .eyebrow { display: inline-flex; gap: .5rem; align-items: center; padding: .5rem .8rem; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.09); font-size: .73rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; backdrop-filter: blur(12px); }
+        .showcase-title { max-width: 540px; margin: 1.3rem 0 1rem; font-family: "Plus Jakarta Sans", sans-serif; font-size: clamp(2.15rem, 4vw, 4.15rem); font-weight: 800; letter-spacing: -.065em; line-height: 1.12; }
+        .showcase-title span { color: #93dcff; }
+        .showcase-copy { max-width: 475px; margin: 0; color: rgba(236,246,255,.8); font-size: 1rem; line-height: 1.75; }
+        .talent-art { position: relative; z-index: 2; width: min(570px, 100%); margin: clamp(2rem, 5vh, 4rem) auto 0; filter: drop-shadow(0 28px 28px rgba(2, 17, 44, .3)); }
+        .talent-art svg { display: block; width: 100%; height: auto; }
+        .trust-row { position: absolute; z-index: 2; left: clamp(2rem, 4.3vw, 4.5rem); bottom: 2rem; display: flex; gap: 1.4rem; flex-wrap: wrap; color: rgba(235,245,255,.78); font-size: .78rem; font-weight: 700; }
+        .trust-row span { display: inline-flex; align-items: center; gap: .42rem; }
+        .auth-panel { display: grid; place-items: center; padding: 2rem clamp(1.5rem, 5.2vw, 6.5rem); background: #fff; }
+        .login-card { width: min(100%, 435px); }
+        .back-home { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: clamp(2.5rem, 8vh, 6rem); color: #68809f; font-size: .85rem; font-weight: 700; text-decoration: none; transition: .2s ease; }
+        .back-home:hover { color: var(--auth-blue); transform: translateX(-2px); }
+        .login-card h1 { margin: 0; font-family: "Plus Jakarta Sans", sans-serif; font-size: clamp(1.8rem, 3vw, 2.35rem); font-weight: 800; letter-spacing: -.055em; color: #112b4d; }
+        .login-intro { margin: .8rem 0 2rem; color: var(--auth-muted); font-size: .92rem; line-height: 1.65; }
+        .form-label { margin-bottom: .48rem; color: #2a405f; font-size: .83rem; font-weight: 800; }
+        .field-wrap { position: relative; }
+        .field-icon { position: absolute; z-index: 3; top: 50%; left: 1rem; color: #7c90ad; transform: translateY(-50%); }
+        .auth-input { height: 54px; padding: .7rem 3.15rem; border: 1px solid #dce5f1; border-radius: 13px; color: #1d3454; font-size: .91rem; transition: .2s ease; }
+        .auth-input::placeholder { color: #a5b2c4; }
+        .auth-input:focus { border-color: #4a9cff; box-shadow: 0 0 0 4px rgba(18,103,233,.11); }
+        .password-toggle { position: absolute; z-index: 4; top: 50%; right: .55rem; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 9px; color: #54708f; background: transparent; transform: translateY(-50%); }
+        .password-toggle:hover { color: var(--auth-blue); background: #edf6ff; }
+        .remember-check { min-height: auto; padding-left: 1.65rem; color: #63758e; font-size: .82rem; font-weight: 600; }
+        .remember-check .form-check-input { width: 1.05rem; height: 1.05rem; margin-left: -1.65rem; margin-top: .12rem; border-color: #bdcadb; }
+        .remember-check .form-check-input:checked { background-color: var(--auth-blue); border-color: var(--auth-blue); }
+        .login-submit { display: inline-flex; justify-content: center; align-items: center; gap: .6rem; width: 100%; min-height: 55px; margin-top: 1.75rem; border: 0; border-radius: 13px; color: #fff; background: linear-gradient(100deg, #0754c8, #1682f0); box-shadow: 0 13px 24px rgba(18,103,233,.24); font-size: .92rem; font-weight: 800; transition: transform .2s ease, box-shadow .2s ease; }
+        .login-submit:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 17px 30px rgba(18,103,233,.31); }
+        .social-divider { display: flex; align-items: center; gap: .75rem; margin: 1.5rem 0; color: #9aa8ba; font-size: .72rem; font-weight: 700; }
+        .social-divider::before, .social-divider::after { content: ""; flex: 1; height: 1px; background: #e6edf6; }
+        .google-button { display: inline-flex; align-items: center; justify-content: center; gap: .7rem; width: 100%; min-height: 52px; border: 1px solid #dbe4f0; border-radius: 13px; color: #29415f; background: #fff; font-size: .87rem; font-weight: 800; text-decoration: none; transition: .2s ease; }
+        .google-button:hover { border-color: #aac8ec; color: #154f9e; background: #f8fbff; box-shadow: 0 9px 18px rgba(43, 91, 148, .09); }
+        .google-g { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: #fff; background: conic-gradient(from -40deg, #4285f4 0 25%, #34a853 0 45%, #fbbc05 0 65%, #ea4335 0 85%, #4285f4 0); font-size: .7rem; font-weight: 800; }
+        .form-alert { border: 1px solid #ffd5d9; border-radius: 12px; color: #a13243; background: #fff5f6; font-size: .82rem; }
+        .form-alert ul { margin-bottom: 0; padding-left: 1.1rem; }
+        .register-line { margin-top: 2.1rem; padding-top: 1.65rem; border-top: 1px solid #e9eef5; color: #73829a; font-size: .84rem; text-align: center; }
+        .register-line a { color: #0d63d7; font-weight: 800; text-decoration: none; }
+        .register-line a:hover { text-decoration: underline; }
+        .secure-note { display: flex; justify-content: center; gap: .45rem; margin-top: 1.25rem; color: #9aa8ba; font-size: .72rem; }
+        .text-danger { display: block; margin-top: .38rem; font-size: .75rem !important; }
+        @@media (max-width: 991.98px) { .auth-shell { grid-template-columns: 1fr; } .auth-showcase { display: none; } .auth-panel { min-height: 100vh; padding-block: 2rem; } .back-home { margin-bottom: 3rem; } }
+        @@media (max-width: 450px) { .auth-panel { padding-inline: 1.25rem; } .login-card h1 { font-size: 1.75rem; } }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+        <aside class="auth-showcase" aria-label="Giới thiệu ARS Recruitment">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-mark"><i class="bi bi-briefcase-fill"></i></span>
+                <span>ARS Recruitment</span>
+            </a>
 
-                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] != null)
-                        {
-                            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
-                        }
+            <div class="showcase-content">
+                <span class="eyebrow"><i class="bi bi-stars"></i> Nền tảng tuyển dụng thông minh</span>
+                <h2 class="showcase-title">Đúng người.<br /><span>Đúng cơ hội.</span></h2>
+                <p class="showcase-copy">Kết nối hành trình nghề nghiệp của bạn với những doanh nghiệp phù hợp, nhanh hơn và hiệu quả hơn mỗi ngày.</p>
+            </div>
 
-                        <!-- Trường nhập Email -->
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label small fw-semibold">Địa chỉ Email</label>
-                            <input asp-for="Email" type="email" class="form-control" placeholder="name@@example.com" />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
+            <div class="talent-art" aria-hidden="true">
+                <svg viewBox="0 0 620 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="card" x1="69" y1="44" x2="511" y2="260" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCEEFF"/></linearGradient>
+                        <linearGradient id="person" x1="301" y1="66" x2="404" y2="249" gradientUnits="userSpaceOnUse"><stop stop-color="#80D4FF"/><stop offset="1" stop-color="#247AF2"/></linearGradient>
+                    </defs>
+                    <circle cx="424" cy="150" r="132" fill="#6CCBFF" fill-opacity=".16"/>
+                    <circle cx="424" cy="150" r="100" stroke="white" stroke-opacity=".16"/>
+                    <rect x="61" y="71" width="372" height="190" rx="22" fill="url(#card)"/>
+                    <rect x="79" y="91" width="96" height="14" rx="7" fill="#C6DFF8"/>
+                    <rect x="79" y="120" width="178" height="10" rx="5" fill="#D5E7F8"/>
+                    <rect x="79" y="143" width="142" height="10" rx="5" fill="#D5E7F8"/>
+                    <rect x="79" y="191" width="135" height="38" rx="12" fill="#E5F3FF"/>
+                    <path d="M99 212l10 10 18-22" stroke="#1874E7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="237" y="154" width="150" height="75" rx="17" fill="#0E3972"/>
+                    <rect x="252" y="171" width="76" height="8" rx="4" fill="white" fill-opacity=".85"/>
+                    <rect x="252" y="190" width="112" height="7" rx="3.5" fill="white" fill-opacity=".35"/>
+                    <rect x="252" y="208" width="58" height="7" rx="3.5" fill="#7FD3FF"/>
+                    <path d="M393 76c16 0 29 13 29 29s-13 29-29 29-29-13-29-29 13-29 29-29Z" fill="#FFD4B1"/>
+                    <path d="M366 107c3-30 20-47 46-41 17 4 27 18 25 41-13-7-26-18-38-33-8 14-18 25-33 33Z" fill="#132E56"/>
+                    <path d="M365 143c10-18 44-21 59-2l19 78H343l22-76Z" fill="url(#person)"/>
+                    <path d="M343 219h100l11 33H326l17-33Z" fill="#EAF6FF"/>
+                    <rect x="427" y="188" width="137" height="69" rx="18" fill="white" fill-opacity=".96"/>
+                    <circle cx="454" cy="214" r="12" fill="#DBF4E8"/>
+                    <path d="m448 214 4 4 8-9" stroke="#20A967" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="476" y="205" width="62" height="9" rx="4.5" fill="#244B7C"/>
+                    <rect x="476" y="222" width="42" height="7" rx="3.5" fill="#A6BDD6"/>
+                    <rect x="478" y="21" width="102" height="57" rx="16" fill="#1976E8"/>
+                    <path d="M505 49h48" stroke="white" stroke-width="7" stroke-linecap="round"/>
+                    <path d="M529 33v32" stroke="white" stroke-width="7" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <div class="trust-row">
+                <span><i class="bi bi-shield-check"></i> Bảo mật dữ liệu</span>
+                <span><i class="bi bi-lightning-charge"></i> Tối ưu tuyển dụng</span>
+            </div>
+        </aside>
+
+        <main class="auth-panel">
+            <section class="login-card" aria-labelledby="login-heading">
+                <a class="back-home" asp-controller="Home" asp-action="Index"><i class="bi bi-arrow-left"></i> Trở về trang chủ</a>
+                <h1 id="login-heading">Chào mừng trở lại</h1>
+                <p class="login-intro">Đăng nhập để tiếp tục hành trình tìm việc và tuyển dụng cùng ARS.</p>
+
+                @if (TempData["RegisterSuccess"] != null)
+                {
+                    <div class="alert alert-success border-0 small py-3 mb-3"><i class="bi bi-check-circle-fill me-2"></i>@TempData["RegisterSuccess"]</div>
+                }
+                @if (TempData["LoginError"] != null)
+                {
+                    <div class="form-alert d-flex gap-2 align-items-start p-3 mb-3" role="alert"><i class="bi bi-exclamation-circle-fill mt-1"></i><span>@TempData["LoginError"]</span></div>
+                }
+
+                <form asp-action="Login" asp-controller="Auth" method="post">
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="form-alert d-flex gap-2 align-items-start p-3 mb-3" role="alert">
+                            <i class="bi bi-exclamation-circle-fill mt-1"></i><span>@ViewBag.ErrorMessage</span>
                         </div>
+                    }
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] != null)
+                    {
+                        <div asp-validation-summary="ModelOnly" class="form-alert p-3 mb-3" role="alert"></div>
+                    }
 
-                        <!-- Trường nhập Mật khẩu -->
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label small fw-semibold">Mật khẩu</label>
-                            <div class="input-group">
-                                <input asp-for="Password" type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu của bạn" />
-                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                    <!-- Sử dụng text đơn giản nếu chưa cài Bootstrap Icon, hoặc dùng icon mắt -->
-                                    <span id="eyeIcon">Hiện</span>
-                                </button>
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger small"></span>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Địa chỉ email</label>
+                        <div class="field-wrap">
+                            <i class="bi bi-envelope field-icon"></i>
+                            <input asp-for="Email" type="email" class="form-control auth-input" autocomplete="email" placeholder="name@example.com" />
                         </div>
-
-                        <!-- Nút Đăng nhập -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg fs-6 fw-semibold rounded-2 py-2 shadow-sm">
-                                Đăng Nhập
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr class="text-muted my-4">
-
-                    <!-- Đường dẫn chuyển sang trang đăng ký -->
-                    <div class="text-center small">
-                        Bạn chưa có tài khoản?
-                        <a asp-action="Register" asp-controller="Auth" class="text-decoration-none fw-semibold text-primary">Đăng ký ứng viên ngay</a>
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
-                </div>
-            </div>
-        </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Mật khẩu</label>
+                        <div class="field-wrap">
+                            <i class="bi bi-lock field-icon"></i>
+                            <input asp-for="Password" type="password" id="loginPassword" class="form-control auth-input" autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" />
+                            <button class="password-toggle" type="button" id="togglePassword" aria-label="Hiện mật khẩu" title="Hiện mật khẩu"><i class="bi bi-eye" id="eyeIcon"></i></button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check remember-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">Ghi nhớ đăng nhập trên thiết bị này</label>
+                    </div>
+                    <div class="text-end mt-2"><a asp-action="ForgotPassword" asp-controller="Auth" class="small text-decoration-none fw-bold" style="color:#1267e9">Quên mật khẩu?</a></div>
+
+                    <button type="submit" class="login-submit">Đăng nhập <i class="bi bi-arrow-right"></i></button>
+                </form>
+
+                <div class="social-divider">hoặc tiếp tục với</div>
+                <a asp-action="GoogleLogin" asp-controller="Auth" class="google-button"><span class="google-g">G</span> Đăng nhập với Google</a>
+
+                <div class="register-line">Chưa có tài khoản? <a asp-action="Register" asp-controller="Auth">Tạo tài khoản ứng viên</a></div>
+                <p class="secure-note"><i class="bi bi-shield-lock-fill"></i> Thông tin của bạn luôn được bảo vệ an toàn</p>
+            </section>
+        </main>
     </div>
-</div>
 
-@section Scripts {
-    <!-- Giúp kiểm tra bỏ trống/sai định dạng email ngay tại Client -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
-
-    <!-- JavaScript xử lý ẩn/hiển thị mật khẩu -->
     <script>
         document.getElementById('togglePassword').addEventListener('click', function () {
-            const passwordInput = document.getElementById('loginPassword');
-            const eyeIcon = document.getElementById('eyeIcon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.textContent = 'Ẩn';
-            } else {
-                passwordInput.type = 'password';
-                eyeIcon.textContent = 'Hiện';
-            }
+            const input = document.getElementById('loginPassword');
+            const icon = document.getElementById('eyeIcon');
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+            this.setAttribute('aria-label', isHidden ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+            this.setAttribute('title', isHidden ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
         });
     </script>
-}
+</body>
+</html>
