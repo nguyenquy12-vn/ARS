@@ -1,0 +1,367 @@
+/* ============================================================
+   Recruiter design system — theo DESIGN.md (cord.com "Sky blueprint on frosted glass")
+   Toàn bộ được scope dưới .recruiter-shell để không ảnh hưởng trang candidate.
+   ============================================================ */
+.recruiter-shell {
+    /* Colors */
+    --color-canvas-white: #ffffff;
+    --color-midnight-ink: #0b3658;
+    --color-cloud-gray: #dde7ee;
+    --color-oceanic-blue: #4e9ad9;
+    --color-subtle-mist: #e6f1fa;
+    --color-slate-text: #486984;
+    --color-muted-stone: #688dac;
+    --color-soft-ash: #97b5ce;
+    --color-subtle-gray: #c8d8e4;
+    --color-success-teal: #42b3b1;
+    --color-error-red: #f56c6c;
+    --color-warning-orange: #e2a365;
+    --color-deep-space: linear-gradient(78deg, rgb(12, 61, 100) 7.69%, rgb(25, 36, 67) 124.07%);
+
+    /* Shadows */
+    --shadow-xl: rgba(11, 54, 88, 0.08) 0px 12px 48px 0px;
+    --shadow-md: rgba(11, 54, 88, 0.04) 0px 4px 12px 0px;
+
+    /* Radius */
+    --r-card: 24px;
+    --r-field: 8px;
+    --r-badge: 5px;
+    --r-btn: 8px;
+
+    font-family: 'Figtree', system-ui, -apple-system, sans-serif;
+    color: var(--color-midnight-ink);
+    background-color: #f4f7fb;
+}
+
+/* ---------- Sidebar ---------- */
+.recruiter-shell .recruiter-sidebar {
+    background: var(--color-deep-space);
+    color: #cdd7e5;
+}
+
+.recruiter-shell .recruiter-sidebar .brand {
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.recruiter-shell .recruiter-sidebar .nav-link {
+    color: #b7c6d8;
+    font-weight: 600;
+    border-radius: 0;
+}
+
+.recruiter-shell .recruiter-sidebar .nav-link:hover {
+    background: rgba(78, 154, 217, .14);
+    color: #fff;
+}
+
+.recruiter-shell .recruiter-sidebar .nav-link.active {
+    background: rgba(78, 154, 217, .22);
+    color: #fff;
+    border-left-color: var(--color-oceanic-blue);
+}
+
+/* ---------- Topbar ---------- */
+.recruiter-shell .recruiter-topbar {
+    background: var(--color-canvas-white);
+    border-bottom: 1px solid var(--color-cloud-gray);
+}
+
+.recruiter-shell .recruiter-topbar h6 {
+    color: var(--color-midnight-ink);
+    font-weight: 700;
+}
+
+/* ---------- Headings ---------- */
+.recruiter-shell h1, .recruiter-shell h2, .recruiter-shell h3,
+.recruiter-shell h4, .recruiter-shell h5, .recruiter-shell h6 {
+    color: var(--color-midnight-ink);
+    letter-spacing: -0.002em;
+}
+
+.recruiter-shell .text-primary {
+    color: var(--color-midnight-ink) !important;
+}
+
+.recruiter-shell .text-muted {
+    color: var(--color-muted-stone) !important;
+}
+
+/* ---------- Cards ---------- */
+.recruiter-shell .card {
+    border: 1px solid var(--color-cloud-gray);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-md);
+    background: var(--color-canvas-white);
+}
+
+.recruiter-shell .card.shadow-sm,
+.recruiter-shell .card.shadow {
+    box-shadow: var(--shadow-xl) !important;
+}
+
+.recruiter-shell .card-body {
+    padding: 24px 28px;
+}
+
+.recruiter-shell .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--color-cloud-gray);
+    font-weight: 700;
+    color: var(--color-midnight-ink);
+}
+
+/* Stat cards (dashboard) */
+.recruiter-shell .display-6 {
+    font-weight: 800;
+    letter-spacing: -0.003em;
+}
+
+/* ---------- Buttons ---------- */
+.recruiter-shell .btn {
+    border-radius: var(--r-btn);
+    font-weight: 600;
+    padding: 9px 18px;
+}
+
+.recruiter-shell .btn-sm {
+    padding: 5px 12px;
+}
+
+.recruiter-shell .btn-primary {
+    background-color: var(--color-oceanic-blue);
+    border-color: var(--color-oceanic-blue);
+    color: #fff;
+}
+
+.recruiter-shell .btn-primary:hover,
+.recruiter-shell .btn-primary:focus {
+    background-color: #3d86c4;
+    border-color: #3d86c4;
+}
+
+.recruiter-shell .btn-outline-primary {
+    color: var(--color-oceanic-blue);
+    border-color: var(--color-oceanic-blue);
+    background: transparent;
+}
+
+.recruiter-shell .btn-outline-primary:hover {
+    background-color: var(--color-oceanic-blue);
+    color: #fff;
+}
+
+.recruiter-shell .btn-outline-secondary {
+    color: var(--color-slate-text);
+    border-color: var(--color-cloud-gray);
+}
+
+.recruiter-shell .btn-outline-secondary:hover {
+    background-color: var(--color-subtle-mist);
+    color: var(--color-midnight-ink);
+    border-color: var(--color-subtle-gray);
+}
+
+.recruiter-shell .btn-secondary {
+    background-color: var(--color-subtle-gray);
+    border-color: var(--color-subtle-gray);
+    color: var(--color-midnight-ink);
+}
+
+.recruiter-shell .btn-success {
+    background-color: var(--color-success-teal);
+    border-color: var(--color-success-teal);
+    color: #fff;
+}
+
+.recruiter-shell .btn-success:hover {
+    background-color: #369795;
+    border-color: #369795;
+}
+
+.recruiter-shell .btn-outline-info {
+    color: var(--color-oceanic-blue);
+    border-color: var(--color-subtle-gray);
+}
+
+.recruiter-shell .btn-outline-info:hover {
+    background-color: var(--color-subtle-mist);
+    color: var(--color-midnight-ink);
+    border-color: var(--color-oceanic-blue);
+}
+
+/* ---------- Badges ---------- */
+.recruiter-shell .badge {
+    border-radius: var(--r-badge);
+    font-weight: 600;
+    padding: 4px 9px;
+    font-size: 11px;
+}
+
+.recruiter-shell .badge.rounded-pill {
+    border-radius: 999px;
+}
+
+/* Skill chips */
+.recruiter-shell .badge.bg-light {
+    background: var(--color-subtle-mist) !important;
+    color: var(--color-slate-text) !important;
+    border-color: var(--color-cloud-gray) !important;
+}
+
+.recruiter-shell .bg-success-subtle {
+    background: rgba(66, 179, 177, .14) !important;
+}
+.recruiter-shell .text-success-emphasis { color: var(--color-success-teal) !important; }
+
+.recruiter-shell .bg-warning-subtle {
+    background: rgba(226, 163, 101, .16) !important;
+}
+.recruiter-shell .text-warning-emphasis { color: #c07d3a !important; }
+
+/* ---------- Forms ---------- */
+.recruiter-shell .form-control,
+.recruiter-shell .form-select {
+    border-radius: var(--r-field);
+    border: 1px solid var(--color-cloud-gray);
+    color: var(--color-midnight-ink);
+    font-size: 14px;
+}
+
+.recruiter-shell .form-control:focus,
+.recruiter-shell .form-select:focus {
+    border-color: var(--color-oceanic-blue);
+    box-shadow: 0 0 0 3px rgba(78, 154, 217, .15);
+}
+
+.recruiter-shell .form-control::placeholder {
+    color: var(--color-soft-ash);
+}
+
+.recruiter-shell .form-label {
+    color: var(--color-slate-text);
+    font-weight: 600;
+}
+
+/* ---------- Tables ---------- */
+.recruiter-shell .table {
+    color: var(--color-midnight-ink);
+    margin-bottom: 0;
+}
+
+.recruiter-shell .table > thead.table-light th,
+.recruiter-shell .table > thead th {
+    background: #f4f8fc;
+    color: var(--color-muted-stone);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    border-bottom: 1px solid var(--color-cloud-gray);
+}
+
+.recruiter-shell .table > tbody > tr {
+    border-bottom: 1px solid var(--color-cloud-gray);
+}
+
+.recruiter-shell .table-hover > tbody > tr:hover > * {
+    background-color: var(--color-subtle-mist);
+}
+
+.recruiter-shell .table td, .recruiter-shell .table th {
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+/* ---------- Alerts ---------- */
+.recruiter-shell .alert {
+    border-radius: var(--r-field);
+    border: 1px solid transparent;
+}
+
+.recruiter-shell .alert-success {
+    background: rgba(66, 179, 177, .12);
+    border-color: rgba(66, 179, 177, .3);
+    color: #2b7a78;
+}
+
+.recruiter-shell .alert-danger {
+    background: rgba(245, 108, 108, .1);
+    border-color: rgba(245, 108, 108, .3);
+    color: #c0392b;
+}
+
+.recruiter-shell .alert-info {
+    background: var(--color-subtle-mist);
+    border-color: var(--color-cloud-gray);
+    color: var(--color-slate-text);
+}
+
+/* ---------- Avatar & score chips (Kho CV / Ứng viên) ---------- */
+.recruiter-shell .r-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-oceanic-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.recruiter-shell .r-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 1;
+}
+.recruiter-shell .r-score .unit { font-size: 11px; font-weight: 600; color: var(--color-muted-stone); }
+.recruiter-shell .r-score-hi { color: var(--color-success-teal); }
+.recruiter-shell .r-score-md { color: var(--color-warning-orange); }
+.recruiter-shell .r-score-lo { color: var(--color-error-red); }
+.recruiter-shell .r-no-score { font-size: 12px; color: var(--color-soft-ash); font-style: italic; }
+
+.recruiter-shell .r-snip {
+    font-size: 13px;
+    color: var(--color-slate-text);
+    line-height: 1.5;
+}
+
+/* Rút gọn 2 dòng cho cột tóm tắt */
+.recruiter-shell .r-clamp2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--color-slate-text);
+    line-height: 1.5;
+    max-width: 260px;
+}
+
+/* Modal chi tiết CV */
+.cvd-callout {
+    padding: 10px 14px;
+    border-left: 3px solid;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 6px;
+}
+.cvd-callout.eval { border-color: var(--color-oceanic-blue); background: var(--color-subtle-mist); }
+.cvd-stat {
+    background: #f4f8fc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+}
+.cvd-stat .v { font-size: 18px; font-weight: 800; color: var(--color-midnight-ink); }
+.cvd-stat .l { font-size: 11px; text-transform: uppercase; color: var(--color-muted-stone); }
+.cvd-list { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 14px; }
+.cvd-list.pos li { color: #1f7a5a; }
+.cvd-list.neg li { color: #b3453a; }

@@ -50,6 +50,11 @@ public class User
     public string? SmtpFromEmail { get; set; }   // email hiển thị người gửi
     public bool SmtpEnableSsl { get; set; } = true;
 
+    // ==========================================
+    // LỰA CHỌN AI: Local (server nội bộ) hoặc OpenAI/ChatGPT (dùng key chung hệ thống)
+    // ==========================================
+    public AiProvider AiProvider { get; set; } = AiProvider.Local;
+
     public Company? Company { get; set; }
 
     public ICollection<Application> Applications { get; set; } = new List<Application>();

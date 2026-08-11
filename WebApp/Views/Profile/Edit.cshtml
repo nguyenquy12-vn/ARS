@@ -74,6 +74,25 @@
         </div>
     </div>
 
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <h6 class="fw-bold mb-1">Nguồn AI chấm điểm CV</h6>
+            <p class="text-muted small mb-3">
+                Chọn AI dùng để trích xuất &amp; chấm điểm CV. <strong>AI Local</strong> chạy trên máy chủ nội bộ (miễn phí, có thể chậm).
+                <strong>ChatGPT (OpenAI)</strong> nhanh và chính xác hơn, dùng API key chung của hệ thống.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="AiProvider" class="form-label"></label>
+                    <select asp-for="AiProvider" class="form-select">
+                        <option value="@((int)Domain.Enums.AiProvider.Local)">AI Local (máy chủ nội bộ)</option>
+                        <option value="@((int)Domain.Enums.AiProvider.OpenAI)">ChatGPT (OpenAI)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <button type="submit" class="btn btn-primary fw-semibold">Lưu hồ sơ</button>
 </form>
 
