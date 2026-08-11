@@ -21,6 +21,12 @@ public class PaymentManagementController : Controller
             .OrderBy(x => x.Status == PaymentStatus.PendingConfirmation ? 0 : 1)
             .ThenByDescending(x => x.CreatedAt)
             .ToListAsync();
+        var successful = orders.Where(x => x.Status == PaymentStatus.Successful).ToList();
+        var today = DateTime.Today;
+        ViewBag.TotalRevenue = successful.Sum(x => x.Amount);
+        ViewBag.MonthRevenue = successful.Where(x => x.ReviewedAt?.ToLocalTime().Year == today.Year && x.ReviewedAt?.ToLocalTime().Month == today.Month).Sum(x => x.Amount);
+        ViewBag.TodayRevenue = successful.Where(x => x.ReviewedAt?.ToLocalTime().Date == today).Sum(x => x.Amount);
+        ViewBag.SuccessCount = successful.Count;
         return View(orders);
     }
 
