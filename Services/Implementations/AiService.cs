@@ -3,23 +3,58 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Domain.Constraints;
+using Domain.Enums;
+using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Services.DTOs.Application;
 using Services.DTOs.CvBank;
 using Services.Interfaces;
 
 namespace Services.Implementations;
 
-// Gọi AI server nội bộ (LAN) giống dự án D:\ARS: POST /api/chat trả về NDJSON streaming.
+// Gọi AI server nội bộ (LAN): POST /api/chat trả về NDJSON streaming,
+// HOẶC gọi ChatGPT (OpenAI) /v1/chat/completions nếu user chọn provider = OpenAI.
 // BaseAddress + timeout + Authorization (Bearer) được cấu hình ở WebApp/Program.cs (AddHttpClient).
 public class AiService : IAiService
 {
     private readonly HttpClient _http;
     private readonly AiSettings _settings;
+    private readonly IHttpClientFactory _httpFactory;
+    private readonly ICurrentUserContext _currentUser;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AiService(HttpClient http, AiSettings settings)
+    // Xác định provider MỘT LẦN cho mỗi request (thread-safe, không dùng chung DbContext
+    // với các lời gọi AI song song). Lazy<Task<>> đảm bảo chỉ đọc DB đúng 1 lần.
+    private readonly Lazy<Task<AiProvider>> _provider;
+
+    public AiService(
+        HttpClient http,
+        AiSettings settings,
+        IHttpClientFactory httpFactory,
+        ICurrentUserContext currentUser,
+        IServiceScopeFactory scopeFactory)
     {
         _http = http;
         _settings = settings;
+        _httpFactory = httpFactory;
+        _currentUser = currentUser;
+        _scopeFactory = scopeFactory;
+        _provider = new Lazy<Task<AiProvider>>(LoadProviderAsync);
+    }
+
+    private async Task<AiProvider> LoadProviderAsync()
+    {
+        var userId = _currentUser.GetCurrentUserId();
+        if (userId == null) return AiProvider.Local;
+
+        // Dùng scope riêng -> DbContext riêng, an toàn khi AI được gọi song song.
+        using var scope = _scopeFactory.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<ARSDbContext>();
+        return await ctx.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.AiProvider)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<CvMatchResult> MatchCvAsync(string jobTitle, string description, string requirements, string cvText, JdEvalSettings settings)
@@ -66,9 +101,75 @@ public class AiService : IAiService
         }
     }
 
+    // Chọn nguồn AI theo cài đặt của user: OpenAI (nếu có key chung) hoặc server nội bộ.
+    private async Task<string> SendChatAsync(string message)
+    {
+        var provider = await _provider.Value;
+        if (provider == AiProvider.OpenAI && !string.IsNullOrWhiteSpace(_settings.OpenAiApiKey))
+            return await SendOpenAiAsync(message);
+
+        return await SendLocalChatAsync(message);
+    }
+
+    // POST /v1/chat/completions (OpenAI/ChatGPT) — không streaming, lấy choices[0].message.content.
+    private async Task<string> SendOpenAiAsync(string message)
+    {
+        var client = _httpFactory.CreateClient("openai");
+
+        var payload = new
+        {
+            model = _settings.OpenAiModel,
+            messages = new[]
+            {
+                new { role = "user", content = message }
+            }
+            // Không set temperature: các model GPT-5 chỉ chấp nhận giá trị mặc định.
+        };
+
+        using var resp = await client.PostAsJsonAsync("chat/completions", payload);
+        var raw = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            // Cố đọc message lỗi cụ thể của OpenAI để hiển thị cho người dùng.
+            var detail = $"OpenAI trả về mã {(int)resp.StatusCode}.";
+            try
+            {
+                using var errDoc = JsonDocument.Parse(raw);
+                if (errDoc.RootElement.TryGetProperty("error", out var e)
+                    && e.TryGetProperty("message", out var em)
+                    && em.ValueKind == JsonValueKind.String)
+                    detail = em.GetString() ?? detail;
+            }
+            catch { /* body không phải JSON */ }
+
+            throw new AiException($"ChatGPT lỗi: {detail}");
+        }
+
+        using var doc = JsonDocument.Parse(raw);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("error", out var err))
+        {
+            var msg = err.TryGetProperty("message", out var m) ? m.GetString() : "OpenAI báo lỗi.";
+            throw new AiException(msg ?? "OpenAI báo lỗi.");
+        }
+
+        if (root.TryGetProperty("choices", out var choices)
+            && choices.ValueKind == JsonValueKind.Array
+            && choices.GetArrayLength() > 0
+            && choices[0].TryGetProperty("message", out var msgEl)
+            && msgEl.TryGetProperty("content", out var contentEl))
+        {
+            return contentEl.GetString() ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
     // POST /api/chat: đọc stream NDJSON từng dòng, ghép tất cả "content".
     // Dừng khi gặp {"done":true}; ném AiException khi gặp {"error":...}.
-    private async Task<string> SendChatAsync(string message)
+    private async Task<string> SendLocalChatAsync(string message)
     {
         var payload = new
         {

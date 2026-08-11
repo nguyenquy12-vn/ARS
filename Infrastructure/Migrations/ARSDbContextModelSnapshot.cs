@@ -676,6 +676,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1078,6 +1079,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AiProvider")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1138,6 +1142,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@ars.com",
                             FullName = "Hệ Thống Admin",
@@ -1150,6 +1155,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 2,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter1@fpt.com",
                             FullName = "Nguyễn Văn Tuyển FPT",
@@ -1162,6 +1168,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 3,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "recruiter2@viettel.com",
                             FullName = "Trần Thị Duyệt Viettel",
@@ -1174,6 +1181,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 4,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate1@gmail.com",
                             FullName = "Lê Văn Pro .NET",
@@ -1186,6 +1194,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 5,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate2@gmail.com",
                             FullName = "Nguyễn Thị Fresher",
@@ -1198,6 +1207,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 6,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate3@gmail.com",
                             FullName = "Trần Văn Intern",
@@ -1210,6 +1220,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 7,
+                            AiProvider = 0,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "candidate4@gmail.com",
                             FullName = "Hoàng Lệ Trái Ngành",

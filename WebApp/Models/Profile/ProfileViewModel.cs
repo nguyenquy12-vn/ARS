@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace WebApp.Models.Profile;
 
@@ -39,4 +40,8 @@ public class ProfileViewModel
 
     [Display(Name = "Dùng SSL/TLS")]
     public bool SmtpEnableSsl { get; set; } = true;
+
+    // ===== Lựa chọn AI =====
+    [Display(Name = "Nguồn AI")]
+    public AiProvider AiProvider { get; set; } = AiProvider.Local;
 }

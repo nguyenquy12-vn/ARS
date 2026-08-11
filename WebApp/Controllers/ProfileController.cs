@@ -35,7 +35,8 @@ public class ProfileController : Controller
             SmtpUsername = user.SmtpUsername,
             SmtpPassword = user.SmtpPassword,
             SmtpFromEmail = user.SmtpFromEmail,
-            SmtpEnableSsl = user.SmtpEnableSsl
+            SmtpEnableSsl = user.SmtpEnableSsl,
+            AiProvider = user.AiProvider
         };
         return View(model);
     }
@@ -62,6 +63,7 @@ public class ProfileController : Controller
         user.SmtpPassword = model.SmtpPassword;
         user.SmtpFromEmail = model.SmtpFromEmail?.Trim();
         user.SmtpEnableSsl = model.SmtpEnableSsl;
+        user.AiProvider = model.AiProvider;
 
         await _context.SaveChangesAsync();
         TempData["Success"] = "Đã lưu hồ sơ cá nhân.";
