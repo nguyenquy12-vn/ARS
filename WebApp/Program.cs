@@ -1,8 +1,10 @@
 using Domain.Enums;
 using Infrastructure;
+using LettuceEncrypt;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Implementations;
@@ -53,8 +55,32 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
 builder.Services.AddSingleton(new AiSettings
 {
-    Model = builder.Configuration["Ai:Model"] ?? "gemma4:12b"
+    Model = builder.Configuration["Ai:Model"] ?? "gemma4:12b",
+    OpenAiBaseUrl = builder.Configuration["Ai:OpenAiBaseUrl"] ?? "https://api.openai.com/v1/",
+    OpenAiApiKey = builder.Configuration["Ai:OpenAiApiKey"],
+    OpenAiModel = builder.Configuration["Ai:OpenAiModel"] ?? "gpt-4o-mini"
 });
+
+// Biết user đang đăng nhập (để AiService chọn Local / ChatGPT theo cài đặt của họ)
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, WebApp.Support.HttpCurrentUserContext>();
+
+// HttpClient cho ChatGPT (OpenAI) - dùng key chung toàn hệ thống
+builder.Services.AddHttpClient("openai", client =>
+{
+    var baseUrl = builder.Configuration["Ai:OpenAiBaseUrl"] ?? "https://api.openai.com/v1/";
+    if (!baseUrl.EndsWith('/')) baseUrl += "/";
+    client.BaseAddress = new Uri(baseUrl);
+
+    var timeout = builder.Configuration.GetValue<int?>("Ai:TimeoutSeconds") ?? 120;
+    client.Timeout = TimeSpan.FromSeconds(timeout);
+
+    var openAiKey = builder.Configuration["Ai:OpenAiApiKey"];
+    if (!string.IsNullOrWhiteSpace(openAiKey))
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", openAiKey);
+});
+
 builder.Services.AddHttpClient<IAiService, AiService>(client =>
 {
     var baseUrl = builder.Configuration["Ai:BaseUrl"] ?? "http://localhost:11434/v1/";
@@ -78,6 +104,19 @@ config.Scan(typeof(MapsterConfig).Assembly);
 builder.Services.AddSingleton(config);
 builder.Services.AddScoped<IMapper, Mapper>();
 
+// SSL tự động (Let's Encrypt) - chỉ bật khi có section "LettuceEncrypt" trong appsettings
+if (builder.Configuration.GetSection("LettuceEncrypt").Exists())
+{
+    builder.Services.AddLettuceEncrypt()
+        .PersistDataToDirectory(new DirectoryInfo("C:\\ARS\\ssl"), null);
+
+    builder.WebHost.UseKestrel(k =>
+    {
+        k.ListenAnyIP(80);                       // cần cho ACME HTTP-01 challenge + redirect
+        k.ListenAnyIP(443, o => o.UseHttps());   // LettuceEncrypt tự cấp cert cho 443
+    });
+}
+
 
 var app = builder.Build();
 
@@ -95,6 +134,15 @@ using (var scope = app.Services.CreateScope())
         // Bỏ qua nếu DB chưa được khởi tạo
     }
 }
+
+// Nhận header X-Forwarded-* từ IIS reverse proxy (để biết đúng scheme https)
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedOptions);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
