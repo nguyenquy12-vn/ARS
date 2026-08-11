@@ -5,6 +5,7 @@ using WebApp.Models.Admin;
 namespace WebApp.Controllers.Admin;
 
 [Route("admin/users")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 public class UserManagementController : Controller
 {
     private readonly IUserService _userService;
@@ -50,6 +51,17 @@ public class UserManagementController : Controller
 
         ModelState.AddModelError(string.Empty, result.ErrorMessage);
         return RedirectToAction("Index");
+    }
+
+    [HttpPost("promote")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PromoteCandidate(int userId, string targetRole)
+    {
+        var result = await _userService.PromoteCandidateAsync(userId, targetRole);
+        TempData[result.IsSuccess ? "Success" : "Error"] = result.IsSuccess
+            ? $"Đã nâng quyền tài khoản lên {targetRole}. Người dùng cần đăng nhập lại để nhận quyền mới."
+            : result.ErrorMessage;
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet("details/{userId}")]

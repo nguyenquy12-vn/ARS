@@ -2,144 +2,199 @@
 
 @{
     ViewData["Title"] = "Việc làm đã ứng tuyển";
+    var applications = Model ?? new List<Services.DTOs.Application.ApplicationDto>();
+    var activeCount = applications.Count(x => x.Status is "Pending" or "Reviewing" or "Accepted");
+    var acceptedCount = applications.Count(x => x.Status == "Accepted");
+
+    (string Label, string Class, string Icon) StatusInfo(string status) => status switch
+    {
+        "Pending" => ("Chờ xử lý", "pending", "bi-hourglass-split"),
+        "Reviewing" => ("Đang xem xét", "reviewing", "bi-search"),
+        "Accepted" => ("Đạt", "accepted", "bi-check-circle-fill"),
+        "Rejected" => ("Chưa phù hợp", "rejected", "bi-x-circle"),
+        "Withdrawn" => ("Đã rút đơn", "withdrawn", "bi-dash-circle"),
+        _ => (status, "pending", "bi-circle")
+    };
 }
 
-<div class="page-header bg-primary text-white py-4">
-    <div class="container py-3">
-        <h2 class="mb-0 fw-bold">Việc làm đã ứng tuyển</h2>
-        <p class="mb-0 text-white-50 mt-1">Quản lý và theo dõi tiến độ các đơn ứng tuyển của bạn</p>
+<section class="candidate-hero">
+    <div class="container position-relative">
+        <div class="candidate-hero-orb candidate-hero-orb-one"></div>
+        <div class="candidate-hero-orb candidate-hero-orb-two"></div>
+        <div class="row align-items-end g-4 position-relative">
+            <div class="col-lg-7">
+                <div class="candidate-eyebrow"><i class="bi bi-stars"></i> Hành trình sự nghiệp</div>
+                <h1>Đơn ứng tuyển<br /><span>của bạn</span></h1>
+                <p>Theo dõi từng cơ hội, cập nhật nhanh trạng thái và chủ động trên hành trình tìm việc.</p>
+            </div>
+            <div class="col-lg-5">
+                <div class="candidate-quick-stats">
+                    <div><strong>@applications.Count</strong><span>Tổng đơn</span></div>
+                    <div><strong>@activeCount</strong><span>Đang xử lý</span></div>
+                    <div><strong>@acceptedCount</strong><span>Đạt</span></div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<div class="container py-5 min-vh-100">
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+<main class="candidate-applications-page">
+    <div class="container">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="candidate-alert success"><i class="bi bi-check2-circle"></i><span>@TempData["SuccessMessage"]</span><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="candidate-alert error"><i class="bi bi-exclamation-circle"></i><span>@TempData["ErrorMessage"]</span><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div>
+        }
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-0">
-            @if (Model != null && Model.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col" class="ps-4 py-3 border-0 rounded-top-start-4">Công việc</th>
-                                <th scope="col" class="py-3 border-0">Ngày nộp</th>
-                                <th scope="col" class="py-3 border-0">Trạng thái</th>
-                                <th scope="col" class="py-3 border-0 text-end pe-4 rounded-top-end-4">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
+        @if (applications.Any())
+        {
+            <div class="candidate-toolbar">
+                <div>
+                    <div class="candidate-section-kicker">Danh sách hồ sơ</div>
+                    <h2>Cơ hội đang theo đuổi</h2>
+                    <p>@applications.Count hồ sơ đã gửi đến các nhà tuyển dụng.</p>
+                </div>
+                <a asp-controller="Job" asp-action="Index" class="candidate-discover-btn"><i class="bi bi-search"></i> Khám phá việc làm</a>
+            </div>
+
+            <div class="candidate-filters" role="tablist" aria-label="Lọc theo trạng thái">
+                <button type="button" class="active" data-filter="all">Tất cả <span>@applications.Count</span></button>
+                <button type="button" data-filter="Pending">Chờ xử lý</button>
+                <button type="button" data-filter="Reviewing">Đang xem xét</button>
+                <button type="button" data-filter="Accepted">Đạt</button>
+            </div>
+
+            <div class="candidate-application-list">
+                @foreach (var item in applications)
+                {
+                    var status = StatusInfo(item.Status);
+                    var canWithdraw = item.Status is "Pending" or "Reviewing";
+                    <article class="candidate-application-card" data-status="@item.Status">
+                        <div class="candidate-company-logo" aria-hidden="true">
+                            @if (!string.IsNullOrWhiteSpace(item.CompanyLogoPath))
                             {
-                                <tr>
-                                    <td class="ps-4 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="company-logo bg-light text-primary fw-bold d-flex align-items-center justify-content-center rounded me-3 shadow-sm" style="width: 48px; height: 48px;">
-                                                @(string.IsNullOrEmpty(item.CompanyLogoPath) ? item.CompanyName.Substring(0,1).ToUpper() : $"<img src='{item.CompanyLogoPath}' alt='logo' class='img-fluid rounded'>")
-                                            </div>
-                                            <div>
-                                                <a href="/Job/Detail/@item.JobPostingId" class="text-dark fw-bold text-decoration-none d-block mb-1">@item.JobTitle</a>
-                                                <span class="text-muted small"><i class="bi bi-building me-1"></i> @item.CompanyName</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3">
-                                        <span class="text-muted"><i class="bi bi-calendar-event me-1"></i> @item.AppliedAt.ToString("dd/MM/yyyy HH:mm")</span>
-                                    </td>
-                                    <td class="py-3">
-                                        @switch (item.Status)
-                                        {
-                                            case "Pending":
-                                                <span class="badge bg-secondary rounded-pill fw-normal px-3 py-2"><i class="bi bi-hourglass-split me-1"></i> Chờ xử lý</span>
-                                                break;
-                                            case "Reviewing":
-                                                <span class="badge bg-info text-dark rounded-pill fw-normal px-3 py-2"><i class="bi bi-search me-1"></i> Đang xem xét</span>
-                                                break;
-                                            case "Accepted":
-                                                <span class="badge bg-success rounded-pill fw-normal px-3 py-2"><i class="bi bi-check-circle me-1"></i> Trúng tuyển / Hẹn phỏng vấn</span>
-                                                break;
-                                            case "Rejected":
-                                                <span class="badge bg-danger rounded-pill fw-normal px-3 py-2"><i class="bi bi-x-circle me-1"></i> Bị từ chối</span>
-                                                break;
-                                            case "Withdrawn":
-                                                <span class="badge bg-dark rounded-pill fw-normal px-3 py-2"><i class="bi bi-slash-circle me-1"></i> Đã rút/Từ chối</span>
-                                                @if (!string.IsNullOrEmpty(item.CancelReason))
-                                                {
-                                                    <div class="small text-muted mt-1 fst-italic">Lý do: @item.CancelReason</div>
-                                                }
-                                                break;
-                                            default:
-                                                <span class="badge bg-primary rounded-pill fw-normal px-3 py-2">@item.Status</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td class="py-3 text-end pe-4">
-                                        @if (item.Status == "Pending" || item.Status == "Reviewing" || item.Status == "Accepted")
-                                        {
-                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#withdrawModal_@item.Id">
-                                                Từ chối / Hủy
-                                            </button>
-                                            
-                                            <!-- Modal Withdraw -->
-                                            <div class="modal fade text-start" id="withdrawModal_@item.Id" tabindex="-1" aria-labelledby="withdrawModalLabel_@item.Id" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content rounded-4 border-0 shadow">
-                                                        <div class="modal-header border-bottom-0 bg-light rounded-top-4 py-3">
-                                                            <h5 class="modal-title fw-bold text-danger" id="withdrawModalLabel_@item.Id"><i class="bi bi-exclamation-triangle me-2"></i> Xác nhận hủy ứng tuyển</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <form action="/Candidate/Withdraw" method="post">
-                                                            @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="applicationId" value="@item.Id" />
-                                                            <div class="modal-body p-4">
-                                                                <p class="mb-3">Bạn đang hủy / từ chối tiến trình tuyển dụng cho công việc <strong>@item.JobTitle</strong>.</p>
-                                                                <div class="mb-3">
-                                                                    <label for="reason_@item.Id" class="form-label fw-medium">Lý do từ chối <span class="text-danger">*</span></label>
-                                                                    <textarea class="form-control" id="reason_@item.Id" name="reason" rows="3" required placeholder="Ví dụ: Đã tìm được công việc khác, Chế độ không phù hợp..."></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
-                                                                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
-                                                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-medium">Xác nhận Hủy</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>Không khả dụng</button>
-                                        }
-                                    </td>
-                                </tr>
+                                <img src="@item.CompanyLogoPath" alt="" />
                             }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-5">
-                    <div class="display-1 text-muted mb-3 opacity-25"><i class="bi bi-inbox"></i></div>
-                    <h5 class="text-muted fw-normal">Bạn chưa ứng tuyển công việc nào.</h5>
-                    <a href="/Job" class="btn btn-primary rounded-pill px-4 mt-3">Tìm việc ngay</a>
-                </div>
-            }
-        </div>
+                            else
+                            {
+                                @(string.IsNullOrWhiteSpace(item.CompanyName) ? "?" : item.CompanyName[..1].ToUpper())
+                            }
+                        </div>
+                        <div class="candidate-application-main">
+                            <div class="candidate-card-topline">
+                                <span class="candidate-status @status.Class"><i class="bi @status.Icon"></i>@status.Label</span>
+                                <span class="candidate-date"><i class="bi bi-calendar3"></i> Gửi ngày @item.AppliedAt.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <a asp-controller="Job" asp-action="Detail" asp-route-id="@item.JobPostingId" class="candidate-job-title">@item.JobTitle</a>
+                            <div class="candidate-company"><i class="bi bi-buildings"></i> @item.CompanyName</div>
+                            @if (item.AiMatchScore.HasValue)
+                            {
+                                <div class="candidate-match"><i class="bi bi-magic"></i> Độ phù hợp AI <strong>@item.AiMatchScore%</strong></div>
+                            }
+                            @if (item.Status == "Withdrawn" && !string.IsNullOrWhiteSpace(item.CancelReason))
+                            {
+                                <p class="candidate-cancel-reason"><i class="bi bi-chat-square-quote"></i> @item.CancelReason</p>
+                            }
+                        </div>
+                        <div class="candidate-card-actions">
+                            <a asp-controller="Job" asp-action="Detail" asp-route-id="@item.JobPostingId" class="candidate-view-link">Xem công việc <i class="bi bi-arrow-up-right"></i></a>
+                            @if (canWithdraw)
+                            {
+                                <button type="button" class="candidate-withdraw-btn" data-bs-toggle="modal" data-bs-target="#withdrawModal_@item.Id">Rút đơn</button>
+                            }
+                        </div>
+                    </article>
+
+                    @if (canWithdraw)
+                    {
+                        <div class="modal fade" id="withdrawModal_@item.Id" tabindex="-1" aria-labelledby="withdrawModalLabel_@item.Id" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content candidate-withdraw-modal">
+                                    <div class="modal-body">
+                                        <button type="button" class="btn-close candidate-modal-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                        <div class="candidate-modal-icon"><i class="bi bi-exclamation"></i></div>
+                                        <div class="candidate-section-kicker">Xác nhận rút đơn</div>
+                                        <h3 id="withdrawModalLabel_@item.Id">Bạn muốn dừng ứng tuyển?</h3>
+                                        <p>Bạn đang rút hồ sơ cho vị trí <strong>@item.JobTitle</strong> tại @item.CompanyName.</p>
+                                        <form asp-action="Withdraw" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="applicationId" value="@item.Id" />
+                                            <label for="reason_@item.Id">Lý do rút đơn <span>*</span></label>
+                                            <textarea id="reason_@item.Id" name="reason" rows="3" required placeholder="Ví dụ: Tôi đã nhận một cơ hội phù hợp hơn..."></textarea>
+                                            <div class="candidate-modal-actions">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Quay lại</button>
+                                                <button type="submit" class="btn btn-danger">Xác nhận rút đơn</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="candidate-empty-state">
+                <div class="candidate-empty-icon"><i class="bi bi-briefcase"></i></div>
+                <div class="candidate-section-kicker">Sẵn sàng bắt đầu?</div>
+                <h2>Cơ hội phù hợp đang chờ bạn</h2>
+                <p>Bạn chưa có đơn ứng tuyển nào. Khám phá những vị trí mới và gửi hồ sơ ngay hôm nay.</p>
+                <a asp-controller="Job" asp-action="Index" class="candidate-discover-btn">Tìm việc ngay <i class="bi bi-arrow-right"></i></a>
+            </div>
+        }
     </div>
-</div>
+</main>
+
+<style>
+    .candidate-hero { position: relative; overflow: hidden; padding: 144px 0 62px; color: #fff; background: #090b20; background-image: radial-gradient(circle at 15% 18%, rgba(79,70,229,.75), transparent 36%), radial-gradient(circle at 90% 75%, rgba(219,39,119,.34), transparent 30%), linear-gradient(115deg,#090b20 0%,#161740 55%,#10122e 100%); }
+    .candidate-hero h1 { margin: 12px 0; color: #fff; font-size: clamp(2.7rem,5vw,4.5rem); font-weight: 900; line-height: 1.02; letter-spacing: -.06em; }
+    .candidate-hero h1 span { background: linear-gradient(90deg,#c4b5fd,#f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .candidate-hero p { max-width: 550px; margin: 0; color: rgba(255,255,255,.7); font-size: 1.08rem; }
+    .candidate-eyebrow,.candidate-section-kicker { display: inline-flex; align-items: center; gap: 7px; color: #6366f1; font-size: .76rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .candidate-hero .candidate-eyebrow { color: #ddd6fe; }
+    .candidate-quick-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; overflow: hidden; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+    .candidate-quick-stats div { padding: 18px 13px; text-align: center; background: rgba(8,9,29,.35); }
+    .candidate-quick-stats strong { display: block; font-size: 1.8rem; line-height: 1.2; }
+    .candidate-quick-stats span { color: rgba(255,255,255,.65); font-size: .75rem; font-weight: 600; }
+    .candidate-hero-orb { position: absolute; border-radius: 999px; filter: blur(2px); opacity: .45; pointer-events: none; }
+    .candidate-hero-orb-one { width: 360px; height: 360px; right: 8%; top: -230px; border: 1px solid rgba(255,255,255,.25); }
+    .candidate-hero-orb-two { width: 180px; height: 180px; left: 42%; bottom: -130px; background: #7c3aed; filter: blur(60px); }
+    .candidate-applications-page { min-height: 64vh; padding: 52px 0 76px; background: #f7f8fc; }
+    .candidate-toolbar { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:25px; }
+    .candidate-toolbar h2,.candidate-empty-state h2 { margin:4px 0; color:#111827; font-size:1.7rem; font-weight:800; letter-spacing:-.04em; }
+    .candidate-toolbar p { margin:0; color:#6b7280; }
+    .candidate-discover-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px; border:0; border-radius:12px; padding:11px 17px; color:#fff; background:linear-gradient(135deg,#4f46e5,#7c3aed); box-shadow:0 10px 20px rgba(79,70,229,.2); font-weight:700; text-decoration:none; transition:.2s ease; white-space:nowrap; }
+    .candidate-discover-btn:hover { color:#fff; transform:translateY(-2px); box-shadow:0 14px 24px rgba(79,70,229,.3); }
+    .candidate-alert { display:flex; align-items:center; gap:10px; margin-bottom:24px; padding:13px 16px; border-radius:14px; font-weight:600; box-shadow:0 5px 15px rgba(15,23,42,.04); }
+    .candidate-alert.success { color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; }.candidate-alert.error { color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; }.candidate-alert i {font-size:1.15rem}.candidate-alert .btn-close{margin-left:auto}
+    .candidate-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .candidate-filters button { padding:8px 13px; border:1px solid #e5e7eb; border-radius:10px; color:#6b7280; background:#fff; font-size:.86rem; font-weight:700; transition:.2s; }.candidate-filters button:hover {border-color:#c7d2fe;color:#4f46e5}.candidate-filters button.active { border-color:#4f46e5; color:#fff; background:#4f46e5; box-shadow:0 5px 12px rgba(79,70,229,.18); }.candidate-filters span { margin-left:4px; opacity:.8; }
+    .candidate-application-list { display:grid; gap:13px; }.candidate-application-card { display:flex; gap:18px; align-items:flex-start; padding:21px; border:1px solid #e8eaf1; border-radius:18px; background:#fff; box-shadow:0 5px 16px rgba(15,23,42,.035); transition:transform .22s,box-shadow .22s,border-color .22s; }.candidate-application-card:hover { transform:translateY(-3px); border-color:#c7d2fe; box-shadow:0 16px 30px rgba(79,70,229,.09); }.candidate-application-card.is-hidden {display:none}
+    .candidate-company-logo { display:flex; flex:0 0 54px; align-items:center; justify-content:center; width:54px; height:54px; overflow:hidden; border-radius:15px; color:#4f46e5; background:linear-gradient(135deg,#eef2ff,#f5f3ff); font-size:1.35rem; font-weight:900; }.candidate-company-logo img { width:100%; height:100%; object-fit:cover; }
+    .candidate-application-main { min-width:0; flex:1; }.candidate-card-topline { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px; }.candidate-status { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border-radius:999px; font-size:.73rem; font-weight:800; }.candidate-status.pending {color:#a16207;background:#fef9c3}.candidate-status.reviewing {color:#0369a1;background:#e0f2fe}.candidate-status.accepted {color:#047857;background:#d1fae5}.candidate-status.rejected {color:#b91c1c;background:#fee2e2}.candidate-status.withdrawn {color:#475569;background:#e2e8f0}.candidate-date { color:#94a3b8; font-size:.78rem; font-weight:600; }.candidate-date i {margin-right:4px}
+    .candidate-job-title { display:block; overflow:hidden; color:#172033; font-size:1.12rem; font-weight:800; letter-spacing:-.02em; text-decoration:none; text-overflow:ellipsis; white-space:nowrap; }.candidate-job-title:hover{color:#4f46e5}.candidate-company { margin-top:3px; color:#64748b; font-size:.88rem; font-weight:600; }.candidate-company i{margin-right:4px;color:#94a3b8}.candidate-match { display:inline-flex; align-items:center; gap:5px; margin-top:10px; padding:4px 9px; border-radius:7px; color:#7c3aed; background:#f5f3ff; font-size:.76rem; font-weight:600; }.candidate-match strong{color:#5b21b6}.candidate-cancel-reason { margin:10px 0 0; color:#94a3b8; font-size:.8rem; font-style:italic; }.candidate-cancel-reason i{margin-right:4px}
+    .candidate-card-actions { display:flex; align-items:flex-end; flex-direction:column; justify-content:space-between; align-self:stretch; gap:16px; }.candidate-view-link { color:#4f46e5; font-size:.82rem; font-weight:800; text-decoration:none; white-space:nowrap; }.candidate-view-link:hover{color:#3730a3}.candidate-withdraw-btn { padding:7px 11px; border:1px solid #fecaca; border-radius:9px; color:#dc2626; background:#fff; font-size:.78rem; font-weight:700; transition:.2s; }.candidate-withdraw-btn:hover { color:#fff;background:#dc2626;border-color:#dc2626; }
+    .candidate-empty-state { max-width:590px; margin:8px auto 0; padding:55px 28px; border:1px solid #e8eaf1; border-radius:22px; background:#fff; text-align:center; box-shadow:0 10px 25px rgba(15,23,42,.04); }.candidate-empty-state p{max-width:410px;margin:10px auto 23px;color:#64748b}.candidate-empty-icon { display:flex; align-items:center; justify-content:center; width:73px; height:73px; margin:0 auto 17px; border-radius:23px; color:#635bdb; background:#eef2ff; font-size:2rem; }
+    .candidate-withdraw-modal { overflow:hidden; border:0; border-radius:20px; box-shadow:0 24px 70px rgba(15,23,42,.22); }.candidate-withdraw-modal .modal-body { position:relative; padding:30px; }.candidate-modal-close{position:absolute;top:18px;right:18px}.candidate-modal-icon { display:flex; align-items:center; justify-content:center; width:45px; height:45px; margin-bottom:16px; border-radius:14px; color:#dc2626; background:#fef2f2; font-size:1.25rem; }.candidate-withdraw-modal h3{margin:4px 0 7px;font-size:1.35rem}.candidate-withdraw-modal p{color:#64748b;font-size:.9rem}.candidate-withdraw-modal label{display:block;margin:20px 0 7px;color:#334155;font-size:.85rem;font-weight:700}.candidate-withdraw-modal label span{color:#dc2626}.candidate-withdraw-modal textarea{width:100%;padding:11px 12px;border:1px solid #dbe0ea;border-radius:10px;outline:none;resize:vertical;font-size:.9rem}.candidate-withdraw-modal textarea:focus{border-color:#818cf8;box-shadow:0 0 0 3px #eef2ff}.candidate-modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.candidate-modal-actions .btn{border-radius:9px;padding:8px 13px;font-weight:700;font-size:.85rem}
+    @@media (max-width: 767.98px) { .candidate-hero{padding:126px 0 42px}.candidate-hero h1{font-size:2.7rem}.candidate-quick-stats{margin-top:10px}.candidate-toolbar{align-items:flex-start;flex-direction:column}.candidate-card-actions{width:100%;align-items:center;flex-direction:row;align-self:auto}.candidate-application-card{flex-wrap:wrap;gap:13px;padding:17px}.candidate-application-main{width:calc(100% - 67px);flex:auto}.candidate-card-actions{padding-left:67px}.candidate-job-title{white-space:normal}.candidate-date{font-size:.72rem}.candidate-applications-page{padding-top:35px} }
+</style>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.candidate-filters button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.candidate-filters button').forEach(x => x.classList.remove('active'));
+                button.classList.add('active');
+                const filter = button.dataset.filter;
+                document.querySelectorAll('.candidate-application-card').forEach(card => {
+                    card.classList.toggle('is-hidden', filter !== 'all' && card.dataset.status !== filter);
+                });
+            });
+        });
+    </script>
+}

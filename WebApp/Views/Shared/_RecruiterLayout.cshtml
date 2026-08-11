@@ -1,4 +1,6 @@
 @using System.Security.Claims
+@using Domain.Enums
+@inject Infrastructure.ARSDbContext DbContext
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -52,6 +54,10 @@
             border-left: 3px solid transparent;
         }
 
+        .recruiter-sidebar .nav-link.plan-locked {
+            opacity: .48;
+        }
+
         .recruiter-main {
             flex-grow: 1;
             display: flex;
@@ -85,6 +91,11 @@
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
         string NavActive(string controller) => currentController == controller ? "active" : "";
+        var recruiterIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var hasActivePlan = int.TryParse(recruiterIdValue, out var recruiterId) &&
+                            DbContext.PaymentOrders.Any(order => order.RecruiterId == recruiterId && order.Status == PaymentStatus.Successful);
+        string LockedClass() => hasActivePlan ? string.Empty : "plan-locked";
+        string LockedTitle() => hasActivePlan ? string.Empty : "Mua gói và chờ Admin duyệt để mở khóa";
     }
     <div class="recruiter-shell">
         <aside class="recruiter-sidebar">
@@ -93,20 +104,23 @@
                 <span>ARS Recruiter</span>
             </div>
             <nav class="nav flex-column mt-2">
-                <a class="nav-link @NavActive("JobPosting")" asp-controller="JobPosting" asp-action="Index">
+                <a class="nav-link @NavActive("JobPosting") @LockedClass()" asp-controller="JobPosting" asp-action="Index" title="@LockedTitle()">
                     <i class="bi bi-speedometer2"></i><span>Bảng điều hành</span>
                 </a>
-                <a class="nav-link" asp-controller="JobPosting" asp-action="Create">
+                <a class="nav-link @LockedClass()" asp-controller="JobPosting" asp-action="Create" title="@LockedTitle()">
                     <i class="bi bi-plus-square"></i><span>Đăng tin mới</span>
                 </a>
-                <a class="nav-link @NavActive("CvBank")" asp-controller="CvBank" asp-action="Index">
+                <a class="nav-link @NavActive("CvBank") @LockedClass()" asp-controller="CvBank" asp-action="Index" title="@LockedTitle()">
                     <i class="bi bi-collection"></i><span>Kho CV</span>
                 </a>
-                <a class="nav-link @NavActive("Company")" asp-controller="Company" asp-action="Index">
+                <a class="nav-link @NavActive("Company") @LockedClass()" asp-controller="Company" asp-action="Index" title="@LockedTitle()">
                     <i class="bi bi-building"></i><span>Hồ sơ công ty</span>
                 </a>
                 <a class="nav-link @NavActive("Profile")" asp-controller="Profile" asp-action="Edit">
                     <i class="bi bi-person-gear"></i><span>Hồ sơ cá nhân</span>
+                </a>
+                <a class="nav-link @NavActive("Billing")" asp-controller="Billing" asp-action="Index">
+                    <i class="bi bi-credit-card-2-front"></i><span>Gói & thanh toán</span>
                 </a>
             </nav>
             <div class="mt-auto p-3 border-top border-secondary">
@@ -122,10 +136,16 @@
         <div class="recruiter-main">
             <div class="recruiter-topbar">
                 <h6 class="mb-0 fw-semibold text-dark">@ViewData["Title"]</h6>
-                <span class="text-muted small d-flex align-items-center">
-                    <i class="bi bi-person-circle fs-5 me-2"></i>
-                    @User.FindFirstValue(ClaimTypes.Name)
-                </span>
+                <div class="d-flex align-items-center gap-3">
+                    <a asp-controller="Application" asp-action="Notifications" class="recruiter-notif-bell @LockedClass()" title="@LockedTitle()" aria-label="Thông báo">
+                        <i class="bi bi-bell-fill"></i>
+                        <span class="recruiter-notif-badge d-none" id="recruiter-notif-badge">0</span>
+                    </a>
+                    <span class="text-muted small d-flex align-items-center">
+                        <i class="bi bi-person-circle fs-5 me-2"></i>
+                        @User.FindFirstValue(ClaimTypes.Name)
+                    </span>
+                </div>
             </div>
             <main class="recruiter-content">
                 @RenderBody()
@@ -135,6 +155,23 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const badge = document.getElementById('recruiter-notif-badge');
+            if (!badge) return;
+            const refreshNotifications = async () => {
+                try {
+                    const response = await fetch('/Application/GetUnreadCount');
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    badge.textContent = data.count;
+                    badge.classList.toggle('d-none', data.count === 0);
+                } catch { /* Keep the navigation usable if polling is unavailable. */ }
+            };
+            refreshNotifications();
+            window.setInterval(refreshNotifications, 60000);
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

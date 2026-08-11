@@ -12,6 +12,15 @@
     </div>
 </div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert"><i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
 <!-- Thẻ Tìm kiếm & Lọc -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
@@ -117,6 +126,21 @@
                                         <a asp-action="Details" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary" title="Xem chi tiết">
                                             <i class="bi bi-eye"></i>
                                         </a>
+
+                                        @if (string.Equals(user.RoleName, "Candidate", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form asp-action="PromoteCandidate" method="post" class="d-flex ms-1">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <select name="targetRole" class="form-select form-select-sm" style="width: 155px;" aria-label="Nâng quyền">
+                                                    <option value="Recruiter">Nâng lên Recruiter</option>
+                                                    <option value="Admin">Nâng lên Admin</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-primary ms-1" title="Xác nhận nâng quyền">
+                                                    <i class="bi bi-arrow-up-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
 
                                         <!-- 2. Nút Khóa / Mở khóa (Ẩn nếu tài khoản là Admin) -->
                                         @if (!string.Equals(user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase))

@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.CvBank;
 using Services.Interfaces;
+using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
 [Authorize(Roles = "Recruiter")]
+[RequireActiveRecruiterPlan]
 public class CvBankController : Controller
 {
     private const string UploadFolder = "uploads/cvbank";

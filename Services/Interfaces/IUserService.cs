@@ -9,4 +9,6 @@ public interface IUserService
     Task<bool> IsUserLockedAsync(int userId);
 
     Task<UserDetailsResponse> GetUserByIdAsync(int userId);
+
+    Task<(bool IsSuccess, string? ErrorMessage)> PromoteCandidateAsync(int userId, string targetRole);
 }
