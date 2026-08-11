@@ -26,7 +26,7 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-4" id="amMatchedBlock">
-                        <h6 class="fw-bold text-uppercase small text-muted mb-2">✓ Kỹ năng khớp JD</h6>
+                        <h6 class="fw-bold text-uppercase small text-muted mb-2">✓ Kỹ năng phù hợp</h6>
                         <div id="amMatched"></div>
                     </div>
                     <div class="col-md-6 mb-4" id="amMissingBlock">
@@ -36,7 +36,7 @@
                 </div>
 
                 <div id="amStrengthsBlock" class="mb-4">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm mạnh so với JD</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Điểm mạnh so với yêu cầu</h6>
                     <ul class="cvd-list pos" id="amStrengths"></ul>
                 </div>
 
@@ -88,7 +88,7 @@
             else { vEl.style.display = "none"; }
 
             document.getElementById("amRecommendation").textContent = d.recommendation ? ("Đề xuất: " + d.recommendation) : "";
-            document.getElementById("amSummary").textContent = d.summary || "Chưa chấm điểm. Bấm \"Chấm điểm\" để AI đánh giá theo JD.";
+            document.getElementById("amSummary").textContent = d.summary || "Chưa chấm điểm. Bấm \"Chấm điểm\" để AI đánh giá theo yêu cầu công việc.";
 
             fillChips("amMatched", "amMatchedBlock", parseArr(d.matched), "bg-success-subtle text-success-emphasis");
             fillChips("amMissing", "amMissingBlock", parseArr(d.missing), "bg-warning-subtle text-warning-emphasis");

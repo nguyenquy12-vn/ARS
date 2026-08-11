@@ -21,7 +21,7 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="startScoring(false)" id="btnScoreNew">
             <i class="bi bi-clipboard-check me-1"></i> Chấm điểm (chưa chấm)
         </button>
-        <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(confirm('Chấm lại toàn bộ ứng viên theo JD?')) startScoring(true)" id="btnScoreAll">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(confirm('Chấm lại toàn bộ ứng viên theo mô tả công việc?')) startScoring(true)" id="btnScoreAll">
             <i class="bi bi-arrow-repeat me-1"></i> Chấm lại tất cả
         </button>
         <button type="button" class="btn btn-success btn-sm" onclick="openBulkInterview()" id="btnBulkInterview">
@@ -52,7 +52,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <h6 class="fw-bold mb-1">Cài đặt chấm điểm cho tin này</h6>
-            <p class="text-muted small mb-3">Đặt trọng số ưu tiên (tổng nên = 100%) và ghi chú must-have. AI sẽ chấm điểm ứng viên dựa trên các thiết lập này.</p>
+            <p class="text-muted small mb-3">Đặt trọng số ưu tiên (tổng nên = 100%) và ghi chú các yêu cầu bắt buộc. AI sẽ chấm điểm ứng viên dựa trên các thiết lập này.</p>
             <form asp-action="SaveScoreSettings" asp-route-id="@Model.Job.Id" method="post" class="row g-3 align-items-end">
                 @Html.AntiForgeryToken()
                 <div class="col-6 col-md-2">
@@ -72,7 +72,7 @@
                     <input type="number" name="WeightAchievement" value="@Model.Job.AiWeightAchievement" min="0" max="100" class="form-control" />
                 </div>
                 <div class="col-12 col-md-4">
-                    <label class="form-label small text-muted mb-1">Ưu tiên / must-have</label>
+                    <label class="form-label small text-muted mb-1">Ưu tiên / yêu cầu bắt buộc</label>
                     <input type="text" name="PriorityNote" value="@Model.Job.AiPriorityNote" class="form-control"
                            placeholder="VD: bắt buộc có React + 2 năm, ưu tiên tiếng Anh tốt..." />
                 </div>
