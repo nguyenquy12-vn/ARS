@@ -119,6 +119,16 @@ public class BillingController : Controller
     {
         var order = await _context.PaymentOrders.FirstOrDefaultAsync(x => x.Id == id && x.RecruiterId == CurrentUserId);
         if (order is null) return NotFound();
+        if (order.Status == PaymentStatus.PendingConfirmation)
+        {
+            order.Status = PaymentStatus.Successful;
+            order.ReviewedAt = DateTime.UtcNow;
+            order.AdminNote = "Thanh toán VietQR đã được xác nhận tự động.";
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Thanh toán QR thành công. Gói của bạn đã được kích hoạt ngay.";
+            return RedirectToAction(nameof(Index));
+        }
+        if (order is null) return NotFound();
         if (order.Status != PaymentStatus.PendingConfirmation)
         {
             TempData["Error"] = "Đơn này không còn chờ xác nhận.";

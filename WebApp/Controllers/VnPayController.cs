@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -134,7 +135,11 @@ public class VnPayController : Controller
         return View("Result", (isSuccessful, order.AdminNote));
     }
 
-    private static string BuildQuery(IEnumerable<KeyValuePair<string, string>> values) => string.Join("&", values.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => $"{Uri.EscapeDataString(x.Key)}={Uri.EscapeDataString(x.Value)}"));
+    // VNPAY tạo checksum trên chuỗi query dùng WebUtility.UrlEncode (không dùng Uri.EscapeDataString).
+    // Hai cách mã hóa khác nhau với khoảng trắng/ký tự đặc biệt sẽ gây lỗi "Sai chữ ký".
+    private static string BuildQuery(IEnumerable<KeyValuePair<string, string>> values) =>
+        string.Join("&", values.OrderBy(x => x.Key, StringComparer.Ordinal)
+            .Select(x => $"{WebUtility.UrlEncode(x.Key)}={WebUtility.UrlEncode(x.Value)}"));
     private static string HmacSha512(string key, string data)
     {
         using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key));
