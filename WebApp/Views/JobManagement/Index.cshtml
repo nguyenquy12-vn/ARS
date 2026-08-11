@@ -12,19 +12,21 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4 ui-filter-panel">
     <div class="card-body p-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-md-4">
+                <label class="ui-filter-label" for="jobSearch">Tìm kiếm</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-muted">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" name="searchTerm" class="form-control border-start-0" placeholder="Tìm theo tiêu đề bài đăng..." value="@Context.Request.Query["searchTerm"]" />
+                    <input id="jobSearch" type="text" name="searchTerm" class="form-control border-start-0" placeholder="Tìm theo tiêu đề bài đăng..." value="@Context.Request.Query["searchTerm"]" />
                 </div>
             </div>
             <div class="col-md-3">
-                <select name="status" class="form-select">
+                <label class="ui-filter-label" for="jobStatus">Trạng thái</label>
+                <select id="jobStatus" name="status" class="form-select">
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="Active" selected="@(Context.Request.Query["status"] == "Active")">Hoạt động (Active)</option>
                     <option value="Draft" selected="@(Context.Request.Query["status"] == "Draft")">Bản nháp (Draft)</option>
@@ -33,9 +35,10 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" name="category" class="form-control" placeholder="Lọc theo ngành nghề..." value="@Context.Request.Query["category"]" />
+                <label class="ui-filter-label" for="jobCategory">Ngành nghề</label>
+                <input id="jobCategory" type="text" name="category" class="form-control" placeholder="Lọc theo ngành nghề..." value="@Context.Request.Query["category"]" />
             </div>
-            <div class="col-md-2 d-flex gap-2">
+            <div class="col-md-2 d-flex gap-2 align-items-end">
                 <button type="submit" class="btn btn-secondary w-100">
                     <i class="bi bi-filter me-1"></i> Lọc
                 </button>
@@ -47,7 +50,7 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm ui-data-card">
     <div class="card-body p-0">
         @if (Model == null || !Model.Any())
         {
