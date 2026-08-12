@@ -9,15 +9,17 @@ public class JobPostingFormViewModel : IValidatableObject
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập tiêu đề tin tuyển dụng")]
-    [StringLength(200, ErrorMessage = "Tiêu đề tối đa 200 ký tự")]
+    [StringLength(200, MinimumLength = 5, ErrorMessage = "Tiêu đề cần từ 5 đến 200 ký tự")]
     [Display(Name = "Tiêu đề")]
     public string Title { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập mô tả công việc")]
+    [StringLength(5000, MinimumLength = 30, ErrorMessage = "Mô tả công việc cần từ 30 đến 5.000 ký tự")]
     [Display(Name = "Mô tả công việc")]
     public string Description { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập yêu cầu ứng viên")]
+    [StringLength(5000, MinimumLength = 20, ErrorMessage = "Yêu cầu ứng viên cần từ 20 đến 5.000 ký tự")]
     [Display(Name = "Yêu cầu ứng viên")]
     public string Requirements { get; set; } = string.Empty;
 
@@ -25,7 +27,7 @@ public class JobPostingFormViewModel : IValidatableObject
     public string? Benefits { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập địa điểm làm việc")]
-    [StringLength(100, ErrorMessage = "Địa điểm tối đa 100 ký tự")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Địa điểm cần từ 2 đến 100 ký tự")]
     [Display(Name = "Địa điểm")]
     public string Location { get; set; } = string.Empty;
 
@@ -53,7 +55,7 @@ public class JobPostingFormViewModel : IValidatableObject
     [Display(Name = "Lương tối đa (VNĐ)")]
     public int? MaxSalary { get; set; }
 
-    [Range(1, 1000, ErrorMessage = "Số lượng tuyển phải từ 1 trở lên")]
+    [Range(1, 1000, ErrorMessage = "Số lượng tuyển phải từ 1 đến 1.000")]
     [Display(Name = "Số lượng tuyển")]
     public int Vacancies { get; set; } = 1;
 

@@ -9,7 +9,8 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu không được để trống")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải từ 6 ký tự trở lên")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự")]
+    [RegularExpression("^(?=.*[A-Z])(?=.*\\d).{8,}$", ErrorMessage = "Mật khẩu phải có ít nhất 1 chữ in hoa và 1 chữ số.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 

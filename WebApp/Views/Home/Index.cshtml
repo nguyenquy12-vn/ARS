@@ -5,133 +5,60 @@
 @functions {
     public string FormatSalary(int? min, int? max)
     {
-        if (min.HasValue && max.HasValue)
-            return $"{min.Value / 1000000} - {max.Value / 1000000} triệu VNĐ";
-        if (min.HasValue)
-            return $"Từ {min.Value / 1000000} triệu VNĐ";
-        if (max.HasValue)
-            return $"Đến {max.Value / 1000000} triệu VNĐ";
+        if (min.HasValue && max.HasValue) return $"{min.Value / 1000000} - {max.Value / 1000000} triệu VNĐ";
+        if (min.HasValue) return $"Từ {min.Value / 1000000} triệu VNĐ";
+        if (max.HasValue) return $"Đến {max.Value / 1000000} triệu VNĐ";
         return "Thỏa thuận";
     }
 }
 
-<!-- HERO SECTION -->
 <section class="hero-section text-center text-white">
     <div class="hero-mesh-overlay"></div>
-
-    <!-- Floating Cards -->
     <div class="floating-badge-card badge-card-1">
-        <div class="rounded-circle bg-success bg-opacity-25 p-2 text-success">
-            <i class="bi bi-patch-check-fill fs-5"></i>
-        </div>
-        <div class="text-start">
-            <div class="fw-bold fs-6">12,000+ Việc làm</div>
-            <div class="text-white-50 small">Đã xác thực tính chính danh</div>
-        </div>
+        <div class="rounded-circle bg-success bg-opacity-25 p-2 text-success"><i class="bi bi-patch-check-fill fs-5"></i></div>
+        <div class="text-start"><div class="fw-bold fs-6">12,000+ Việc làm</div><div class="text-white-50 small">Đã xác thực tính chính danh</div></div>
     </div>
-
     <div class="floating-badge-card badge-card-2">
-        <div class="rounded-circle bg-info bg-opacity-25 p-2 text-info">
-            <i class="bi bi-building-check fs-5"></i>
-        </div>
-        <div class="text-start">
-            <div class="fw-bold fs-6">500+ Doanh nghiệp</div>
-            <div class="text-white-50 small">Đang tuyển dụng trực tiếp</div>
-        </div>
+        <div class="rounded-circle bg-info bg-opacity-25 p-2 text-info"><i class="bi bi-building-check fs-5"></i></div>
+        <div class="text-start"><div class="fw-bold fs-6">500+ Doanh nghiệp</div><div class="text-white-50 small">Đang tuyển dụng trực tiếp</div></div>
     </div>
-
     <div class="container hero-content">
-        <!-- Live Status Badge -->
-        <div class="hero-badge">
-            <span class="badge-pulse"></span>
-            Nền tảng Tuyển dụng AI & Tìm việc làm thế hệ mới
-        </div>
-
-        <!-- Main Headline -->
-        <h1 class="hero-title">
-            Khám phá <span class="text-gradient">Cơ hội Nghề nghiệp</span><br>Bứt phá Giới hạn Bản thân
-        </h1>
-
-        <!-- Subtitle -->
-        <p class="hero-subtitle">
-            ARS kết nối hàng ngàn ứng viên tài năng với các cơ hội nghề nghiệp hàng đầu từ những tập đoàn đa quốc gia và startup công nghệ tiên phong.
-        </p>
-
-        <!-- Glassmorphism Search Bar -->
+        <div class="hero-badge"><span class="badge-pulse"></span>Nền tảng Tuyển dụng AI & Tìm việc làm thế hệ mới</div>
+        <h1 class="hero-title">Khám phá <span class="text-gradient">Cơ hội Nghề nghiệp</span><br>Bứt phá Giới hạn Bản thân</h1>
+        <p class="hero-subtitle">ARS kết nối hàng ngàn ứng viên tài năng với các cơ hội nghề nghiệp hàng đầu từ những tập đoàn đa quốc gia và startup công nghệ tiên phong.</p>
         <div class="search-box-container">
             <div class="search-box-glass">
                 <form action="/Job" method="get" class="search-inner-form">
                     <i class="bi bi-search text-muted fs-5 ms-2"></i>
                     <input type="text" name="keyword" class="search-input-field" placeholder="Nhập vị trí tuyển dụng, công ty hoặc kỹ năng (VD: React, .NET...)" />
-                    <button type="submit" class="btn-search-submit">
-                        <i class="bi bi-search me-1"></i> Tìm kiếm ngay
-                    </button>
+                    <button type="submit" class="btn-search-submit"><i class="bi bi-search me-1"></i> Tìm kiếm ngay</button>
                 </form>
             </div>
-            
             <div class="search-pills">
                 <span class="text-white-50 small me-1">Gợi ý hot:</span>
-                <span class="pill-item" onclick="fillSearch('ReactJS')">ReactJS</span>
-                <span class="pill-item" onclick="fillSearch('ASP.NET Core')">ASP.NET</span>
-                <span class="pill-item" onclick="fillSearch('UI/UX')">UI/UX Designer</span>
-                <span class="pill-item" onclick="fillSearch('DevOps')">DevOps</span>
-                <span class="pill-item" onclick="fillSearch('Python')">Python AI</span>
+                <span class="pill-item" onclick="fillSearch('ReactJS')">ReactJS</span><span class="pill-item" onclick="fillSearch('ASP.NET Core')">ASP.NET</span><span class="pill-item" onclick="fillSearch('UI/UX')">UI/UX Designer</span><span class="pill-item" onclick="fillSearch('DevOps')">DevOps</span><span class="pill-item" onclick="fillSearch('Python')">Python AI</span>
             </div>
         </div>
-
-        <!-- Stats Row -->
         <div class="hero-stats-row">
-            <div class="stat-block">
-                <span class="stat-val">98%</span>
-                <span class="stat-lbl">Ứng viên hài lòng</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-val">250K+</span>
-                <span class="stat-lbl">Hồ sơ ứng tuyển</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-val">15+</span>
-                <span class="stat-lbl">Ngành nghề nổi bật</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-val">20M+</span>
-                <span class="stat-lbl">Lương trung bình</span>
-            </div>
+            <div class="stat-block"><span class="stat-val">98%</span><span class="stat-lbl">Ứng viên hài lòng</span></div><div class="stat-block"><span class="stat-val">250K+</span><span class="stat-lbl">Hồ sơ ứng tuyển</span></div><div class="stat-block"><span class="stat-val">15+</span><span class="stat-lbl">Ngành nghề nổi bật</span></div><div class="stat-block"><span class="stat-val">20M+</span><span class="stat-lbl">Lương trung bình</span></div>
         </div>
     </div>
 </section>
 
-<!-- CATEGORIES SECTION -->
+<section class="home-social-proof"><div class="container"><div><span class="home-proof-label">Được tin dùng bởi đội ngũ tuyển dụng hiện đại</span><strong>FPT Software</strong><strong>Viettel</strong><strong>MB Bank</strong><strong>VNG</strong><strong>Techcombank</strong></div></div></section>
+
 <section class="categories-wrapper">
     <div class="container">
-        <div class="text-center mb-5 reveal">
-            <div class="section-tag">
-                <i class="bi bi-grid-3x3-gap-fill"></i> Lĩnh vực chuyên môn
-            </div>
-            <h2 class="section-main-title">Khám phá Ngành nghề Nổi bật</h2>
-            <p class="text-muted fs-5 mt-2 max-w-md mx-auto">Chọn danh mục phù hợp để tìm kiếm những cơ hội phát triển sự nghiệp của bạn</p>
-        </div>
-
+        <div class="text-center mb-5 reveal"><div class="section-tag"><i class="bi bi-grid-3x3-gap-fill"></i> Lĩnh vực chuyên môn</div><h2 class="section-main-title">Khám phá Ngành nghề Nổi bật</h2><p class="text-muted fs-5 mt-2 max-w-md mx-auto">Chọn danh mục phù hợp để tìm kiếm những cơ hội phát triển sự nghiệp của bạn</p></div>
         <div class="row g-4 justify-content-center">
             @if (ViewBag.Categories != null)
             {
                 var categories = (IEnumerable<dynamic>)ViewBag.Categories;
                 var icons = new[] { "bi-code-slash", "bi-graph-up-arrow", "bi-megaphone", "bi-palette", "bi-cpu", "bi-building-gear", "bi-cash-coin", "bi-headset" };
                 int iconIndex = 0;
-
                 foreach (var cat in categories)
                 {
-                    <div class="col-lg-3 col-md-4 col-sm-6 reveal">
-                        <a href="/Job?categoryId=@cat.Id" class="text-decoration-none">
-                            <div class="category-tile">
-                                <div class="tile-icon">
-                                    <i class="bi @icons[iconIndex % icons.Length]"></i>
-                                </div>
-                                <h5 class="tile-title">@cat.Name</h5>
-                                <div class="tile-sub">Nhiều vị trí tuyển dụng</div>
-                            </div>
-                        </a>
-                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 reveal"><a href="/Job?categoryId=@cat.Id" class="text-decoration-none"><div class="category-tile"><div class="tile-icon"><i class="bi @icons[iconIndex % icons.Length]"></i></div><h5 class="tile-title">@cat.Name</h5><div class="tile-sub">Nhiều vị trí tuyển dụng</div></div></a></div>
                     iconIndex++;
                 }
             }
@@ -139,149 +66,49 @@
     </div>
 </section>
 
-<!-- LATEST JOBS SECTION -->
 <section class="jobs-wrapper">
     <div class="container">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end mb-5 reveal">
-            <div>
-                <div class="section-tag">
-                    <i class="bi bi-lightning-charge-fill"></i> Cập nhật liên tục
-                </div>
-                <h2 class="section-main-title">Tin Tuyển Dụng Mới Nhất</h2>
-                <p class="text-muted fs-5 mb-0">Ứng tuyển ngay để không bỏ lỡ cơ hội việc làm hấp dẫn</p>
-            </div>
-            <div class="mt-3 mt-md-0">
-                <a href="/Job" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">
-                    Xem tất cả việc làm <i class="bi bi-arrow-right ms-1"></i>
-                </a>
-            </div>
+            <div><div class="section-tag"><i class="bi bi-lightning-charge-fill"></i> Cập nhật liên tục</div><h2 class="section-main-title">Tin Tuyển Dụng Mới Nhất</h2><p class="text-muted fs-5 mb-0">Ứng tuyển ngay để không bỏ lỡ cơ hội việc làm hấp dẫn</p></div>
+            <div class="mt-3 mt-md-0"><a href="/Job" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">Xem tất cả việc làm <i class="bi bi-arrow-right ms-1"></i></a></div>
         </div>
-
         <div class="row g-4">
             @if (ViewBag.LatestJobs != null)
             {
                 foreach (var job in ViewBag.LatestJobs)
                 {
-                    <div class="col-lg-4 col-md-6 reveal">
-                        <div class="job-modern-card">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="job-logo-box">
-                                    @if (!string.IsNullOrEmpty(job.CompanyLogoPath))
-                                    {
-                                        <img src="@job.CompanyLogoPath" alt="logo">
-                                    }
-                                    else
-                                    {
-                                        @(string.IsNullOrEmpty(job.CompanyName) ? "J" : job.CompanyName.Substring(0,1).ToUpper())
-                                    }
-                                </div>
-                                <div class="overflow-hidden">
-                                    <a href="/Job/Detail/@job.Id" class="job-title-link text-truncate" title="@job.Title">@job.Title</a>
-                                    <div class="job-comp-name text-truncate">@job.CompanyName</div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <span class="job-salary-pill">
-                                    <i class="bi bi-cash-stack"></i> @FormatSalary(job.MinSalary, job.MaxSalary)
-                                </span>
-                            </div>
-
-                            <div class="d-flex flex-wrap gap-2 mb-4">
-                                <span class="job-badge-tag"><i class="bi bi-geo-alt me-1"></i>@job.Location</span>
-                                <span class="job-badge-tag"><i class="bi bi-clock me-1"></i>@job.JobTypeName</span>
-                                <span class="job-badge-tag"><i class="bi bi-laptop me-1"></i>@job.WorkModeName</span>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                <a href="/Job/Detail/@job.Id" class="btn-card-apply">
-                                    Xem chi tiết <i class="bi bi-arrow-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="col-lg-4 col-md-6 reveal"><div class="job-modern-card">
+                        <div class="d-flex align-items-center gap-3 mb-3"><div class="job-logo-box">@if (!string.IsNullOrEmpty(job.CompanyLogoPath)) { <img src="@job.CompanyLogoPath" alt="logo"> } else { @(string.IsNullOrEmpty(job.CompanyName) ? "J" : job.CompanyName.Substring(0,1).ToUpper()) }</div><div class="overflow-hidden"><a href="/Job/Detail/@job.Id" class="job-title-link text-truncate" title="@job.Title">@job.Title</a><div class="job-comp-name text-truncate">@job.CompanyName</div></div></div>
+                        <div class="d-flex align-items-center gap-2 mb-3"><span class="job-salary-pill"><i class="bi bi-cash-stack"></i> @FormatSalary(job.MinSalary, job.MaxSalary)</span></div>
+                        <div class="d-flex flex-wrap gap-2 mb-4"><span class="job-badge-tag"><i class="bi bi-geo-alt me-1"></i>@job.Location</span><span class="job-badge-tag"><i class="bi bi-clock me-1"></i>@job.JobTypeName</span><span class="job-badge-tag"><i class="bi bi-laptop me-1"></i>@job.WorkModeName</span></div>
+                        <div class="mt-auto pt-2"><a href="/Job/Detail/@job.Id" class="btn-card-apply">Xem chi tiết <i class="bi bi-arrow-right"></i></a></div>
+                    </div></div>
                 }
             }
         </div>
     </div>
 </section>
 
-<!-- FEATURES SECTION -->
 <section class="features-wrapper">
     <div class="container">
-        <div class="text-center mb-5 reveal">
-            <div class="section-tag">
-                <i class="bi bi-star-fill"></i> Giá trị khác biệt
-            </div>
-            <h2 class="section-main-title">Tại Sao Chọn ARS Tuyển Dụng?</h2>
-            <p class="text-muted fs-5 mt-2 max-w-md mx-auto">Giải pháp công nghệ kết nối nhân sự hiệu quả và minh bạch</p>
-        </div>
-
+        <div class="text-center mb-5 reveal"><div class="section-tag"><i class="bi bi-star-fill"></i> Giá trị khác biệt</div><h2 class="section-main-title">Tại Sao Chọn ARS Tuyển Dụng?</h2><p class="text-muted fs-5 mt-2 max-w-md mx-auto">Giải pháp công nghệ kết nối nhân sự hiệu quả và minh bạch</p></div>
         <div class="row g-4">
-            <div class="col-md-4 reveal">
-                <div class="feature-box">
-                    <div class="feature-icon-badge bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-cpu-fill"></i>
-                    </div>
-                    <h4 class="fw-bold">Chấm điểm AI Thông Minh</h4>
-                    <p class="text-muted mb-0">Tự động phân tích CV và so sánh với mô tả công việc, giúp ứng viên và nhà tuyển dụng tìm thấy nhau nhanh nhất.</p>
-                </div>
-            </div>
-            <div class="col-md-4 reveal">
-                <div class="feature-box">
-                    <div class="feature-icon-badge bg-info bg-opacity-10 text-info">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <h4 class="fw-bold">Tin Tuyển Dụng Đã Sàng Lọc</h4>
-                    <p class="text-muted mb-0">100% doanh nghiệp và bài đăng được xác minh thông tin minh bạch, loại bỏ hoàn toàn tin giả và lừa đảo.</p>
-                </div>
-            </div>
-            <div class="col-md-4 reveal">
-                <div class="feature-box">
-                    <div class="feature-icon-badge bg-success bg-opacity-10 text-success">
-                        <i class="bi bi-lightning-fill"></i>
-                    </div>
-                    <h4 class="fw-bold">Phản Hồi Trực Tiếp</h4>
-                    <p class="text-muted mb-0">Cập nhật tiến độ duyệt hồ sơ ứng tuyển theo thời gian thực, không còn tình trạng nộp CV vào "hố đen".</p>
-                </div>
-            </div>
+            <div class="col-md-4 reveal"><div class="feature-box"><div class="feature-icon-badge bg-primary bg-opacity-10 text-primary"><i class="bi bi-cpu-fill"></i></div><h4 class="fw-bold">Chấm điểm AI Thông Minh</h4><p class="text-muted mb-0">Tự động phân tích CV và so sánh với mô tả công việc, giúp ứng viên và nhà tuyển dụng tìm thấy nhau nhanh nhất.</p></div></div>
+            <div class="col-md-4 reveal"><div class="feature-box"><div class="feature-icon-badge bg-info bg-opacity-10 text-info"><i class="bi bi-shield-check"></i></div><h4 class="fw-bold">Tin Tuyển Dụng Đã Sàng Lọc</h4><p class="text-muted mb-0">100% doanh nghiệp và bài đăng được xác minh thông tin minh bạch, loại bỏ hoàn toàn tin giả và lừa đảo.</p></div></div>
+            <div class="col-md-4 reveal"><div class="feature-box"><div class="feature-icon-badge bg-success bg-opacity-10 text-success"><i class="bi bi-lightning-fill"></i></div><h4 class="fw-bold">Phản Hồi Trực Tiếp</h4><p class="text-muted mb-0">Cập nhật tiến độ duyệt hồ sơ ứng tuyển theo thời gian thực, không còn tình trạng nộp CV vào "hố đen".</p></div></div>
         </div>
     </div>
 </section>
 
-<!-- CTA BANNER -->
-<section class="cta-banner text-white">
-    <div class="container reveal">
-        <h2 class="display-5 fw-black mb-3">Sẵn sàng Tạo Bước Ngoặt Sự Nghiệp?</h2>
-        <p class="fs-5 text-white-50 max-w-md mx-auto mb-4">Tạo hồ sơ ngay hôm nay để nhận được đề xuất công việc phù hợp nhất từ hệ thống ARS.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/Auth/Register" class="btn-cta-main">
-                Đăng ký ngay bây giờ <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
-    </div>
-</section>
+<section class="cta-banner text-white"><div class="container reveal"><h2 class="display-5 fw-black mb-3">Sẵn sàng Tạo Bước Ngoặt Sự Nghiệp?</h2><p class="fs-5 text-white-50 max-w-md mx-auto mb-4">Tạo hồ sơ ngay hôm nay để nhận được đề xuất công việc phù hợp nhất từ hệ thống ARS.</p><div class="d-flex justify-content-center gap-3"><a asp-controller="Auth" asp-action="Register" class="btn-cta-main">Đăng ký ngay bây giờ <i class="bi bi-arrow-right"></i></a></div></div></section>
 
 @section Scripts {
     <script>
-        function fillSearch(val) {
-            document.querySelector('.search-input-field').value = val;
-            document.querySelector('.search-inner-form').submit();
-        }
-
+        function fillSearch(val) { document.querySelector('.search-input-field').value = val; document.querySelector('.search-inner-form').submit(); }
         document.addEventListener('DOMContentLoaded', function() {
             const reveals = document.querySelectorAll('.reveal');
-            function checkReveal() {
-                const triggerBottom = window.innerHeight * 0.88;
-                reveals.forEach(reveal => {
-                    const revealTop = reveal.getBoundingClientRect().top;
-                    if (revealTop < triggerBottom) {
-                        reveal.classList.add('revealed');
-                    }
-                });
-            }
-            window.addEventListener('scroll', checkReveal);
-            checkReveal();
+            function checkReveal() { const triggerBottom = window.innerHeight * 0.88; reveals.forEach(reveal => { if (reveal.getBoundingClientRect().top < triggerBottom) reveal.classList.add('revealed'); }); }
+            window.addEventListener('scroll', checkReveal); checkReveal();
         });
     </script>
 }

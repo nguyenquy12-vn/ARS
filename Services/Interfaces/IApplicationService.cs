@@ -11,6 +11,7 @@ public interface IApplicationService
 
     // Danh sách ứng viên đã nộp vào một tin tuyển dụng (kiểm tra quyền sở hữu theo recruiter)
     Task<List<ApplicantListItem>> GetApplicantsForJobAsync(int jobId, int recruiterId);
+    Task<List<ApplicantListItem>> GetUpcomingInterviewsAsync(int recruiterId);
 
     // Trích xuất thông tin CV bằng AI cho các ứng viên chưa phân tích. Trả về số CV đã phân tích.
     Task<int> AnalyzeApplicantsAsync(int jobId, int recruiterId);

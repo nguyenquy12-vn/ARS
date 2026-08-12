@@ -7,6 +7,10 @@
     var avgScore = graded > 0
         ? Model.Applicants.Where(a => a.AiMatchScore.HasValue).Average(a => a.AiMatchScore!.Value)
         : 0;
+    var pendingCount = Model.Applicants.Count(a => a.Status is Domain.Enums.ApplicationStatus.Pending or Domain.Enums.ApplicationStatus.Reviewing or Domain.Enums.ApplicationStatus.EvaluatingAI);
+    var interviewCount = Model.Applicants.Count(a => a.Status == Domain.Enums.ApplicationStatus.Interview);
+    var acceptedCount = Model.Applicants.Count(a => a.Status == Domain.Enums.ApplicationStatus.Accepted);
+    var rejectedCount = Model.Applicants.Count(a => a.Status == Domain.Enums.ApplicationStatus.Rejected);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -130,7 +134,17 @@
     </div>
 </div>
 
-<div class="text-muted small mb-2">Hiển thị @total ứng viên</div>
+<section class="recruitment-pipeline mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3"><div><span>PIPELINE TUYỂN DỤNG</span><h5>Theo dõi tiến trình xử lý hồ sơ</h5></div><button type="button" class="btn btn-sm btn-light" onclick="filterPipeline('all')">Hiện tất cả</button></div>
+    <div class="pipeline-stages">
+        <button type="button" class="pipeline-stage is-new" onclick="filterPipeline('new')"><i class="bi bi-inbox"></i><strong>@pendingCount</strong><small>Hồ sơ mới</small></button>
+        <button type="button" class="pipeline-stage is-interview" onclick="filterPipeline('Interview')"><i class="bi bi-calendar-event"></i><strong>@interviewCount</strong><small>Phỏng vấn</small></button>
+        <button type="button" class="pipeline-stage is-accepted" onclick="filterPipeline('Accepted')"><i class="bi bi-person-check"></i><strong>@acceptedCount</strong><small>Đạt / đi làm</small></button>
+        <button type="button" class="pipeline-stage is-rejected" onclick="filterPipeline('Rejected')"><i class="bi bi-person-x"></i><strong>@rejectedCount</strong><small>Từ chối</small></button>
+    </div>
+</section>
+
+<div class="text-muted small mb-2" id="pipeline-result">Hiển thị @total ứng viên</div>
 
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
@@ -161,7 +175,7 @@
                     foreach (var a in Model.Applicants)
                     {
                         var initial = string.IsNullOrWhiteSpace(a.CandidateName) ? "?" : a.CandidateName.Trim()[..1].ToUpper();
-                        <tr id="row-@a.Id" data-app-id="@a.Id" data-scored="@(a.HasScore ? 1 : 0)" data-name="@a.CandidateName">
+                        <tr id="row-@a.Id" data-app-id="@a.Id" data-scored="@(a.HasScore ? 1 : 0)" data-name="@a.CandidateName" data-status="@a.Status">
                             <td class="text-center">
                                 <input type="checkbox" class="form-check-input bulk-check" value="@a.Id"
                                        data-name="@a.CandidateName" data-email="@a.CandidateEmail" onchange="updateBulkCount()" />
@@ -473,6 +487,19 @@
             document.getElementById('ivTime').value = time || '';
             document.getElementById('ivNote').value = note || '';
             new bootstrap.Modal(document.getElementById('interviewModal')).show();
+        }
+
+        function filterPipeline(stage) {
+            const rows = Array.from(document.querySelectorAll('tr[data-app-id]'));
+            let shown = 0;
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                const visible = stage === 'all' || status === stage ||
+                    (stage === 'new' && ['Pending', 'Reviewing', 'EvaluatingAI'].includes(status));
+                row.classList.toggle('d-none', !visible);
+                if (visible) shown++;
+            });
+            document.getElementById('pipeline-result').textContent = `Hiển thị ${shown} ứng viên`;
         }
 
         // ===== Chọn nhiều + mời PV hàng loạt =====

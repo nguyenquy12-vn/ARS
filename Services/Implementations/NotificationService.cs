@@ -8,10 +8,12 @@ namespace Services.Implementations;
 public class NotificationService : INotificationService
 {
     private readonly ARSDbContext _context;
+    private readonly IRealtimeNotificationPublisher? _realtimePublisher;
 
-    public NotificationService(ARSDbContext context)
+    public NotificationService(ARSDbContext context, IRealtimeNotificationPublisher? realtimePublisher = null)
     {
         _context = context;
+        _realtimePublisher = realtimePublisher;
     }
 
     public async Task CreateAsync(int userId, string title, string message, string type, int? relatedId = null)
@@ -27,6 +29,10 @@ public class NotificationService : INotificationService
             CreatedAt = DateTime.UtcNow
         });
         await _context.SaveChangesAsync();
+        if (_realtimePublisher != null)
+        {
+            await _realtimePublisher.PublishAsync(userId, title, message, type, relatedId);
+        }
     }
 
     public async Task<List<Notification>> GetByUserAsync(int userId)

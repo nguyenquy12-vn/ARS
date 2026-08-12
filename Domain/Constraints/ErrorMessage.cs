@@ -24,6 +24,8 @@ public static class ErrorMessage
     // Error messages for applications (Recruiter)
     public const string ApplicationNotFound = "Không tìm thấy hồ sơ ứng tuyển hoặc bạn không có quyền truy cập.";
     public const string ApplicationSaveError = "Có lỗi xảy ra khi cập nhật hồ sơ ứng tuyển. Vui lòng thử lại.";
+    public const string JobHasNoVacancy = "Tin tuyển dụng này đã đủ số lượng tuyển.";
+    public const string AcceptedApplicationFinal = "Ứng viên đã đạt và được tính vào chỉ tiêu tuyển dụng, không thể đổi lại trạng thái.";
 
     // Error messages for AI CV evaluation (Gemini)
     public const string CvContentMissing = "Hồ sơ ứng viên chưa có nội dung CV để chấm điểm.";

@@ -1,0 +1,48 @@
+@model List<Services.DTOs.Application.ApplicantListItem>
+@{
+    ViewData["Title"] = "Lịch phỏng vấn";
+    var upcoming = Model.Where(item => item.InterviewAt >= DateTime.Now).ToList();
+    var today = upcoming.Count(item => item.InterviewAt!.Value.Date == DateTime.Today);
+}
+
+<div class="interviews-page">
+    <section class="interviews-hero">
+        <div>
+            <span><i class="bi bi-calendar2-check-fill"></i> LỊCH TUYỂN DỤNG</span>
+            <h1>Lịch phỏng vấn</h1>
+            <p>Theo dõi các buổi phỏng vấn sắp diễn ra và xử lý ứng viên đúng thời điểm.</p>
+        </div>
+        <div class="interviews-hero-stat"><strong>@upcoming.Count</strong><small>lịch sắp tới</small></div>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="interview-kpi"><span>Hôm nay</span><strong>@today</strong></div></div>
+        <div class="col-6 col-md-3"><div class="interview-kpi"><span>7 ngày tới</span><strong>@upcoming.Count(item => item.InterviewAt < DateTime.Now.AddDays(7))</strong></div></div>
+        <div class="col-6 col-md-3"><div class="interview-kpi"><span>Tổng đã hẹn</span><strong>@Model.Count</strong></div></div>
+        <div class="col-6 col-md-3"><div class="interview-kpi"><span>Đang chờ xử lý</span><strong>@upcoming.Count</strong></div></div>
+    </div>
+
+    @if (!upcoming.Any())
+    {
+        <div class="interviews-empty"><i class="bi bi-calendar-x"></i><h3>Chưa có lịch phỏng vấn sắp tới</h3><p>Hãy vào danh sách ứng viên của một tin tuyển dụng để đặt lịch.</p></div>
+    }
+    else
+    {
+        <div class="interviews-timeline">
+            @foreach (var interview in upcoming)
+            {
+                var at = interview.InterviewAt!.Value;
+                <article class="interview-item">
+                    <time><strong>@at.ToString("dd")</strong><span>@at.ToString("MM/yyyy")</span></time>
+                    <div class="interview-time"><i class="bi bi-clock"></i> @at.ToString("HH:mm")</div>
+                    <div class="interview-main"><h3>@interview.CandidateName</h3><p>@interview.JobTitle · @interview.CandidateEmail</p>@if (!string.IsNullOrWhiteSpace(interview.InterviewNote)){<div><i class="bi bi-geo-alt"></i> @interview.InterviewNote</div>}</div>
+                    <a asp-action="Details" asp-route-id="@interview.Id" class="btn btn-outline-primary btn-sm">Mở hồ sơ <i class="bi bi-arrow-right"></i></a>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .interviews-page { max-width:1050px; }.interviews-hero { display:flex; justify-content:space-between; gap:25px; align-items:center; padding:30px; margin-bottom:22px; border-radius:22px; color:#fff; background:linear-gradient(125deg,#0b3658,#2476aa); box-shadow:0 16px 35px rgba(16,74,113,.18); }.interviews-hero span { font-size:.74rem; font-weight:800; letter-spacing:.08em; }.interviews-hero h1 { margin:7px 0 5px; color:#fff!important; font-size:2rem; font-weight:800; }.interviews-hero p { margin:0; opacity:.8; }.interviews-hero-stat { display:grid; min-width:118px; padding:16px; border:1px solid rgba(255,255,255,.22); border-radius:16px; background:rgba(255,255,255,.1); text-align:center; }.interviews-hero-stat strong { font-size:2rem; line-height:1; }.interviews-hero-stat small { margin-top:5px; opacity:.8; }.interview-kpi { display:flex; justify-content:space-between; align-items:center; padding:17px; border:1px solid #dbe7ee; border-radius:14px; background:#fff; }.interview-kpi span { color:#66839a; font-size:.84rem; }.interview-kpi strong { color:#0b3658; font-size:1.4rem; }.interviews-timeline { display:grid; gap:12px; }.interview-item { display:grid; grid-template-columns:70px 88px minmax(0,1fr) auto; gap:16px; align-items:center; padding:18px; border:1px solid #dce7ee; border-radius:16px; background:#fff; }.interview-item time { display:grid; place-items:center; padding:8px; border-radius:11px; color:#226891; background:#e9f5fb; }.interview-item time strong { font-size:1.45rem; line-height:1; }.interview-item time span { margin-top:3px; font-size:.7rem; font-weight:700; }.interview-time { color:#4a7692; font-size:.88rem; font-weight:700; }.interview-main h3 { margin:0 0 3px; color:#0b3658; font-size:1rem; font-weight:800; }.interview-main p,.interview-main div { margin:0; color:#68859a; font-size:.84rem; }.interview-main div { margin-top:5px; }.interviews-empty { padding:70px 20px; border:1px dashed #bdd3e1; border-radius:18px; background:#fff; text-align:center; }.interviews-empty i { color:#75a4c2; font-size:2rem; }.interviews-empty h3 { margin:12px 0 5px; color:#0b3658; font-size:1.1rem; font-weight:800; }.interviews-empty p { margin:0; color:#718da1; } @@media(max-width:700px){.interviews-hero,.interview-item{grid-template-columns:1fr;}.interviews-hero{align-items:flex-start;flex-direction:column}.interviews-hero-stat{min-width:0;width:100%;}.interview-item{gap:9px;}.interview-item time{width:70px;}.interview-item .btn{width:100%;}}
+</style>

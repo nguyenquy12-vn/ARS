@@ -1,10 +1,13 @@
 @model WebApp.Models.JobPosting.JobPostingFormViewModel
+@{
+    var minimumExpiryDate = DateTime.Today.ToString("yyyy-MM-dd");
+}
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
 
 <div class="mb-3">
     <label asp-for="Title" class="form-label fw-semibold"></label>
-    <input asp-for="Title" class="form-control" placeholder="Ví dụ: Kỹ sư Lập trình Backend .NET" />
+        <input asp-for="Title" class="form-control" placeholder="Ví dụ: Kỹ sư Lập trình Backend .NET" minlength="5" maxlength="200" />
     <span asp-validation-for="Title" class="text-danger small"></span>
 </div>
 
@@ -18,7 +21,7 @@
     </div>
     <div class="col-md-6 mb-3">
         <label asp-for="Location" class="form-label fw-semibold"></label>
-        <input asp-for="Location" class="form-control" placeholder="Ví dụ: Cầu Giấy, Hà Nội" />
+        <input asp-for="Location" class="form-control" placeholder="Ví dụ: Cầu Giấy, Hà Nội" minlength="2" maxlength="100" />
         <span asp-validation-for="Location" class="text-danger small"></span>
     </div>
 </div>
@@ -41,35 +44,35 @@
 <div class="row">
     <div class="col-md-4 mb-3">
         <label asp-for="MinSalary" class="form-label fw-semibold"></label>
-        <input asp-for="MinSalary" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
+        <input asp-for="MinSalary" type="number" min="0" step="100000" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
         <span asp-validation-for="MinSalary" class="text-danger small"></span>
     </div>
     <div class="col-md-4 mb-3">
         <label asp-for="MaxSalary" class="form-label fw-semibold"></label>
-        <input asp-for="MaxSalary" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
+        <input asp-for="MaxSalary" type="number" min="0" step="100000" class="form-control" placeholder="Bỏ trống nếu thỏa thuận" />
         <span asp-validation-for="MaxSalary" class="text-danger small"></span>
     </div>
     <div class="col-md-2 mb-3">
         <label asp-for="Vacancies" class="form-label fw-semibold"></label>
-        <input asp-for="Vacancies" class="form-control" />
+        <input asp-for="Vacancies" type="number" min="1" max="1000" step="1" class="form-control" />
         <span asp-validation-for="Vacancies" class="text-danger small"></span>
     </div>
     <div class="col-md-2 mb-3">
         <label asp-for="ExpiredAt" class="form-label fw-semibold"></label>
-        <input asp-for="ExpiredAt" type="date" class="form-control" />
+        <input asp-for="ExpiredAt" type="date" min="@minimumExpiryDate" class="form-control" />
         <span asp-validation-for="ExpiredAt" class="text-danger small"></span>
     </div>
 </div>
 
 <div class="mb-3">
     <label asp-for="Description" class="form-label fw-semibold"></label>
-    <textarea asp-for="Description" class="form-control js-mde" rows="5"></textarea>
+    <textarea asp-for="Description" class="form-control js-mde" rows="5" minlength="30" maxlength="5000"></textarea>
     <span asp-validation-for="Description" class="text-danger small"></span>
 </div>
 
 <div class="mb-3">
     <label asp-for="Requirements" class="form-label fw-semibold"></label>
-    <textarea asp-for="Requirements" class="form-control js-mde" rows="4"></textarea>
+    <textarea asp-for="Requirements" class="form-control js-mde" rows="4" minlength="20" maxlength="5000"></textarea>
     <span asp-validation-for="Requirements" class="text-danger small"></span>
 </div>
 
@@ -84,6 +87,25 @@
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script>
     (function () {
+        function validateSalaryRange() {
+            const minSalary = document.getElementById("MinSalary");
+            const maxSalary = document.getElementById("MaxSalary");
+            const validationMessage = document.querySelector('[data-valmsg-for="MaxSalary"]');
+
+            if (!minSalary || !maxSalary || !validationMessage) return true;
+
+            const min = minSalary.value === "" ? null : Number(minSalary.value);
+            const max = maxSalary.value === "" ? null : Number(maxSalary.value);
+            const isInvalid = min !== null && max !== null && max < min;
+
+            maxSalary.setCustomValidity(isInvalid ? "Lương tối đa không được nhỏ hơn lương tối thiểu." : "");
+            validationMessage.textContent = isInvalid ? "Lương tối đa không được nhỏ hơn lương tối thiểu." : "";
+            validationMessage.classList.toggle("field-validation-error", isInvalid);
+            validationMessage.classList.toggle("field-validation-valid", !isInvalid);
+            maxSalary.classList.toggle("is-invalid", isInvalid);
+            return !isInvalid;
+        }
+
         function initMde(el) {
             new EasyMDE({
                 element: el,
@@ -95,5 +117,18 @@
             });
         }
         document.querySelectorAll("textarea.js-mde").forEach(initMde);
+
+        const minSalary = document.getElementById("MinSalary");
+        const maxSalary = document.getElementById("MaxSalary");
+        minSalary?.addEventListener("input", validateSalaryRange);
+        maxSalary?.addEventListener("input", validateSalaryRange);
+        maxSalary?.addEventListener("blur", validateSalaryRange);
+
+        document.querySelector("form")?.addEventListener("submit", function (event) {
+            if (!validateSalaryRange()) {
+                event.preventDefault();
+                maxSalary?.focus();
+            }
+        });
     })();
 </script>

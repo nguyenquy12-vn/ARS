@@ -41,6 +41,14 @@ public class ApplicationController : Controller
         return View(new JobApplicantsViewModel { Job = job, Applicants = applicants });
     }
 
+    [HttpGet]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> Interviews()
+    {
+        var interviews = await _applicationService.GetUpcomingInterviewsAsync(CurrentUserId);
+        return View(interviews);
+    }
+
     // POST /Application/Analyze -> trích xuất thông tin CV bằng AI cho các ứng viên chưa phân tích
     [HttpPost]
     [ValidateAntiForgeryToken]

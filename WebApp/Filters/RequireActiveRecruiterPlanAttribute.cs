@@ -27,6 +27,16 @@ public sealed class RequireActiveRecruiterPlanFilter : IAsyncActionFilter
             return;
         }
 
+        // Notification endpoints must stay usable so recruiters do not miss new CVs.
+        var controllerName = context.RouteData.Values["controller"]?.ToString();
+        var actionName = context.RouteData.Values["action"]?.ToString();
+        if (string.Equals(controllerName, "Application", StringComparison.OrdinalIgnoreCase) &&
+            actionName is "Notifications" or "GetUnreadCount" or "MarkRead" or "MarkAllRead")
+        {
+            await next();
+            return;
+        }
+
         var hasActivePlan = await _context.PaymentOrders
             .AnyAsync(order => order.RecruiterId == recruiterId && order.Status == PaymentStatus.Successful);
         if (hasActivePlan)

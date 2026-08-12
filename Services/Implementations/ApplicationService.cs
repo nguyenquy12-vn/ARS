@@ -149,6 +149,7 @@ public class ApplicationService : IApplicationService
         return applications.Select(a => new ApplicantListItem
         {
             Id = a.Id,
+            JobTitle = a.JobPosting?.Title ?? string.Empty,
             CandidateName = a.Candidate != null ? a.Candidate.FullName : string.Empty,
             CandidateEmail = a.Candidate != null ? a.Candidate.Email : string.Empty,
             ResumeTitle = a.Resume != null ? a.Resume.Title : string.Empty,
@@ -182,6 +183,29 @@ public class ApplicationService : IApplicationService
             InterviewAt = a.InterviewAt,
             InterviewNote = a.InterviewNote
         }).ToList();
+    }
+
+    public async Task<List<ApplicantListItem>> GetUpcomingInterviewsAsync(int recruiterId)
+    {
+        return await _context.Set<Domain.Entities.Application>()
+            .Include(application => application.Candidate)
+            .Include(application => application.JobPosting)
+            .Where(application => application.JobPosting!.Company!.RecruiterId == recruiterId
+                && application.InterviewAt.HasValue
+                && application.Status == ApplicationStatus.Interview)
+            .OrderBy(application => application.InterviewAt)
+            .Select(application => new ApplicantListItem
+            {
+                Id = application.Id,
+                JobTitle = application.JobPosting!.Title,
+                CandidateName = application.Candidate != null ? application.Candidate.FullName : string.Empty,
+                CandidateEmail = application.Candidate != null ? application.Candidate.Email : string.Empty,
+                Status = application.Status,
+                InterviewAt = application.InterviewAt,
+                InterviewNote = application.InterviewNote,
+                AiMatchScore = application.AiMatchScore
+            })
+            .ToListAsync();
     }
 
     public async Task<int> AnalyzeApplicantsAsync(int jobId, int recruiterId)
@@ -259,6 +283,26 @@ public class ApplicationService : IApplicationService
         if (application == null)
         {
             return ApplicationResult.Failure(ErrorMessage.ApplicationNotFound);
+        }
+
+        var wasAccepted = application.Status == ApplicationStatus.Accepted;
+        if (wasAccepted && status != ApplicationStatus.Accepted)
+        {
+            return ApplicationResult.Failure(ErrorMessage.AcceptedApplicationFinal);
+        }
+
+        var isBeingAccepted = status == ApplicationStatus.Accepted && !wasAccepted;
+
+        // "Vacancies" là số lượng còn cần tuyển. Chỉ giảm đúng một lần khi
+        // ứng viên lần đầu được xác nhận Đạt/đi làm.
+        if (isBeingAccepted)
+        {
+            if (application.JobPosting == null || application.JobPosting.Vacancies <= 0)
+            {
+                return ApplicationResult.Failure(ErrorMessage.JobHasNoVacancy);
+            }
+
+            application.JobPosting.Vacancies--;
         }
 
         application.Status = status;
@@ -640,7 +684,9 @@ public class ApplicationService : IApplicationService
 
     public async Task<(bool ok, string? error)> ApplyAsync(int jobId, int candidateId, string fileName, string filePath, byte[] pdfBytes, string? coverLetter)
     {
-        var job = await _context.JobPostings.FirstOrDefaultAsync(j => j.Id == jobId);
+        var job = await _context.JobPostings
+            .Include(j => j.Company)
+            .FirstOrDefaultAsync(j => j.Id == jobId);
         if (job == null || job.Status != JobStatus.Active)
         {
             return (false, "Tin tuyển dụng không tồn tại hoặc đã đóng.");
@@ -688,6 +734,24 @@ public class ApplicationService : IApplicationService
         };
         _context.Set<Domain.Entities.Application>().Add(application);
         await _context.SaveChangesAsync();
+
+        // Đây là luồng nộp CV đang dùng ở trang /Job/Detail.
+        // Tạo thông báo cho đúng recruiter sở hữu công ty của tin tuyển dụng.
+        var recruiterId = job.Company?.RecruiterId;
+        if (recruiterId.HasValue)
+        {
+            var candidateName = await _context.Users
+                .Where(user => user.Id == candidateId)
+                .Select(user => user.FullName)
+                .FirstOrDefaultAsync() ?? "Ứng viên";
+
+            await _notificationService.CreateAsync(
+                recruiterId.Value,
+                $"CV mới: {job.Title}",
+                $"{candidateName} vừa nộp CV cho vị trí {job.Title}. Hãy xem và xử lý hồ sơ.",
+                "NewApplication",
+                job.Id);
+        }
 
         return (true, null);
     }

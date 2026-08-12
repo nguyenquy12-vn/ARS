@@ -115,6 +115,9 @@
                 <a class="nav-link @NavActive("CvBank") @LockedClass()" asp-controller="CvBank" asp-action="Index" title="@LockedTitle()">
                     <i class="bi bi-collection"></i><span>Kho CV</span>
                 </a>
+                <a class="nav-link @NavActive("Application", "Interviews") @LockedClass()" asp-controller="Application" asp-action="Interviews" title="@LockedTitle()">
+                    <i class="bi bi-calendar2-week"></i><span>Lịch phỏng vấn</span>
+                </a>
                 <a class="nav-link @NavActive("Company") @LockedClass()" asp-controller="Company" asp-action="Index" title="@LockedTitle()">
                     <i class="bi bi-building"></i><span>Hồ sơ công ty</span>
                 </a>
@@ -155,23 +158,60 @@
         </div>
     </div>
 
+    <div id="recruiter-realtime-toast" class="recruiter-realtime-toast" role="status" aria-live="polite" hidden>
+        <i class="bi bi-file-earmark-person-fill"></i>
+        <div><strong id="recruiter-realtime-title"></strong><span id="recruiter-realtime-message"></span></div>
+        <button type="button" aria-label="Đóng">&times;</button>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" referrerpolicy="no-referrer"></script>
     <script>
         (() => {
             const badge = document.getElementById('recruiter-notif-badge');
             if (!badge) return;
             const refreshNotifications = async () => {
                 try {
-                    const response = await fetch('/Application/GetUnreadCount');
+                    const response = await fetch('@Url.Action("GetUnreadCount", "Application")', {
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-store'
+                    });
                     if (!response.ok) return;
                     const data = await response.json();
-                    badge.textContent = data.count;
-                    badge.classList.toggle('d-none', data.count === 0);
+                    const count = Number(data.count) || 0;
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.toggle('d-none', count === 0);
                 } catch { /* Keep the navigation usable if polling is unavailable. */ }
             };
             refreshNotifications();
-            window.setInterval(refreshNotifications, 60000);
+            window.setInterval(refreshNotifications, 15000);
+
+            const toast = document.getElementById('recruiter-realtime-toast');
+            const toastTitle = document.getElementById('recruiter-realtime-title');
+            const toastMessage = document.getElementById('recruiter-realtime-message');
+            let toastTimer;
+            const showRealtimeToast = (notification) => {
+                if (!toast || !toastTitle || !toastMessage) return;
+                toastTitle.textContent = notification.title || 'Thông báo mới';
+                toastMessage.textContent = notification.message || '';
+                toast.hidden = false;
+                clearTimeout(toastTimer);
+                toastTimer = window.setTimeout(() => { toast.hidden = true; }, 7000);
+            };
+
+            toast?.querySelector('button')?.addEventListener('click', () => { toast.hidden = true; });
+            if (window.signalR) {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/hubs/notifications')
+                    .withAutomaticReconnect()
+                    .build();
+                connection.on('notification:new', (notification) => {
+                    refreshNotifications();
+                    showRealtimeToast(notification);
+                });
+                connection.start().catch(() => { /* Polling remains the fallback. */ });
+            }
         })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)

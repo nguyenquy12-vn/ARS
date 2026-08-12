@@ -12,6 +12,7 @@ using Services.Implementations;
 using Services.Interfaces;
 using WebApp.Middlewares;
 using WebApp.Accounts;
+using WebApp.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,7 @@ builder.Services.AddAuthorization(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -73,6 +75,7 @@ builder.Services.AddScoped<ICvBankService, CvBankService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSingleton<IRealtimeNotificationPublisher, SignalRNotificationPublisher>();
 builder.Services.AddScoped<IAccountEmailService, AccountEmailService>();
 
 // AI service noi bo (LAN, kieu Ollama/OpenWebUI) - giong du an D:\ARS.
@@ -188,5 +191,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
