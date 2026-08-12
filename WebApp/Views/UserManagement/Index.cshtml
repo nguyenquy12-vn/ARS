@@ -164,6 +164,18 @@
                                                 </button>
                                             </form>
                                         }
+                                        else if (string.Equals(user.RoleName, "Recruiter", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form asp-action="PromoteCandidate" method="post" class="d-inline ms-1"
+                                                  onsubmit="return confirm('Hạ tài khoản @user.FullName xuống Candidate? Người dùng cần đăng nhập lại để cập nhật quyền.');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <input type="hidden" name="targetRole" value="Candidate" />
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Hạ xuống Candidate">
+                                                    <i class="bi bi-arrow-down-circle"></i> Hạ vai trò
+                                                </button>
+                                            </form>
+                                        }
 
                                         <!-- 2. Nút Khóa / Mở khóa (Ẩn nếu tài khoản là Admin) -->
                                         @if (!string.Equals(user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase))
