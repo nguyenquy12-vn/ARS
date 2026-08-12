@@ -23,7 +23,7 @@ namespace WebApp.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int jobPage = 1)
         {
             // Recruiter không dùng trang chủ candidate/guest — dashboard của họ chính là trang quản lý tin
             if (User.Identity?.IsAuthenticated == true && User.IsInRole("Recruiter"))
@@ -40,7 +40,14 @@ namespace WebApp.Controllers
                 ViewBag.Permissions = User.Claims.Where(c => c.Type == "Permission").Select(c => c.Value).ToList();
             }
 
-            ViewBag.LatestJobs = await _jobPostingService.GetLatestJobsAsync(6);
+            const int pageSize = 6;
+            var totalJobs = await _jobPostingService.CountActiveJobsAsync();
+            var totalPages = Math.Max(1, (int)Math.Ceiling(totalJobs / (double)pageSize));
+            jobPage = Math.Clamp(jobPage, 1, totalPages);
+            ViewBag.LatestJobs = await _jobPostingService.GetLatestJobsAsync(pageSize, (jobPage - 1) * pageSize);
+            ViewBag.JobPage = jobPage;
+            ViewBag.JobTotalPages = totalPages;
+            ViewBag.JobTotalCount = totalJobs;
             ViewBag.Categories = await _context.JobCategories.ToListAsync();
 
             return View();

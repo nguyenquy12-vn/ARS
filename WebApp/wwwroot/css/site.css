@@ -909,3 +909,40 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .notif-empty i { font-size: 3.5rem; opacity: 0.25; display: block; margin-bottom: 16px; }
+
+.home-job-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  margin-top: 3rem;
+}
+
+.home-job-pagination a {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #dce4f1;
+  border-radius: 12px;
+  color: #49617f;
+  background: #fff;
+  font-size: .88rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.home-job-pagination a:hover,
+.home-job-pagination .active {
+  color: #fff;
+  border-color: #1769e8;
+  background: linear-gradient(135deg, #1769e8, #7655ea);
+  box-shadow: 0 8px 18px rgba(23, 105, 232, .22);
+  transform: translateY(-2px);
+}
+
+.home-job-pagination .disabled {
+  opacity: .35;
+  pointer-events: none;
+}

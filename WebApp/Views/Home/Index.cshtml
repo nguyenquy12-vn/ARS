@@ -66,7 +66,7 @@
     </div>
 </section>
 
-<section class="jobs-wrapper">
+<section class="jobs-wrapper" id="latest-jobs">
     <div class="container">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end mb-5 reveal">
             <div><div class="section-tag"><i class="bi bi-lightning-charge-fill"></i> Cập nhật liên tục</div><h2 class="section-main-title">Tin Tuyển Dụng Mới Nhất</h2><p class="text-muted fs-5 mb-0">Ứng tuyển ngay để không bỏ lỡ cơ hội việc làm hấp dẫn</p></div>
@@ -86,6 +86,26 @@
                 }
             }
         </div>
+        @{
+            int currentJobPage = ViewBag.JobPage ?? 1;
+            int jobTotalPages = ViewBag.JobTotalPages ?? 1;
+        }
+        @if (jobTotalPages > 1)
+        {
+            <nav class="home-job-pagination" aria-label="Phân trang việc làm">
+                <a class="page-arrow @(currentJobPage == 1 ? "disabled" : "")"
+                   asp-controller="Home" asp-action="Index" asp-route-jobPage="@(currentJobPage - 1)" asp-fragment="latest-jobs"
+                   aria-label="Trang trước"><i class="bi bi-arrow-left"></i></a>
+                @for (var pageNumber = 1; pageNumber <= jobTotalPages; pageNumber++)
+                {
+                    <a class="page-number @(pageNumber == currentJobPage ? "active" : "")"
+                       asp-controller="Home" asp-action="Index" asp-route-jobPage="@pageNumber" asp-fragment="latest-jobs">@pageNumber</a>
+                }
+                <a class="page-arrow @(currentJobPage == jobTotalPages ? "disabled" : "")"
+                   asp-controller="Home" asp-action="Index" asp-route-jobPage="@(currentJobPage + 1)" asp-fragment="latest-jobs"
+                   aria-label="Trang sau"><i class="bi bi-arrow-right"></i></a>
+            </nav>
+        }
     </div>
 </section>
 

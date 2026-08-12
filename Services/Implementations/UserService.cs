@@ -74,14 +74,17 @@ public class UserService : IUserService
 
     public async Task<(bool IsSuccess, string? ErrorMessage)> PromoteCandidateAsync(int userId, string targetRole)
     {
-        if (targetRole is not ("Recruiter" or "Admin"))
-            return (false, "Vai trò nâng cấp không hợp lệ.");
+        if (targetRole is not ("Candidate" or "Recruiter" or "Admin"))
+            return (false, "Vai trò đích không hợp lệ.");
 
         var user = await _context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == userId);
         if (user is null)
             return (false, ErrorMessage.UserNotFound);
-        if (user.Role?.Name != "Candidate")
-            return (false, "Chỉ có thể nâng quyền tài khoản đang là Ứng viên.");
+        var currentRole = user.Role?.Name;
+        var isCandidatePromotion = currentRole == "Candidate" && targetRole is "Recruiter" or "Admin";
+        var isRecruiterDowngrade = currentRole == "Recruiter" && targetRole == "Candidate";
+        if (!isCandidatePromotion && !isRecruiterDowngrade)
+            return (false, "Không thể thực hiện chuyển đổi vai trò này.");
 
         var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == targetRole);
         if (role is null)

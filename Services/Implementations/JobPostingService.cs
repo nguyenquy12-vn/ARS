@@ -295,13 +295,14 @@ public class JobPostingService : IJobPostingService
         return job;
     }
 
-    public async Task<List<JobPostingListDto>> GetLatestJobsAsync(int count)
+    public async Task<List<JobPostingListDto>> GetLatestJobsAsync(int count, int skip = 0)
     {
         var jobs = await _context.JobPostings
             .Include(x => x.Company)
             .Include(x => x.JobCategory)
             .Where(x => x.Status == JobStatus.Active)
             .OrderByDescending(x => x.CreatedAt)
+            .Skip(skip)
             .Take(count)
             .Select(x => new JobPostingListDto
             {
@@ -327,6 +328,9 @@ public class JobPostingService : IJobPostingService
 
         return jobs;
     }
+
+    public Task<int> CountActiveJobsAsync() =>
+        _context.JobPostings.CountAsync(x => x.Status == JobStatus.Active);
 
     public async Task<List<JobListItem>> GetAllJobsAsync()
     {

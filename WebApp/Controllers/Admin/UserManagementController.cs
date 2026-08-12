@@ -59,7 +59,7 @@ public class UserManagementController : Controller
     {
         var result = await _userService.PromoteCandidateAsync(userId, targetRole);
         TempData[result.IsSuccess ? "Success" : "Error"] = result.IsSuccess
-            ? $"Đã nâng quyền tài khoản lên {targetRole}. Người dùng cần đăng nhập lại để nhận quyền mới."
+            ? $"Đã chuyển vai trò tài khoản sang {targetRole}. Người dùng cần đăng nhập lại để nhận quyền mới."
             : result.ErrorMessage;
         return RedirectToAction(nameof(Index));
     }

@@ -23,10 +23,15 @@ public class ARSDbContext : DbContext
     public DbSet<CvFolder> CvFolders { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<PaymentOrder> PaymentOrders { get; set; }
+    public DbSet<Application> Applications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Giữ đúng tên bảng singular đã được tạo bởi migration ban đầu.
+        // Tên thuộc tính DbSet không được làm EF đổi truy vấn sang "Applications".
+        modelBuilder.Entity<Application>().ToTable("Application");
 
         // Enum string conversions
         modelBuilder.Entity<User>()

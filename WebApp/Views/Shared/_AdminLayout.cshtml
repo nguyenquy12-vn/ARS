@@ -134,7 +134,7 @@
     <div class="admin-wrapper">
         <!-- ==================== LEFT SIDEBAR NAVIGATION ==================== -->
         <aside class="admin-sidebar">
-            <a asp-controller="AdminDashboard" asp-action="Index" class="sidebar-brand d-flex align-items-center">
+            <a asp-controller="Admin" asp-action="Index" class="sidebar-brand d-flex align-items-center">
                 <i class="bi bi-shield-lock-fill text-primary fs-3 me-2"></i>
                 <span>ARS Admin</span>
             </a>
@@ -184,8 +184,8 @@
                     <li class="nav-item">
                         <a class="nav-link @(currentController == "PaymentManagement" ? "active" : "")"
                            asp-controller="PaymentManagement" asp-action="Index">
-                            <i class="bi bi-credit-card-check"></i>
-                            <span>Dashboard doanh thu</span>
+                            <i class="bi bi-cash-coin"></i>
+                            <span>Quản lý doanh thu</span>
                         </a>
                     </li>
                 }
@@ -243,12 +243,16 @@
                 </li>
             </ul>
 
-            <!-- Về trang người dùng -->
             <div class="mt-auto p-3 border-top border-secondary border-opacity-25">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light btn-sm w-100">
-                    <i class="bi bi-box-arrow-up-right me-1"></i> Xem trang Client
-                </a>
+                <form asp-controller="Auth" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-light btn-sm w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
             </div>
+
         </aside>
 
         <!-- ==================== MAIN CONTENT AREA ==================== -->
