@@ -42,6 +42,6 @@ public class ProfileViewModel
     public bool SmtpEnableSsl { get; set; } = true;
 
     // ===== Lựa chọn AI =====
-    [Display(Name = "Nguồn AI")]
+    [Display(Name = "Công cụ AI")]
     public AiProvider AiProvider { get; set; } = AiProvider.Local;
 }

@@ -77,10 +77,10 @@
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-1"></i> JD & chấm điểm cho thư mục "@folderJd.Name"</h6>
+                <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-1"></i> Mô tả công việc & chấm điểm cho thư mục "@folderJd.Name"</h6>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#folderJdPanel">
-                        <i class="bi bi-pencil me-1"></i> Sửa JD / cài đặt
+                        <i class="bi bi-pencil me-1"></i> Sửa mô tả / cài đặt
                     </button>
                     <button type="button" class="btn btn-primary btn-sm" onclick="startCvScoring(false)" id="btnCvScoreNew">
                         <i class="bi bi-clipboard-check me-1"></i> Chấm CV chưa chấm
@@ -93,7 +93,7 @@
 
             @if (!folderJd.HasJd)
             {
-                <div class="alert alert-warning py-2 small mb-3">Thư mục chưa có JD. Bấm <strong>Sửa JD / cài đặt</strong> để nhập trước khi chấm điểm.</div>
+                <div class="alert alert-warning py-2 small mb-3">Thư mục chưa có mô tả công việc. Bấm <strong>Sửa mô tả / cài đặt</strong> để nhập trước khi chấm điểm.</div>
             }
 
             <div class="collapse @(folderJd.HasJd ? "" : "show")" id="folderJdPanel">
@@ -101,7 +101,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="folderId" value="@folderJd.Id" />
                     <div class="col-md-6">
-                        <label class="form-label small text-muted mb-1">Mô tả công việc (JD)</label>
+                        <label class="form-label small text-muted mb-1">Mô tả công việc</label>
                         <textarea name="jdDescription" rows="4" class="form-control" placeholder="Mô tả vị trí, nhiệm vụ...">@folderJd.JdDescription</textarea>
                     </div>
                     <div class="col-md-6">
@@ -125,11 +125,11 @@
                         <input type="number" name="weightAchievement" value="@folderJd.AiWeightAchievement" min="0" max="100" class="form-control" />
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small text-muted mb-1">Ưu tiên / must-have</label>
+                        <label class="form-label small text-muted mb-1">Ưu tiên / yêu cầu bắt buộc</label>
                         <input type="text" name="priorityNote" value="@folderJd.AiPriorityNote" class="form-control" placeholder="VD: bắt buộc 3 năm React..." />
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-sm">Lưu JD</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
                     </div>
                 </form>
             </div>

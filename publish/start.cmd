@@ -20,6 +20,10 @@ set LettuceEncrypt__EmailAddress=admin@arsrecruit.com
 set LettuceEncrypt__DomainNames__0=arsrecruit.com
 set LettuceEncrypt__DomainNames__1=www.arsrecruit.com
 
+REM --- Dang nhap Google (OAuth) ---
+set GoogleAuth__ClientId=113080090949-7o8sv0me6q5aoco3g2uvpqf4q5e8b4g3.apps.googleusercontent.com
+set GoogleAuth__ClientSecret=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
+
 echo [3/3] Chay ARS tren cong 80 + 443 ...
 echo.
 dotnet WebApp.dll
