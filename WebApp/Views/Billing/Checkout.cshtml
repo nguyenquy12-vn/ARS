@@ -1,20 +1,61 @@
 @model Domain.Entities.PaymentOrder
 @{
-    ViewData["Title"] = "Thanh toán đơn hàng";
-    var bankId = (string)ViewBag.BankId;
-    var accountNumber = (string)ViewBag.AccountNumber;
-    var accountName = (string)ViewBag.AccountName;
-    var qr = $"https://img.vietqr.io/image/{bankId}-{accountNumber}-compact2.png?amount={Model.Amount:0}&addInfo={Uri.EscapeDataString(Model.TransferCode)}&accountName={Uri.EscapeDataString(accountName)}";
+    ViewData["Title"] = "Xác nhận thanh toán";
 }
-<div class="row justify-content-center"><div class="col-lg-9">
-    <a asp-action="Index" class="text-decoration-none small"><i class="bi bi-arrow-left"></i> Quay lại gói</a>
-    @if (TempData["VnPayError"] != null) { <div class="alert alert-warning mt-3">@TempData["VnPayError"]</div> }
-    <div class="card border-0 shadow-sm mt-3"><div class="card-body p-4 p-md-5">
-        <div class="text-center"><div class="text-primary small fw-bold text-uppercase">Đơn chờ Admin xác nhận</div><h2 class="fw-bold mt-2">Chọn phương thức thanh toán</h2><p class="text-muted">Gói <strong>@Model.PlanName</strong> · <strong class="text-primary">@Model.Amount.ToString("N0")đ</strong></p></div>
-        <div class="row g-4 mt-1">
-            <div class="col-md-6"><div class="border rounded-4 p-4 h-100"><div class="d-flex align-items-center gap-2"><i class="bi bi-qr-code-scan fs-3 text-primary"></i><div><h5 class="mb-0 fw-bold">Quét mã VietQR</h5><small class="text-muted">Chuyển khoản ngân hàng</small></div></div><img src="@qr" class="img-fluid border rounded-4 p-2 my-3 d-block mx-auto" style="max-width:230px" alt="Mã QR thanh toán" /><div class="small text-muted">Nội dung bắt buộc</div><code class="fs-6">@Model.TransferCode</code><p class="small text-muted mt-3">Sau khi chuyển khoản, hãy xác nhận để Admin đối chiếu.</p><form asp-action="ConfirmQrPayment" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Id" /><button type="submit" class="btn btn-outline-primary w-100 fw-bold"><i class="bi bi-check2-circle me-2"></i>Đã thanh toán QR thành công</button></form></div></div>
-            <div class="col-md-6"><div class="border rounded-4 p-4 h-100"><div class="d-flex align-items-center gap-2"><i class="bi bi-credit-card-2-front fs-3 text-primary"></i><div><h5 class="mb-0 fw-bold">Thẻ ngân hàng</h5><small class="text-muted">Cổng VNPay</small></div></div><p class="text-muted small mt-4">Bạn sẽ được chuyển đến cổng VNPay để chọn thẻ ATM nội địa, Visa, Mastercard hoặc JCB.</p><form asp-controller="VnPay" asp-action="CreatePayment" method="post">@Html.AntiForgeryToken()<input type="hidden" name="orderId" value="@Model.Id"/><button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-box-arrow-up-right me-2"></i>Thanh toán bằng thẻ</button></form><p class="small text-muted text-center mt-3 mb-0">Nếu cổng thanh toán chưa sẵn sàng, nút trên sẽ mở trang thanh toán thử nghiệm.</p></div></div>
+
+<style>
+    .payment-shell { max-width: 760px; margin: 0 auto; }
+    .payment-back { display:inline-flex; align-items:center; gap:.4rem; margin-bottom:1.1rem; color:#3976ce; font-size:.82rem; text-decoration:none; }
+    .payment-card { overflow:hidden; border:1px solid #e1e8f1; border-radius:24px; background:#fff; box-shadow:0 20px 55px rgba(24,55,94,.11); }
+    .payment-hero { position:relative; padding:2.25rem 2.5rem; color:#fff; background:linear-gradient(120deg,#0c2f58,#126cd8 70%,#4eb5ed); }
+    .payment-hero:after { content:''; position:absolute; width:240px; height:240px; right:-100px; top:-120px; border:1px solid rgba(255,255,255,.28); border-radius:50%; box-shadow:0 0 0 28px rgba(255,255,255,.06),0 0 0 56px rgba(255,255,255,.04); }
+    .payment-kicker { position:relative; z-index:1; font-size:.7rem; font-weight:800; letter-spacing:.11em; color:#a9ddff; text-transform:uppercase; }
+    .payment-hero h1 { position:relative; z-index:1; margin:.45rem 0 .3rem; font-size:1.9rem; font-weight:800; letter-spacing:-.04em; }
+    .payment-hero p { position:relative; z-index:1; margin:0; color:#d7eaff; }
+    .payment-body { padding:2rem 2.5rem 2.4rem; }
+    .order-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.05rem 0; border-bottom:1px solid #edf1f6; }
+    .order-row span { color:#74849a; font-size:.82rem; }
+    .order-row strong { color:#193452; text-align:right; }
+    .order-total { margin-top:.7rem; border-bottom:0; }
+    .order-total strong { color:#1268d7; font-size:1.65rem; }
+    .vnpay-box { display:flex; align-items:center; gap:1rem; margin:1.4rem 0; padding:1.1rem; border:1px solid #dce7f4; border-radius:16px; background:#f7faff; }
+    .vnpay-icon { display:grid; flex:0 0 48px; height:48px; place-items:center; border-radius:14px; color:#1268d7; background:#e5f1ff; font-size:1.35rem; }
+    .vnpay-box strong,.vnpay-box small { display:block; }.vnpay-box small { margin-top:.2rem; color:#7b8ca2; }
+    .pay-button { display:flex; width:100%; min-height:54px; align-items:center; justify-content:center; gap:.6rem; border:0; border-radius:13px; color:#fff; background:linear-gradient(100deg,#1267d7,#4b9ee7); font-weight:800; box-shadow:0 10px 23px rgba(18,103,215,.24); transition:.2s; }
+    .pay-button:hover { color:#fff; transform:translateY(-2px); box-shadow:0 14px 28px rgba(18,103,215,.3); }
+    .payment-note { display:flex; gap:.6rem; margin-top:1.1rem; color:#71839a; font-size:.74rem; line-height:1.55; }
+    .payment-note i { color:#13936f; }
+    @@media(max-width:576px){.payment-hero,.payment-body{padding:1.5rem}.payment-hero h1{font-size:1.55rem}}
+</style>
+
+<div class="payment-shell">
+    <a asp-action="Index" class="payment-back"><i class="bi bi-arrow-left"></i> Quay lại gói dịch vụ</a>
+    @if (TempData["VnPayError"] != null)
+    {
+        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["VnPayError"]</div>
+    }
+    <section class="payment-card">
+        <header class="payment-hero">
+            <div class="payment-kicker"><i class="bi bi-shield-check me-1"></i> Thanh toán bảo mật qua VNPAY</div>
+            <h1>Xác nhận đơn hàng</h1>
+            <p>Kiểm tra thông tin trước khi chuyển tới cổng thanh toán.</p>
+        </header>
+        <div class="payment-body">
+            <div class="order-row"><span>Gói dịch vụ</span><strong>@Model.PlanName</strong></div>
+            <div class="order-row"><span>Mã đơn hàng</span><strong>@Model.TransferCode</strong></div>
+            <div class="order-row order-total"><span>Tổng thanh toán</span><strong>@Model.Amount.ToString("N0")đ</strong></div>
+
+            <div class="vnpay-box">
+                <div class="vnpay-icon"><i class="bi bi-credit-card-2-front"></i></div>
+                <div><strong>Cổng thanh toán VNPAY</strong><small>Hỗ trợ ATM nội địa, tài khoản ngân hàng và thẻ quốc tế.</small></div>
+            </div>
+
+            <form asp-controller="VnPay" asp-action="CreatePayment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderId" value="@Model.Id" />
+                <button type="submit" class="pay-button">Tiếp tục thanh toán <i class="bi bi-arrow-right"></i></button>
+            </form>
+            <div class="payment-note"><i class="bi bi-lock-fill"></i><span>Bạn sẽ được chuyển sang VNPAY. Gói được kích hoạt tự động sau khi VNPAY xác nhận giao dịch thành công; Admin không cần duyệt thủ công.</span></div>
         </div>
-        <div class="alert alert-warning mt-4 mb-0"><i class="bi bi-shield-check me-2"></i>Dù thanh toán bằng phương thức nào, đơn vẫn là <strong>Chờ xác nhận</strong> cho đến khi Admin duyệt.</div>
-    </div></div>
-</div></div>
+    </section>
+</div>

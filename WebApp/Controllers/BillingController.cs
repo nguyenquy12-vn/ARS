@@ -12,12 +12,10 @@ namespace WebApp.Controllers;
 public class BillingController : Controller
 {
     private readonly ARSDbContext _context;
-    private readonly IConfiguration _configuration;
 
-    public BillingController(ARSDbContext context, IConfiguration configuration)
+    public BillingController(ARSDbContext context)
     {
         _context = context;
-        _configuration = configuration;
     }
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -45,7 +43,7 @@ public class BillingController : Controller
             .AnyAsync(x => x.RecruiterId == CurrentUserId && x.Status == PaymentStatus.PendingConfirmation);
         if (hasPendingOrder)
         {
-            TempData["Error"] = "Bạn đang có đơn chờ xác nhận. Hãy tiếp tục thanh toán hoặc hủy đơn đó trước khi chọn gói khác.";
+            TempData["Error"] = "Bạn đang có đơn chưa thanh toán. Hãy tiếp tục qua VNPAY hoặc hủy đơn đó trước khi chọn gói khác.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -113,34 +111,6 @@ public class BillingController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConfirmQrPayment(int id)
-    {
-        var order = await _context.PaymentOrders.FirstOrDefaultAsync(x => x.Id == id && x.RecruiterId == CurrentUserId);
-        if (order is null) return NotFound();
-        if (order.Status == PaymentStatus.PendingConfirmation)
-        {
-            order.Status = PaymentStatus.Successful;
-            order.ReviewedAt = DateTime.UtcNow;
-            order.AdminNote = "Thanh toán VietQR đã được xác nhận tự động.";
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Thanh toán QR thành công. Gói của bạn đã được kích hoạt ngay.";
-            return RedirectToAction(nameof(Index));
-        }
-        if (order is null) return NotFound();
-        if (order.Status != PaymentStatus.PendingConfirmation)
-        {
-            TempData["Error"] = "Đơn này không còn chờ xác nhận.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        order.AdminNote = "Recruiter đã xác nhận thanh toán bằng VietQR. Chờ Admin đối chiếu và duyệt.";
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Đã ghi nhận thanh toán QR. Đơn đang chờ Admin duyệt.";
-        return RedirectToAction(nameof(Index));
-    }
-
     [HttpGet]
     public async Task<IActionResult> Checkout(int id)
     {
@@ -152,9 +122,6 @@ public class BillingController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        ViewBag.BankId = _configuration["Payments:BankId"] ?? "MB";
-        ViewBag.AccountNumber = _configuration["Payments:AccountNumber"] ?? "CHUA_CAU_HINH";
-        ViewBag.AccountName = _configuration["Payments:AccountName"] ?? "ARS RECRUITMENT";
         return View(order);
     }
 }

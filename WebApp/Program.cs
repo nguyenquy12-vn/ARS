@@ -16,6 +16,10 @@ using WebApp.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// User Secrets mặc định chỉ được tự động nạp trong Development.
+// Nạp tùy chọn để cấu hình local VNPAY/Google vẫn hoạt động khi chạy profile khác.
+builder.Configuration.AddUserSecrets<Program>(optional: true);
+
 // Cookie Authentication configuration
 var authentication = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
