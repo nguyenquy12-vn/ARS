@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] ADMIN ĐƠN ỨNG TUYỂN: tìm kiếm/lọc toàn bộ Application và Include quan hệ.
 [Authorize(Roles = "Admin")]
 [Route("admin/applications")]
 public class ApplicationManagementController : Controller

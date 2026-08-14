@@ -9,6 +9,8 @@ using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] HỒ SƠ CÔNG TY: một Recruiter có một Company (RecruiterId unique).
+// Edit POST gọi CompanyService; RecruiterId lấy từ claim để chống sửa công ty người khác.
 [Authorize(Roles = "Recruiter")]
 [RequireActiveRecruiterPlan]
 public class CompanyController : Controller

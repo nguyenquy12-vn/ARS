@@ -1,5 +1,4 @@
 @using System.Security.Claims
-@using Domain.Enums
 @inject Infrastructure.ARSDbContext DbContext
 <!DOCTYPE html>
 <html lang="vi">
@@ -94,10 +93,15 @@
         string NavActive(string controller, string? action = null) =>
             currentController == controller && (action is null || currentAction == action) ? "active" : "";
         var recruiterIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var hasActivePlan = int.TryParse(recruiterIdValue, out var recruiterId) &&
-                            DbContext.PaymentOrders.Any(order => order.RecruiterId == recruiterId && order.Status == PaymentStatus.Successful);
+        var activeSubscription = int.TryParse(recruiterIdValue, out var recruiterId)
+            ? DbContext.RecruiterSubscriptions.FirstOrDefault(subscription => subscription.RecruiterId == recruiterId && subscription.ExpiresAt > DateTime.UtcNow)
+            : null;
+        var hasActivePlan = activeSubscription != null;
+        var hasProPlan = activeSubscription?.PlanCode == "Pro";
         string LockedClass() => hasActivePlan ? string.Empty : "plan-locked";
         string LockedTitle() => hasActivePlan ? string.Empty : "Mua gói và chờ Admin duyệt để mở khóa";
+        string ProLockedClass() => hasProPlan ? string.Empty : "plan-locked";
+        string ProLockedTitle() => hasProPlan ? string.Empty : "Chỉ khả dụng với gói Pro";
     }
     <div class="recruiter-shell">
         <aside class="recruiter-sidebar">
@@ -112,7 +116,7 @@
                 <a class="nav-link @NavActive("JobPosting", "Create") @LockedClass()" asp-controller="JobPosting" asp-action="Create" title="@LockedTitle()">
                     <i class="bi bi-plus-square"></i><span>Đăng tin mới</span>
                 </a>
-                <a class="nav-link @NavActive("CvBank") @LockedClass()" asp-controller="CvBank" asp-action="Index" title="@LockedTitle()">
+                <a class="nav-link @NavActive("CvBank") @LockedClass() @ProLockedClass()" asp-controller="CvBank" asp-action="Index" title="@(hasActivePlan ? ProLockedTitle() : LockedTitle())">
                     <i class="bi bi-collection"></i><span>Kho CV</span>
                 </a>
                 <a class="nav-link @NavActive("Application", "Interviews") @LockedClass()" asp-controller="Application" asp-action="Interviews" title="@LockedTitle()">

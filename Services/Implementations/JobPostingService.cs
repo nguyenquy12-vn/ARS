@@ -294,7 +294,7 @@ public class JobPostingService : IJobPostingService
 
         return job;
     }
-
+// homepage lấy việc làm mới nhất 
     public async Task<List<JobPostingListDto>> GetLatestJobsAsync(int count, int skip = 0)
     {
         var jobs = await _context.JobPostings
@@ -328,7 +328,7 @@ public class JobPostingService : IJobPostingService
 
         return jobs;
     }
-
+//đếm tổng số việc làm
     public Task<int> CountActiveJobsAsync() =>
         _context.JobPostings.CountAsync(x => x.Status == JobStatus.Active);
 

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] DASHBOARD ADMIN: tổng hợp KPI Users, Jobs, Applications, PaymentOrders vào ViewBag.
 [Route("admin")]
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller

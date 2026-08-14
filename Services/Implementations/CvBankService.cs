@@ -8,6 +8,7 @@ using Services.Interfaces;
 
 namespace Services.Implementations;
 
+// [BẢO VỆ] CV BANK SERVICE: mọi query lọc RecruiterId; quản lý PDF/thư mục/JD và chấm AI.
 public class CvBankService : ICvBankService
 {
     private readonly ARSDbContext _context;

@@ -16,6 +16,14 @@ using WebApp.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// [BẢO VỆ] COMPOSITION ROOT: Program.cs là nơi ghép toàn hệ thống.
+// Thứ tự cần nhớ: Configuration -> Authentication/Authorization -> DI Services
+// -> DbContext -> Middleware pipeline -> MapControllerRoute.
+
+// User Secrets mặc định chỉ được tự động nạp trong Development.
+// Nạp tùy chọn để cấu hình local VNPAY/Google vẫn hoạt động khi chạy profile khác.
+builder.Configuration.AddUserSecrets<Program>(optional: true);
+
 // Cookie Authentication configuration
 var authentication = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -27,6 +35,7 @@ var authentication = builder.Services.AddAuthentication(CookieAuthenticationDefa
         options.SlidingExpiration = true;     
     });
 
+// cấu hình đăng nhập google
 var googleClientId = builder.Configuration["GoogleAuth:ClientId"];
 var googleClientSecret = builder.Configuration["GoogleAuth:ClientSecret"];
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))

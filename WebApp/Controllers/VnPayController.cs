@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] VNPAY: CreatePayment ký HMAC-SHA512; Return kiểm chữ ký, số tiền và responseCode.
+// Chỉ khi cả ba hợp lệ mới đổi đơn Successful và kích hoạt/gia hạn gói 30 ngày.
 [Authorize(Roles = "Recruiter")]
 public class VnPayController : Controller
 {
@@ -31,19 +33,28 @@ public class VnPayController : Controller
     {
         var order = await _context.PaymentOrders.FirstOrDefaultAsync(x => x.Id == orderId && x.RecruiterId == CurrentUserId);
         if (order is null) return NotFound();
+        if (order.Status != Domain.Enums.PaymentStatus.PendingConfirmation)
+        {
+            TempData["Error"] = "Đơn hàng này không còn chờ thanh toán.";
+            return RedirectToAction("Index", "Billing");
+        }
 
         var tmnCode = _configuration["VnPay:TmnCode"];
         var hashSecret = _configuration["VnPay:HashSecret"];
         if (string.IsNullOrWhiteSpace(tmnCode) || string.IsNullOrWhiteSpace(hashSecret))
         {
-            order.AdminNote = "Recruiter đã mở form VNPay Sandbox Demo để thử thẻ.";
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(DemoCard), new { orderId = order.Id });
+            TempData["VnPayError"] = "Cổng VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.";
+            return RedirectToAction("Checkout", "Billing", new { id = order.Id });
         }
 
         var returnUrl = _configuration["VnPay:ReturnUrl"];
         if (string.IsNullOrWhiteSpace(returnUrl))
             returnUrl = $"{Request.Scheme}://{Request.Host}/VnPay/Return";
+
+        var remoteIp = HttpContext.Connection.RemoteIpAddress;
+        var vnpIpAddress = remoteIp is null || IPAddress.IsLoopback(remoteIp)
+            ? "127.0.0.1"
+            : remoteIp.IsIPv4MappedToIPv6 ? remoteIp.MapToIPv4().ToString() : remoteIp.ToString();
 
         var parameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
         {
@@ -51,7 +62,7 @@ public class VnPayController : Controller
             ["vnp_Command"] = "pay",
             ["vnp_CreateDate"] = DateTime.Now.ToString("yyyyMMddHHmmss"),
             ["vnp_CurrCode"] = "VND",
-            ["vnp_IpAddr"] = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
+            ["vnp_IpAddr"] = vnpIpAddress,
             ["vnp_Locale"] = "vn",
             ["vnp_OrderInfo"] = $"Thanh toan don ARS {order.TransferCode}",
             ["vnp_OrderType"] = "other",
@@ -68,40 +79,9 @@ public class VnPayController : Controller
         return Redirect($"{_configuration["VnPay:PaymentUrl"] ?? SandboxPaymentUrl}?{query}&vnp_SecureHash={signature}");
     }
 
-    [HttpGet]
-    public async Task<IActionResult> DemoCard(int orderId)
-    {
-        var order = await _context.PaymentOrders.FirstOrDefaultAsync(x => x.Id == orderId && x.RecruiterId == CurrentUserId);
-        return order is null ? NotFound() : View(order);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitDemoCard(int orderId, string cardNumber, string cardHolder, string issueDate, string otp)
-    {
-        var order = await _context.PaymentOrders.FirstOrDefaultAsync(x => x.Id == orderId && x.RecruiterId == CurrentUserId);
-        if (order is null) return NotFound();
-
-        var normalizedCard = new string((cardNumber ?? string.Empty).Where(char.IsDigit).ToArray());
-        var isSuccessfulTestCard = normalizedCard == "9704198526191432198" &&
-                                    string.Equals(cardHolder?.Trim(), "NGUYEN VAN A", StringComparison.OrdinalIgnoreCase) &&
-                                    issueDate?.Trim() == "07/15" && otp?.Trim() == "123456";
-
-        if (isSuccessfulTestCard)
-        {
-            order.Status = Domain.Enums.PaymentStatus.Successful;
-            order.ReviewedAt = DateTime.UtcNow;
-        }
-        order.AdminNote = isSuccessfulTestCard
-            ? "VNPay Sandbox Demo: thẻ test hợp lệ. Gói đã được kích hoạt tự động."
-            : "VNPay Sandbox Demo: thông tin thẻ test không hợp lệ hoặc giao dịch thất bại.";
-        await _context.SaveChangesAsync();
-
-        return View("Result", (isSuccessfulTestCard, order.AdminNote));
-    }
-
     [AllowAnonymous]
     [HttpGet]
+    // [BẢO VỆ] CALLBACK VNPAY - đoạn quan trọng nhất của thanh toán: xác minh trước khi kích hoạt gói.
     public async Task<IActionResult> Return()
     {
         var secureHash = Request.Query["vnp_SecureHash"].ToString();
@@ -126,6 +106,7 @@ public class VnPayController : Controller
         {
             order.Status = Domain.Enums.PaymentStatus.Successful;
             order.ReviewedAt = DateTime.UtcNow;
+            await ActivateSubscriptionAsync(order);
         }
         order.AdminNote = isSuccessful
             ? $"VNPay Sandbox báo thanh toán thành công (mã GD: {transactionNo}). Gói đã được kích hoạt tự động."
@@ -135,8 +116,33 @@ public class VnPayController : Controller
         return View("Result", (isSuccessful, order.AdminNote));
     }
 
+    private async Task ActivateSubscriptionAsync(Domain.Entities.PaymentOrder order)
+    {
+        var now = DateTime.UtcNow;
+        var subscription = await _context.RecruiterSubscriptions
+            .FirstOrDefaultAsync(x => x.RecruiterId == order.RecruiterId);
+        if (subscription is null)
+        {
+            subscription = new Domain.Entities.RecruiterSubscription
+            {
+                RecruiterId = order.RecruiterId,
+                StartedAt = now
+            };
+            _context.RecruiterSubscriptions.Add(subscription);
+        }
+        else if (subscription.ExpiresAt <= now)
+        {
+            subscription.StartedAt = now;
+        }
+
+        subscription.PlanCode = order.PlanCode;
+        subscription.ExpiresAt = (subscription.ExpiresAt > now ? subscription.ExpiresAt : now).AddDays(30);
+        subscription.UpdatedAt = now;
+        subscription.AdminNote = $"Kích hoạt tự động từ đơn {order.TransferCode}.";
+    }
+
     // VNPAY tạo checksum trên chuỗi query dùng WebUtility.UrlEncode (không dùng Uri.EscapeDataString).
-    // Hai cách mã hóa khác nhau với khoảng trắng/ký tự đặc biệt sẽ gây lỗi "Sai chữ ký".
+    // Hai cách mã hóa khác nhau với khoảng trắng/ký tự đặc biệt sẽ gây lỗi "Sai chữ ký". (HMAC-SHA512)
     private static string BuildQuery(IEnumerable<KeyValuePair<string, string>> values) =>
         string.Join("&", values.OrderBy(x => x.Key, StringComparer.Ordinal)
             .Select(x => $"{WebUtility.UrlEncode(x.Key)}={WebUtility.UrlEncode(x.Value)}"));

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] NGÀNH NGHỀ: CRUD JobCategory; chặn xóa ngành đang có JobPosting sử dụng.
 [Authorize(Roles = "Admin")]
 [Route("admin/categories")]
 public class SkillController : Controller

@@ -7,6 +7,9 @@ using Services.DTOs.JobPosting;
 using Services.Interfaces;
 using WebApp.Models.JobPosting;
 using WebApp.Filters;
+using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Domain.Enums;
 
 namespace WebApp.Controllers;
 
@@ -15,10 +18,12 @@ namespace WebApp.Controllers;
 public class JobPostingController : Controller
 {
     private readonly IJobPostingService _jobPostingService;
+    private readonly ARSDbContext _context;
 
-    public JobPostingController(IJobPostingService jobPostingService)
+    public JobPostingController(IJobPostingService jobPostingService, ARSDbContext context)
     {
         _jobPostingService = jobPostingService;
+        _context = context;
     }
 
     // Lấy Id của người dùng đang đăng nhập từ Claim
@@ -49,6 +54,11 @@ public class JobPostingController : Controller
     [Authorize(Policy = "CanCreateJob")]
     public async Task<IActionResult> Create()
     {
+        if (!await CanCreateJobAsync())
+        {
+            TempData["Error"] = "Gói hiện tại đã dùng hết số bài đăng cho phép. Hãy đóng một bài hoặc nâng cấp gói.";
+            return RedirectToAction(nameof(Index));
+        }
         var model = new JobPostingFormViewModel();
         await PopulateCategoriesAsync(model);
         return View(model);
@@ -59,6 +69,11 @@ public class JobPostingController : Controller
     [Authorize(Policy = "CanCreateJob")]
     public async Task<IActionResult> Create(JobPostingFormViewModel model)
     {
+        if (!await CanCreateJobAsync())
+        {
+            TempData["Error"] = "Bạn đã dùng hết số bài đăng của gói hiện tại. Vui lòng đóng một bài hoặc nâng cấp lên Pro.";
+            return RedirectToAction(nameof(Index));
+        }
         if (!ModelState.IsValid)
         {
             await PopulateCategoriesAsync(model);
@@ -146,5 +161,20 @@ public class JobPostingController : Controller
             Value = c.Id.ToString(),
             Text = c.Name
         });
+    }
+
+    private async Task<bool> CanCreateJobAsync()
+    {
+        var plan = await _context.RecruiterSubscriptions
+            .Where(x => x.RecruiterId == CurrentUserId && x.ExpiresAt > DateTime.UtcNow)
+            .Select(x => x.PlanCode)
+            .FirstOrDefaultAsync();
+        if (plan == "Pro") return true;
+        if (plan is not ("Starter" or "Free")) return false;
+
+        var usedSlots = await _context.JobPostings.CountAsync(x =>
+            x.Company != null && x.Company.RecruiterId == CurrentUserId &&
+            x.Status != JobStatus.Closed && x.Status != JobStatus.Archived);
+        return usedSlots < (plan == "Free" ? 1 : 3);
     }
 }

@@ -10,6 +10,7 @@ using Services.Interfaces;
 
 namespace Services.Implementations;
 
+// [BẢO VỆ] AUTH SERVICE: email/mật khẩu, hash, đăng nhập Google, đổi-reset mật khẩu, khóa/mở user.
 public class AuthService : IAuthService
 {
     private readonly ARSDbContext _context;
@@ -88,7 +89,7 @@ public class AuthService : IAuthService
 
             return BoolResponse.Success();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return BoolResponse.Failure(ErrorMessage.ExceptionError);
         }

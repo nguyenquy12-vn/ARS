@@ -9,8 +9,11 @@ using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] KHO CV CHỈ PRO: upload/xem/xóa PDF, thư mục, chấm AI và xuất CSV.
+// RequireProPlan đặt ở class nên Free/Starter gọi URL trực tiếp cũng bị chặn.
 [Authorize(Roles = "Recruiter")]
 [RequireActiveRecruiterPlan]
+[RequireProPlan]
 public class CvBankController : Controller
 {
     private const string UploadFolder = "uploads/cvbank";
