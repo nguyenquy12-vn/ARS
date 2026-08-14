@@ -35,7 +35,7 @@ public class AuthService : IAuthService
         }
 
         // 2. Kiểm tra mật khẩu
-        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash); 
 
         if (!isPasswordValid)
         {
@@ -100,6 +100,7 @@ public class AuthService : IAuthService
         return !await _context.Users.AnyAsync(u => u.Email == email.Trim());
     }
 
+    // xử lý kiểm tra hoặc tạo tk bằng Gmail.
     public async Task<LoginResponse> LoginWithGoogleAsync(string email, string fullName)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();

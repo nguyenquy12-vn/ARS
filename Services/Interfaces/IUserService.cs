@@ -10,5 +10,4 @@ public interface IUserService
 
     Task<UserDetailsResponse> GetUserByIdAsync(int userId);
 
-    Task<(bool IsSuccess, string? ErrorMessage)> PromoteCandidateAsync(int userId, string targetRole);
 }

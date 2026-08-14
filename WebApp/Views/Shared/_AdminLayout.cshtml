@@ -188,6 +188,13 @@
                             <span>Quản lý doanh thu</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "RecruiterRequestManagement" ? "active" : "")"
+                           asp-controller="RecruiterRequestManagement" asp-action="Index">
+                            <i class="bi bi-building-check"></i>
+                            <span>Duyệt nhà tuyển dụng</span>
+                        </a>
+                    </li>
                 }
 
                 @if (User.HasClaim("Permission", "ManageUsers"))

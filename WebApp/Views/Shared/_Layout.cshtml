@@ -45,6 +45,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Candidate" asp-action="MyApplications">Việc làm đã ứng tuyển</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="RecruiterRequest" asp-action="Index">Đăng ký nhà tuyển dụng</a>
+                            </li>
                         }
                         @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Recruiter"))
                         {

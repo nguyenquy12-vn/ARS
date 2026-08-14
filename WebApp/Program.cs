@@ -40,7 +40,8 @@ var googleClientId = builder.Configuration["GoogleAuth:ClientId"];
 var googleClientSecret = builder.Configuration["GoogleAuth:ClientSecret"];
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
-    authentication.AddCookie("External")
+    // đăng kí dịch vụ google
+     authentication.AddCookie("External") 
     .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
     {
         options.SignInScheme = "External";
