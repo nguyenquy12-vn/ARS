@@ -13,6 +13,9 @@ using Services.Interfaces;
 
 namespace Services.Implementations;
 
+// [BẢO VỆ] AI SERVICE: gửi CV + JD tới AI endpoint và parse kết quả JSON.
+// MatchCvAsync trả điểm/giải thích; ExtractCvInfoAsync trích xuất thông tin CV.
+// AI là công cụ tư vấn, Recruiter vẫn là người quyết định trạng thái tuyển dụng.
 // Gọi AI server nội bộ (LAN): POST /api/chat trả về NDJSON streaming,
 // HOẶC gọi ChatGPT (OpenAI) /v1/chat/completions nếu user chọn provider = OpenAI.
 // BaseAddress + timeout + Authorization (Bearer) được cấu hình ở WebApp/Program.cs (AddHttpClient).

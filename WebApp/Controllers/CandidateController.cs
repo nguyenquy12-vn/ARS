@@ -5,6 +5,8 @@ using System.Security.Claims;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] CANDIDATE: nộp CV PDF, theo dõi/rút đơn và đọc thông báo.
+// CandidateId lấy từ Claim, service kiểm tra chủ sở hữu nên không sửa đơn của người khác.
 [Authorize(Policy = "CanApplyJob")]
 public class CandidateController : Controller
 {
@@ -22,6 +24,7 @@ public class CandidateController : Controller
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpPost]
+    // [BẢO VỆ] ĐIỂM VÀO ỨNG TUYỂN: kiểm file rồi giao ApplicationService tạo Resume/Application.
     public async Task<IActionResult> Apply(int jobId, IFormFile cvFile, string? coverLetter)
     {
         if (cvFile == null || cvFile.Length == 0)

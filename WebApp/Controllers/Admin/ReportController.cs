@@ -7,6 +7,7 @@ using WebApp.Models.Admin;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] BÁO CÁO: GroupBy dữ liệu user/job/application/doanh thu thành các series.
 [Authorize(Roles = "Admin")]
 [Route("admin/reports")]
 public class ReportController : Controller

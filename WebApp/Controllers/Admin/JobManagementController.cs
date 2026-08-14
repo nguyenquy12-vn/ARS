@@ -7,6 +7,7 @@ using Services.Interfaces;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] ADMIN BÀI ĐĂNG: CloseJob đổi Status=Closed, không xóa để giữ hồ sơ/lịch sử.
 [Route("admin/jobs")]
 [Authorize(Roles = "Admin")]
 public class JobManagementController : Controller

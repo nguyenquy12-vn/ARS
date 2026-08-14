@@ -46,7 +46,7 @@ public class UserService : IUserService
         }
 
         List<ResumeDto>? resumes = null;
-        CompanyProfileDto companyProfile = null;
+        CompanyProfileDto? companyProfile = null;
 
         if (user.Role != null)
         {

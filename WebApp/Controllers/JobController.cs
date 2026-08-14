@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] VIỆC LÀM CLIENT: Index tìm/lọc, Detail xem chi tiết, Apply nộp hồ sơ.
+// Controller nhận bộ lọc rồi gọi JobPostingService để EF Core tạo truy vấn SQL.
 public class JobController : Controller
 {
     private readonly IJobPostingService _jobPostingService;

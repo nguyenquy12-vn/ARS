@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] VNPAY: CreatePayment ký HMAC-SHA512; Return kiểm chữ ký, số tiền và responseCode.
+// Chỉ khi cả ba hợp lệ mới đổi đơn Successful và kích hoạt/gia hạn gói 30 ngày.
 [Authorize(Roles = "Recruiter")]
 public class VnPayController : Controller
 {
@@ -79,6 +81,7 @@ public class VnPayController : Controller
 
     [AllowAnonymous]
     [HttpGet]
+    // [BẢO VỆ] CALLBACK VNPAY - đoạn quan trọng nhất của thanh toán: xác minh trước khi kích hoạt gói.
     public async Task<IActionResult> Return()
     {
         var secureHash = Request.Query["vnp_SecureHash"].ToString();
@@ -103,6 +106,7 @@ public class VnPayController : Controller
         {
             order.Status = Domain.Enums.PaymentStatus.Successful;
             order.ReviewedAt = DateTime.UtcNow;
+            await ActivateSubscriptionAsync(order);
         }
         order.AdminNote = isSuccessful
             ? $"VNPay Sandbox báo thanh toán thành công (mã GD: {transactionNo}). Gói đã được kích hoạt tự động."
@@ -112,8 +116,33 @@ public class VnPayController : Controller
         return View("Result", (isSuccessful, order.AdminNote));
     }
 
+    private async Task ActivateSubscriptionAsync(Domain.Entities.PaymentOrder order)
+    {
+        var now = DateTime.UtcNow;
+        var subscription = await _context.RecruiterSubscriptions
+            .FirstOrDefaultAsync(x => x.RecruiterId == order.RecruiterId);
+        if (subscription is null)
+        {
+            subscription = new Domain.Entities.RecruiterSubscription
+            {
+                RecruiterId = order.RecruiterId,
+                StartedAt = now
+            };
+            _context.RecruiterSubscriptions.Add(subscription);
+        }
+        else if (subscription.ExpiresAt <= now)
+        {
+            subscription.StartedAt = now;
+        }
+
+        subscription.PlanCode = order.PlanCode;
+        subscription.ExpiresAt = (subscription.ExpiresAt > now ? subscription.ExpiresAt : now).AddDays(30);
+        subscription.UpdatedAt = now;
+        subscription.AdminNote = $"Kích hoạt tự động từ đơn {order.TransferCode}.";
+    }
+
     // VNPAY tạo checksum trên chuỗi query dùng WebUtility.UrlEncode (không dùng Uri.EscapeDataString).
-    // Hai cách mã hóa khác nhau với khoảng trắng/ký tự đặc biệt sẽ gây lỗi "Sai chữ ký".
+    // Hai cách mã hóa khác nhau với khoảng trắng/ký tự đặc biệt sẽ gây lỗi "Sai chữ ký". (HMAC-SHA512)
     private static string BuildQuery(IEnumerable<KeyValuePair<string, string>> values) =>
         string.Join("&", values.OrderBy(x => x.Key, StringComparer.Ordinal)
             .Select(x => $"{WebUtility.UrlEncode(x.Key)}={WebUtility.UrlEncode(x.Value)}"));

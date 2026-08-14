@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] RBAC: cập nhật bảng nối RolePermission; policy kiểm claim Permission.
 [Authorize(Roles = "Admin")]
 [Route("admin/roles")]
 public class RoleController : Controller

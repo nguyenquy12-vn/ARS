@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
+// [BẢO VỆ] EF CORE: DbSet là bảng; OnModelCreating cấu hình quan hệ/index/enum/seed data.
 public class ARSDbContext : DbContext
 {
     public ARSDbContext(DbContextOptions<ARSDbContext> options) : base(options)
@@ -23,6 +24,7 @@ public class ARSDbContext : DbContext
     public DbSet<CvFolder> CvFolders { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<PaymentOrder> PaymentOrders { get; set; }
+    public DbSet<RecruiterSubscription> RecruiterSubscriptions { get; set; }
     public DbSet<Application> Applications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -66,6 +68,16 @@ public class ARSDbContext : DbContext
         modelBuilder.Entity<PaymentOrder>()
             .Property(p => p.Amount)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<RecruiterSubscription>()
+            .HasIndex(x => x.RecruiterId)
+            .IsUnique();
+
+        modelBuilder.Entity<RecruiterSubscription>()
+            .HasOne(x => x.Recruiter)
+            .WithMany()
+            .HasForeignKey(x => x.RecruiterId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Prevent multiple cascade paths
         modelBuilder.Entity<Application>()

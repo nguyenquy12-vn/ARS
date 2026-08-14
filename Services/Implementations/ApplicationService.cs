@@ -8,6 +8,7 @@ using Services.Interfaces;
 
 namespace Services.Implementations;
 
+// [BẢO VỆ] APPLICATION SERVICE: ứng tuyển/rút đơn, pipeline, AI, lịch phỏng vấn và email.
 public class ApplicationService : IApplicationService
 {
     private readonly ARSDbContext _context;
@@ -90,15 +91,15 @@ public class ApplicationService : IApplicationService
     {
         var applications = await _context.Set<Application>()
             .Include(a => a.JobPosting)
-            .ThenInclude(j => j.Company)
+            .ThenInclude(j => j!.Company)
             .Where(a => a.CandidateId == candidateId)
             .OrderByDescending(a => a.AppliedAt)
             .Select(a => new ApplicationDto
             {
                 Id = a.Id,
                 JobPostingId = a.JobPostingId,
-                JobTitle = a.JobPosting.Title,
-                CompanyName = a.JobPosting.Company.CompanyName,
+                JobTitle = a.JobPosting!.Title,
+                CompanyName = a.JobPosting.Company!.CompanyName,
                 CompanyLogoPath = a.JobPosting.Company.LogoPath,
                 AppliedAt = a.AppliedAt,
                 Status = a.Status.ToString(),

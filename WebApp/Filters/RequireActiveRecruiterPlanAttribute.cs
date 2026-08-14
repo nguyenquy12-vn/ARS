@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Domain.Enums;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Filters;
 
+// [BẢO VỆ] FILTER GÓI CƠ BẢN: Recruiter phải có subscription còn hạn.
+// Đây là kiểm tra server-side; ẩn menu thôi chưa đủ vì user có thể gõ URL trực tiếp.
 public sealed class RequireActiveRecruiterPlanAttribute : TypeFilterAttribute
 {
     public RequireActiveRecruiterPlanAttribute() : base(typeof(RequireActiveRecruiterPlanFilter)) { }
@@ -37,8 +38,8 @@ public sealed class RequireActiveRecruiterPlanFilter : IAsyncActionFilter
             return;
         }
 
-        var hasActivePlan = await _context.PaymentOrders
-            .AnyAsync(order => order.RecruiterId == recruiterId && order.Status == PaymentStatus.Successful);
+        var hasActivePlan = await _context.RecruiterSubscriptions
+            .AnyAsync(subscription => subscription.RecruiterId == recruiterId && subscription.ExpiresAt > DateTime.UtcNow);
         if (hasActivePlan)
         {
             await next();

@@ -9,6 +9,8 @@ using WebApp.Filters;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] PIPELINE RECRUITER: xem ứng viên, đổi trạng thái, AI chấm CV và đặt lịch phỏng vấn.
+// Các action AI có RequireAiPlan; mọi service call đều truyền CurrentUserId để kiểm tra ownership.
 [Authorize(Roles = "Recruiter")]
 [RequireActiveRecruiterPlan]
 public class ApplicationController : Controller
@@ -53,6 +55,7 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanReviewCV")]
+    [RequireAiPlan]
     public async Task<IActionResult> Analyze(int id)
     {
         try
@@ -74,6 +77,8 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanEvaluateAI")]
+    [RequireAiPlan]
+    // [BẢO VỆ] CHẤM AI HÀNG LOẠT: RequireAiPlan chặn Starter trước khi service được gọi.
     public async Task<IActionResult> ScoreAll(int id, bool rescore = false)
     {
         try
@@ -100,6 +105,7 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanEvaluateAI")]
+    [RequireAiPlan]
     public async Task<IActionResult> ScoreOne(int id)
     {
         try
@@ -117,6 +123,7 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanReviewCV")]
+    [RequireAiPlan]
     public async Task<IActionResult> SaveScoreSettings(int id, JdEvalSettings settings)
     {
         var ok = await _applicationService.SaveJdSettingsAsync(id, CurrentUserId, settings);
@@ -164,6 +171,7 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanEvaluateAI")]
+    [RequireAiPlan]
     public async Task<IActionResult> Evaluate(int id)
     {
         var result = await _applicationService.EvaluateWithAiAsync(id, CurrentUserId);
@@ -184,6 +192,7 @@ public class ApplicationController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "CanReviewCV")]
+    // [BẢO VỆ] ĐẶT LỊCH: service lưu lịch, đổi trạng thái và gửi email cho Candidate.
     public async Task<IActionResult> ScheduleInterview(int id, int jobId, DateTime interviewAt, string? note)
     {
         var (ok, error, mailInfo) = await _applicationService.ScheduleInterviewAsync(id, CurrentUserId, interviewAt, note);

@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] GÓI DỊCH VỤ: PaymentOrder là lịch sử; RecruiterSubscription là gói hiện tại + hạn.
+// Free dùng thử một lần/24 giờ; Starter và Pro tạo đơn rồi thanh toán qua VNPAY.
 [Authorize(Roles = "Recruiter")]
 public class BillingController : Controller
 {
@@ -27,16 +29,86 @@ public class BillingController : Controller
             .Where(x => x.RecruiterId == CurrentUserId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
-        ViewBag.CurrentPlan = orders
-            .Where(x => x.Status == PaymentStatus.Successful)
-            .OrderByDescending(x => x.ReviewedAt ?? x.CreatedAt)
-            .Select(x => x.PlanCode)
-            .FirstOrDefault();
+        var subscription = await _context.RecruiterSubscriptions
+            .FirstOrDefaultAsync(x => x.RecruiterId == CurrentUserId);
+
+        // Đồng bộ các gói đã bị Admin hủy trước khi lịch sử thanh toán hỗ trợ trạng thái này.
+        if (subscription is not null && subscription.ExpiresAt <= DateTime.UtcNow &&
+            subscription.AdminNote?.Contains("Admin", StringComparison.OrdinalIgnoreCase) == true &&
+            subscription.AdminNote.Contains("hủy", StringComparison.OrdinalIgnoreCase))
+        {
+            var legacyOrder = orders.FirstOrDefault(x =>
+                x.PlanCode == subscription.PlanCode && x.Status == PaymentStatus.Successful);
+            if (legacyOrder is not null)
+            {
+                legacyOrder.Status = PaymentStatus.Cancelled;
+                legacyOrder.AdminNote = subscription.AdminNote;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        var isActive = subscription?.ExpiresAt > DateTime.UtcNow;
+        ViewBag.CurrentPlan = isActive ? subscription!.PlanCode : null;
+        ViewBag.PlanExpiresAt = isActive ? subscription!.ExpiresAt : (DateTime?)null;
+        ViewBag.HasUsedFreeTrial = await _context.PaymentOrders
+            .AnyAsync(x => x.RecruiterId == CurrentUserId && x.PlanCode == "Free");
         return View(orders);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    // [BẢO VỆ] KÍCH HOẠT FREE: chống dùng lần hai bằng PaymentOrder PlanCode="Free", hạn đúng 24 giờ.
+    public async Task<IActionResult> ActivateFreeTrial()
+    {
+        var now = DateTime.UtcNow;
+        var hasUsedTrial = await _context.PaymentOrders
+            .AnyAsync(x => x.RecruiterId == CurrentUserId && x.PlanCode == "Free");
+        if (hasUsedTrial)
+        {
+            TempData["Error"] = "Mỗi tài khoản chỉ được sử dụng gói Free một lần.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var subscription = await _context.RecruiterSubscriptions
+            .FirstOrDefaultAsync(x => x.RecruiterId == CurrentUserId);
+        if (subscription?.ExpiresAt > now)
+        {
+            TempData["Error"] = "Tài khoản đang có một gói hoạt động nên không thể kích hoạt dùng thử.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var trialOrder = new PaymentOrder
+        {
+            RecruiterId = CurrentUserId,
+            PlanCode = "Free",
+            PlanName = "Free dùng thử 1 ngày",
+            Amount = 0,
+            TransferCode = $"TRIAL{DateTime.UtcNow:yyMMdd}{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}",
+            Status = PaymentStatus.Successful,
+            ReviewedAt = now,
+            AdminNote = "Kích hoạt gói Free dùng thử tự động."
+        };
+        _context.PaymentOrders.Add(trialOrder);
+
+        if (subscription is null)
+        {
+            subscription = new RecruiterSubscription { RecruiterId = CurrentUserId };
+            _context.RecruiterSubscriptions.Add(subscription);
+        }
+        subscription.PlanCode = "Free";
+        subscription.StartedAt = now;
+        subscription.ExpiresAt = now.AddDays(1);
+        subscription.UpdatedAt = now;
+        subscription.AdminNote = "Gói Free dùng thử 1 ngày.";
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Đã kích hoạt gói Free. Bạn có 24 giờ dùng thử và được đăng tối đa 1 bài tuyển dụng.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    // [BẢO VỆ] TẠO ĐƠN STARTER/PRO: chưa thu tiền ở đây; chỉ tạo PaymentOrder chờ VNPAY.
     public async Task<IActionResult> CreateOrder(string planCode)
     {
         var hasPendingOrder = await _context.PaymentOrders
@@ -60,9 +132,8 @@ public class BillingController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var currentPlan = await _context.PaymentOrders
-            .Where(x => x.RecruiterId == CurrentUserId && x.Status == PaymentStatus.Successful)
-            .OrderByDescending(x => x.ReviewedAt ?? x.CreatedAt)
+        var currentPlan = await _context.RecruiterSubscriptions
+            .Where(x => x.RecruiterId == CurrentUserId && x.ExpiresAt > DateTime.UtcNow)
             .Select(x => x.PlanCode)
             .FirstOrDefaultAsync();
 

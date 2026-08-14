@@ -16,6 +16,8 @@ using WebApp.Accounts;
 
 namespace WebApp.Controllers;
 
+// [BẢO VỆ] XÁC THỰC: đăng ký, OTP, đăng nhập thường/Google, đổi-quên mật khẩu và đăng xuất.
+// Luồng: form -> AuthController -> AuthService -> tạo cookie SignInAsync -> redirect theo Role.
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
@@ -98,7 +100,7 @@ public class AuthController : Controller
         // Gọi Service xử lý tạo tài khoản
         var result = await _authService.LoginAsync(loginDto);
 
-        if (result.IsSuccess)
+        if (result.IsSuccess) // Tạo cookie đăng nhập và chuyển trang
         {
             await SignInAsync(result, model.RememberMe);
             return RedirectByRole(result.User!.RoleName);
@@ -226,8 +228,9 @@ public class AuthController : Controller
             TempData["LoginError"] = "Google chưa cung cấp địa chỉ email của tài khoản này.";
             return RedirectToAction(nameof(Login));
         }
-
+        // kiểm tra hoặc tạo TK
         var result = await _authService.LoginWithGoogleAsync(email, fullName);
+
         if (!result.IsSuccess)
         {
             TempData["LoginError"] = result.ErrorMessage ?? "Không thể đăng nhập với Google.";

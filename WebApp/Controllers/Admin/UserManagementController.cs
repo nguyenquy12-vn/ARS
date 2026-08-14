@@ -4,6 +4,7 @@ using WebApp.Models.Admin;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] ADMIN USER: danh sách/chi tiết, khóa-mở tài khoản và đổi vai trò qua Service.
 [Route("admin/users")]
 [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 public class UserManagementController : Controller

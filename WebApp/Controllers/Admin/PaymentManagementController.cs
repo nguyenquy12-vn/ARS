@@ -1,4 +1,5 @@
 using Domain.Enums;
+using Domain.Entities;
 using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApp.Controllers.Admin;
 
+// [BẢO VỆ] DOANH THU: chỉ PaymentStatus.Successful được tính; Index tạo KPI/biểu đồ.
 [Authorize(Roles = "Admin")]
 public class PaymentManagementController : Controller
 {
@@ -83,6 +85,25 @@ public class PaymentManagementController : Controller
         order.AdminNote = adminNote?.Trim();
         order.ReviewedAt = DateTime.UtcNow;
         order.ReviewedByUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        if (status == PaymentStatus.Successful)
+        {
+            var now = DateTime.UtcNow;
+            var subscription = await _context.RecruiterSubscriptions.FirstOrDefaultAsync(x => x.RecruiterId == order.RecruiterId);
+            if (subscription is null)
+            {
+                subscription = new RecruiterSubscription { RecruiterId = order.RecruiterId, StartedAt = now };
+                _context.RecruiterSubscriptions.Add(subscription);
+            }
+            else if (subscription.ExpiresAt <= now)
+            {
+                subscription.StartedAt = now;
+            }
+            subscription.PlanCode = order.PlanCode;
+            subscription.ExpiresAt = (subscription.ExpiresAt > now ? subscription.ExpiresAt : now).AddDays(30);
+            subscription.UpdatedAt = now;
+            subscription.UpdatedByUserId = order.ReviewedByUserId;
+            subscription.AdminNote = $"Kích hoạt từ đơn {order.TransferCode}.";
+        }
         await _context.SaveChangesAsync();
         TempData["Success"] = "Đã cập nhật trạng thái đơn thanh toán.";
         return RedirectToAction(nameof(Index));
