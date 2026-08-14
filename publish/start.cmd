@@ -32,6 +32,11 @@ set EmailOtp__Password=@Quy12345
 set EmailOtp__FromEmail=noreply@arsrecruit.com
 set EmailOtp__FromName=ARS Recruitment
 
+REM --- Cong thanh toan VNPAY (Sandbox) ---
+set VnPay__TmnCode=UBLAMUHP
+set VnPay__HashSecret=ILSIPGOOTOMMXYTVEJHXPNTHYEBBPXGK
+set VnPay__ReturnUrl=https://arsrecruit.com/VnPay/Return
+
 echo [3/3] Chay ARS tren cong 80 + 443 ...
 echo.
 dotnet WebApp.dll

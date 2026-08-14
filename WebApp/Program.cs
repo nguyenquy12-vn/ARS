@@ -197,6 +197,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseMiddleware<UserStatusValidationMiddleware>();
 app.UseAuthorization();
+app.UseMiddleware<RoleBasedAccessMiddleware>();
 
 app.MapControllerRoute(
     name: "default",
