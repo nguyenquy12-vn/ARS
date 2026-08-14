@@ -54,17 +54,6 @@ public class UserManagementController : Controller
         return RedirectToAction("Index");
     }
 
-    [HttpPost("promote")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PromoteCandidate(int userId, string targetRole)
-    {
-        var result = await _userService.PromoteCandidateAsync(userId, targetRole);
-        TempData[result.IsSuccess ? "Success" : "Error"] = result.IsSuccess
-            ? $"Đã chuyển vai trò tài khoản sang {targetRole}. Người dùng cần đăng nhập lại để nhận quyền mới."
-            : result.ErrorMessage;
-        return RedirectToAction(nameof(Index));
-    }
-
     [HttpGet("details/{userId}")]
     public async Task<IActionResult> Details(int userId)
     {

@@ -19,8 +19,8 @@
     .user-table-card .table { margin:0; }.user-table-card thead th { padding:1rem .8rem; border-bottom:1px solid #dce5ee; color:#526b80; background:#f8fafc; font-size:.72rem; font-weight:800; letter-spacing:.055em; text-transform:uppercase; white-space:nowrap; }
     .user-table-card tbody td { padding:1rem .8rem; border-color:#edf1f5; vertical-align:middle; }.user-table-card tbody tr { transition:background .18s ease; }.user-table-card tbody tr:hover { background:#f8fbff; }
     .avatar-circle { width:38px !important; height:38px !important; border:1px solid #bfdbfe; background:#eff6ff !important; }.user-role-badge,.user-status-badge { border-radius:999px; font-size:.75rem; font-weight:700; padding:.38rem .65rem !important; }
-    .user-action-cell .btn { border-radius:8px; }.role-promote-form { min-width:205px; }.role-promote-form .form-select { font-size:.75rem; }
-    @@media (max-width: 767.98px) { .user-page-header { align-items:start; flex-direction:column; }.user-table-card tbody td { min-width:130px; }.role-promote-form { min-width:185px; } }
+    .user-action-cell .btn { border-radius:8px; }
+    @@media (max-width: 767.98px) { .user-page-header { align-items:start; flex-direction:column; }.user-table-card tbody td { min-width:130px; } }
 </style>
 
 <div class="user-page-header">
@@ -149,33 +149,6 @@
                                         <a asp-action="Details" asp-route-userId="@user.Id" class="btn btn-sm btn-outline-secondary" title="Xem chi tiết">
                                             <i class="bi bi-eye"></i>
                                         </a>
-
-                                        @if (string.Equals(user.RoleName, "Candidate", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            <form asp-action="PromoteCandidate" method="post" class="d-flex ms-1 role-promote-form">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="userId" value="@user.Id" />
-                                                <select name="targetRole" class="form-select form-select-sm" style="width: 155px;" aria-label="Nâng quyền">
-                                                    <option value="Recruiter">Nâng lên Recruiter</option>
-                                                    <option value="Admin">Nâng lên Admin</option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-primary ms-1" title="Xác nhận nâng quyền">
-                                                    <i class="bi bi-arrow-up-circle"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                        else if (string.Equals(user.RoleName, "Recruiter", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            <form asp-action="PromoteCandidate" method="post" class="d-inline ms-1"
-                                                  onsubmit="return confirm('Hạ tài khoản @user.FullName xuống Candidate? Người dùng cần đăng nhập lại để cập nhật quyền.');">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="userId" value="@user.Id" />
-                                                <input type="hidden" name="targetRole" value="Candidate" />
-                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Hạ xuống Candidate">
-                                                    <i class="bi bi-arrow-down-circle"></i> Hạ vai trò
-                                                </button>
-                                            </form>
-                                        }
 
                                         <!-- 2. Nút Khóa / Mở khóa (Ẩn nếu tài khoản là Admin) -->
                                         @if (!string.Equals(user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase))

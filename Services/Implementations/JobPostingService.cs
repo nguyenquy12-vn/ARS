@@ -301,7 +301,7 @@ public class JobPostingService : IJobPostingService
             .Include(x => x.Company)
             .Include(x => x.JobCategory)
             .Where(x => x.Status == JobStatus.Active)
-            .OrderByDescending(x => x.CreatedAt)
+              .OrderByDescending(x => x.CreatedAt)
             .Skip(skip)
             .Take(count)
             .Select(x => new JobPostingListDto

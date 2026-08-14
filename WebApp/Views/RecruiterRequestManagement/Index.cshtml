@@ -1,0 +1,62 @@
+@using Domain.Entities
+@using Domain.Enums
+@model List<RecruiterRequest>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Yêu cầu nhà tuyển dụng";
+    string Tone(RecruiterRequestStatus status) => status switch
+    {
+        RecruiterRequestStatus.Pending => "warning",
+        RecruiterRequestStatus.Approved => "success",
+        _ => "danger"
+    };
+    string Text(RecruiterRequestStatus status) => status switch
+    {
+        RecruiterRequestStatus.Pending => "Chờ duyệt",
+        RecruiterRequestStatus.Approved => "Đã duyệt",
+        _ => "Từ chối"
+    };
+}
+
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+        <div><div class="text-primary small fw-bold">ARS ADMIN</div><h1 class="fw-bold mb-1">Yêu cầu nhà tuyển dụng</h1><p class="text-muted mb-0">Xác minh doanh nghiệp trước khi cấp quyền Recruiter.</p></div>
+        <form method="get"><select name="status" class="form-select" onchange="this.form.submit()"><option value="">Tất cả trạng thái</option>@foreach(var s in Enum.GetValues<RecruiterRequestStatus>()){<option value="@s" selected="@(ViewBag.Status?.ToString()==s.ToString())">@Text(s)</option>}</select></form>
+    </div>
+    @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+    @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th class="p-3">Người gửi</th><th>Công ty</th><th>Giấy tờ</th><th>Ngày gửi</th><th>Trạng thái</th><th style="min-width:310px">Xử lý</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="p-3"><strong>@item.User?.FullName</strong><small class="d-block text-muted">@item.User?.Email</small></td>
+                        <td><strong>@item.CompanyName</strong><small class="d-block text-muted">MST: @item.TaxCode</small></td>
+                        <td><a asp-action="Document" asp-route-id="@item.Id" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-text"></i> Xem giấy tờ</a></td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="badge bg-@Tone(item.Status) bg-opacity-10 text-@Tone(item.Status)">@Text(item.Status)</span>@if(item.ProcessedAt.HasValue){<small class="d-block text-muted mt-1">@item.ProcessedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>}</td>
+                        <td>
+                            @if (item.Status == RecruiterRequestStatus.Pending)
+                            {
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <form asp-action="Approve" asp-route-id="@item.Id" method="post" class="d-flex gap-2">@Html.AntiForgeryToken()<input name="adminNotes" class="form-control form-control-sm" placeholder="Ghi chú duyệt (không bắt buộc)" /><button class="btn btn-success btn-sm" onclick="return confirm('Duyệt và cấp quyền Recruiter?')">Duyệt</button></form>
+                                    <form asp-action="Reject" asp-route-id="@item.Id" method="post" class="d-flex gap-2">@Html.AntiForgeryToken()<input name="adminNotes" required class="form-control form-control-sm" placeholder="Lý do từ chối" /><button class="btn btn-outline-danger btn-sm" onclick="return confirm('Từ chối yêu cầu này?')">Từ chối</button></form>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">@item.AdminNotes</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any()) { <tr><td colspan="6" class="text-center text-muted py-5">Chưa có yêu cầu phù hợp.</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -72,26 +72,4 @@ public class UserService : IUserService
         return UserDetailsResponse.Success(_mapper.Map<UserDto>(user), resumes, companyProfile);
     }
 
-    public async Task<(bool IsSuccess, string? ErrorMessage)> PromoteCandidateAsync(int userId, string targetRole)
-    {
-        if (targetRole is not ("Candidate" or "Recruiter" or "Admin"))
-            return (false, "Vai trò đích không hợp lệ.");
-
-        var user = await _context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == userId);
-        if (user is null)
-            return (false, ErrorMessage.UserNotFound);
-        var currentRole = user.Role?.Name;
-        var isCandidatePromotion = currentRole == "Candidate" && targetRole is "Recruiter" or "Admin";
-        var isRecruiterDowngrade = currentRole == "Recruiter" && targetRole == "Candidate";
-        if (!isCandidatePromotion && !isRecruiterDowngrade)
-            return (false, "Không thể thực hiện chuyển đổi vai trò này.");
-
-        var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == targetRole);
-        if (role is null)
-            return (false, "Không tìm thấy vai trò đích.");
-
-        user.RoleId = role.Id;
-        await _context.SaveChangesAsync();
-        return (true, null);
-    }
 }
