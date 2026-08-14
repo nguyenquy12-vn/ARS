@@ -18,12 +18,14 @@ public class ApplicationController : Controller
     private readonly IApplicationService _applicationService;
     private readonly IJobPostingService _jobPostingService;
     private readonly INotificationService _notificationService;
+    private readonly IWebHostEnvironment _env;
 
-    public ApplicationController(IApplicationService applicationService, IJobPostingService jobPostingService, INotificationService notificationService)
+    public ApplicationController(IApplicationService applicationService, IJobPostingService jobPostingService, INotificationService notificationService, IWebHostEnvironment env)
     {
         _applicationService = applicationService;
         _jobPostingService = jobPostingService;
         _notificationService = notificationService;
+        _env = env;
     }
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -41,6 +43,83 @@ public class ApplicationController : Controller
 
         var applicants = await _applicationService.GetApplicantsForJobAsync(id, CurrentUserId);
         return View(new JobApplicantsViewModel { Job = job, Applicants = applicants });
+    }
+
+    // GET /Application/DownloadAllCvs/5 -> tải toàn bộ CV (PDF) của một tin về dưới dạng file ZIP
+    [HttpGet]
+    [Authorize(Policy = "CanReviewCV")]
+    public async Task<IActionResult> DownloadAllCvs(int id)
+    {
+        var job = await _jobPostingService.GetForRecruiterAsync(id, CurrentUserId);
+        if (job == null)
+        {
+            return NotFound();
+        }
+
+        var applicants = await _applicationService.GetApplicantsForJobAsync(id, CurrentUserId);
+
+        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+        var memoryStream = new MemoryStream();
+        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var added = 0;
+
+        using (var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var a in applicants)
+            {
+                if (string.IsNullOrWhiteSpace(a.ResumeFilePath))
+                {
+                    continue;
+                }
+
+                // ResumeFilePath dạng "/uploads/cv/xxx.pdf" -> đường dẫn vật lý trong wwwroot
+                var relative = a.ResumeFilePath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+                var physicalPath = Path.GetFullPath(Path.Combine(webRoot, relative));
+
+                // Chặn path traversal: file phải nằm trong wwwroot
+                if (!physicalPath.StartsWith(Path.GetFullPath(webRoot), StringComparison.OrdinalIgnoreCase)
+                    || !System.IO.File.Exists(physicalPath))
+                {
+                    continue;
+                }
+
+                var safeName = SanitizeFileName(a.CandidateName);
+                var entryName = $"{safeName}.pdf";
+                var counter = 1;
+                while (!usedNames.Add(entryName))
+                {
+                    entryName = $"{safeName}_{++counter}.pdf";
+                }
+
+                var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.Optimal);
+                await using var entryStream = entry.Open();
+                await using var fileStream = System.IO.File.OpenRead(physicalPath);
+                await fileStream.CopyToAsync(entryStream);
+                added++;
+            }
+        }
+
+        if (added == 0)
+        {
+            await memoryStream.DisposeAsync();
+            TempData["Error"] = "Không có CV nào để tải cho tin tuyển dụng này.";
+            return RedirectToAction(nameof(ByJob), new { id });
+        }
+
+        memoryStream.Position = 0;
+        var zipName = $"CV_{SanitizeFileName(job.Title)}_{DateTime.Now:yyyyMMdd}.zip";
+        return File(memoryStream, "application/zip", zipName);
+    }
+
+    private static string SanitizeFileName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "CV";
+        }
+
+        var cleaned = string.Concat(name.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "CV" : cleaned;
     }
 
     [HttpGet]

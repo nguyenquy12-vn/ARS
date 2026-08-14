@@ -31,6 +31,9 @@
         <button type="button" class="btn btn-success btn-sm" onclick="openBulkInterview()" id="btnBulkInterview">
             <i class="bi bi-envelope-paper me-1"></i> Mời PV hàng loạt <span class="badge bg-light text-success ms-1" id="bulkCount">0</span>
         </button>
+        <a asp-action="DownloadAllCvs" asp-route-id="@Model.Job.Id" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-download me-1"></i> Tải tất cả CV
+        </a>
         <a asp-controller="JobPosting" asp-action="Details" asp-route-id="@Model.Job.Id"
            class="btn btn-outline-secondary btn-sm">← Quay lại tin</a>
     </div>

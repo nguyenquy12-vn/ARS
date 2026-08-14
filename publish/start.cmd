@@ -24,6 +24,14 @@ REM --- Dang nhap Google (OAuth) ---
 set GoogleAuth__ClientId=113080090949-7o8sv0me6q5aoco3g2uvpqf4q5e8b4g3.apps.googleusercontent.com
 set GoogleAuth__ClientSecret=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
 
+REM --- Gui OTP qua email (PrivateEmail) ---
+set EmailOtp__SmtpHost=mail.privateemail.com
+set EmailOtp__Port=465
+set EmailOtp__Username=noreply@arsrecruit.com
+set EmailOtp__Password=@Quy12345
+set EmailOtp__FromEmail=noreply@arsrecruit.com
+set EmailOtp__FromName=ARS Recruitment
+
 echo [3/3] Chay ARS tren cong 80 + 443 ...
 echo.
 dotnet WebApp.dll
